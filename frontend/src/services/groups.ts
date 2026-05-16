@@ -72,6 +72,19 @@ export async function listGroups() {
   return (data as ListGroupsResponse).groups;
 }
 
+export async function joinGroup(inviteCode: string) {
+  const data = await requestAPI(
+    '/api/v1/groups/join',
+    {
+      body: JSON.stringify({ invite_code: inviteCode }),
+      method: 'POST',
+    },
+    'Nao foi possivel entrar no grupo.',
+  );
+
+  return data as Group;
+}
+
 async function requestAPI(path: string, init: RequestInit | undefined, fallbackError: string) {
   const {
     data: { session },

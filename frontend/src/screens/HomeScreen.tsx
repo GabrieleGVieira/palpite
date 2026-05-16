@@ -7,12 +7,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../hooks/useAuth';
-import { listGroups, type Group } from '../services/groups';
+import { joinGroup, listGroups, type Group } from '../services/groups';
 
 type HomeScreenProps = {
   onCreateGroup: () => void;
@@ -24,6 +25,9 @@ export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoadingGroups, setIsLoadingGroups] = useState(true);
   const [groupsError, setGroupsError] = useState<string | null>(null);
+  const [inviteCode, setInviteCode] = useState('');
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [isJoiningGroup, setIsJoiningGroup] = useState(false);
 
   const loadGroups = useCallback(async () => {
     setGroupsError(null);
@@ -44,6 +48,27 @@ export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
   useEffect(() => {
     loadGroups();
   }, [loadGroups]);
+
+  async function handleJoinGroup() {
+    setJoinError(null);
+
+    if (!inviteCode.trim()) {
+      setJoinError('Informe o codigo do grupo.');
+      return;
+    }
+
+    setIsJoiningGroup(true);
+
+    try {
+      await joinGroup(inviteCode);
+      setInviteCode('');
+      await loadGroups();
+    } catch (error) {
+      setJoinError(error instanceof Error ? error.message : 'Nao foi possivel entrar no grupo.');
+    } finally {
+      setIsJoiningGroup(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -71,6 +96,32 @@ export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
           <Text style={styles.sessionLabel}>Conta conectada</Text>
           <Text style={styles.sessionName}>{userName || user?.email || 'Usuario'}</Text>
           {user?.email ? <Text style={styles.sessionEmail}>{user.email}</Text> : null}
+        </View>
+
+        <View style={styles.joinBox}>
+          <View>
+            <Text style={styles.joinTitle}>Entrar em um grupo</Text>
+            <Text style={styles.joinSubtitle}>Use o codigo de convite recebido.</Text>
+          </View>
+
+          <View style={styles.joinForm}>
+            <TextInput
+              autoCapitalize="characters"
+              onChangeText={setInviteCode}
+              placeholder="CODIGO"
+              placeholderTextColor="#7c8898"
+              style={styles.inviteInput}
+              value={inviteCode}
+            />
+            <Pressable
+              disabled={isJoiningGroup}
+              onPress={handleJoinGroup}
+              style={[styles.joinButton, isJoiningGroup && styles.buttonDisabled]}>
+              <Text style={styles.joinButtonText}>{isJoiningGroup ? 'Entrando...' : 'Entrar'}</Text>
+            </Pressable>
+          </View>
+
+          {joinError ? <Text style={styles.errorText}>{joinError}</Text> : null}
         </View>
 
         <View style={styles.groupsSection}>
@@ -237,6 +288,56 @@ const styles = StyleSheet.create({
     color: '#486654',
     fontSize: 15,
     marginTop: 4,
+  },
+  joinBox: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cfe0c9',
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 14,
+    padding: 16,
+  },
+  joinTitle: {
+    color: '#123d2a',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  joinSubtitle: {
+    color: '#486654',
+    fontSize: 13,
+    marginTop: 4,
+  },
+  joinForm: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  inviteInput: {
+    backgroundColor: '#f5f8ef',
+    borderColor: '#cfe0c9',
+    borderRadius: 8,
+    borderWidth: 1,
+    color: '#183f2d',
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '800',
+    minHeight: 48,
+    paddingHorizontal: 14,
+  },
+  joinButton: {
+    alignItems: 'center',
+    backgroundColor: '#1f7a4a',
+    borderRadius: 8,
+    justifyContent: 'center',
+    minHeight: 48,
+    paddingHorizontal: 18,
+  },
+  buttonDisabled: {
+    opacity: 0.72,
+  },
+  joinButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
   },
   groupsSection: {
     gap: 12,
