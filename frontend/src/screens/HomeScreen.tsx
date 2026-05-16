@@ -4,7 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../hooks/useAuth';
 
-export function HomeScreen() {
+type HomeScreenProps = {
+  onCreateGroup: () => void;
+};
+
+export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
   const { isSubmitting, logout, user } = useAuth();
   const userName = user?.user_metadata.full_name as string | undefined;
 
@@ -36,9 +40,15 @@ export function HomeScreen() {
           {user?.email ? <Text style={styles.sessionEmail}>{user.email}</Text> : null}
         </View>
 
-        <Pressable disabled={isSubmitting} onPress={logout} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>{isSubmitting ? 'Saindo...' : 'Sair'}</Text>
-        </Pressable>
+        <View style={styles.actions}>
+          <Pressable onPress={onCreateGroup} style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>Criar grupo</Text>
+          </Pressable>
+
+          <Pressable disabled={isSubmitting} onPress={logout} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>{isSubmitting ? 'Saindo...' : 'Sair'}</Text>
+          </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -136,6 +146,21 @@ const styles = StyleSheet.create({
     color: '#486654',
     fontSize: 15,
     marginTop: 4,
+  },
+  actions: {
+    gap: 12,
+  },
+  primaryButton: {
+    alignItems: 'center',
+    backgroundColor: '#1f7a4a',
+    borderRadius: 8,
+    justifyContent: 'center',
+    minHeight: 54,
+  },
+  primaryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '800',
   },
   secondaryButton: {
     alignItems: 'center',

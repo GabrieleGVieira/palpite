@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useAuth } from './src/hooks/useAuth';
+import { CreateGroupScreen } from './src/screens/CreateGroupScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
@@ -12,6 +13,7 @@ function AppContent() {
   const { isLoading, session } = useAuth();
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
   const [authScreen, setAuthScreen] = useState<'login' | 'signup'>('login');
+  const [appScreen, setAppScreen] = useState<'home' | 'create-group'>('home');
 
   if (isLoading) {
     return (
@@ -22,7 +24,11 @@ function AppContent() {
   }
 
   if (session) {
-    return <HomeScreen />;
+    if (appScreen === 'create-group') {
+      return <CreateGroupScreen onBack={() => setAppScreen('home')} />;
+    }
+
+    return <HomeScreen onCreateGroup={() => setAppScreen('create-group')} />;
   }
 
   if (!hasSeenOnboarding) {
