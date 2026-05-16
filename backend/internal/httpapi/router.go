@@ -22,6 +22,7 @@ type statusResponse struct {
 type datastore interface {
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
 	Ping(ctx context.Context) error
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
@@ -30,7 +31,9 @@ func NewRouter(cfg config.Config, db datastore) http.Handler {
 
 	mux.HandleFunc("GET /health", healthHandler(db))
 	mux.HandleFunc("GET /api/v1/status", statusHandler(cfg, db))
+	mux.HandleFunc("GET /api/v1/groups", listGroupsHandler(cfg, db))
 	mux.HandleFunc("POST /api/v1/groups", createGroupHandler(cfg, db))
+	mux.HandleFunc("POST /api/v1/groups/join", joinGroupHandler(cfg, db))
 
 	return withCORS(mux)
 }

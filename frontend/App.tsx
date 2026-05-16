@@ -25,7 +25,12 @@ function AppContent() {
 
   if (session) {
     if (appScreen === 'create-group') {
-      return <CreateGroupScreen onBack={() => setAppScreen('home')} />;
+      return (
+        <CreateGroupScreen
+          onBack={() => setAppScreen('home')}
+          onGroupCreated={() => setAppScreen('home')}
+        />
+      );
     }
 
     return <HomeScreen onCreateGroup={() => setAppScreen('create-group')} />;

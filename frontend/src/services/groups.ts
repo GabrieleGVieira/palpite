@@ -19,14 +19,20 @@ export type Group = {
   invite_code: string;
   is_private: boolean;
   match_scope: string;
+  member_count: number;
   name: string;
   owner_id: string;
   participant_limit: number | null;
+  role: string;
   selected_teams: string[];
 };
 
 type APIError = {
   error?: string;
+};
+
+type ListGroupsResponse = {
+  groups: Group[];
 };
 
 async function readJSONResponse(response: Response) {
@@ -37,13 +43,36 @@ async function readJSONResponse(response: Response) {
   }
 
   try {
-    return JSON.parse(responseText) as Group | APIError;
+    return JSON.parse(responseText) as Group | ListGroupsResponse | APIError;
   } catch {
     throw new Error(`A API respondeu em formato inesperado: ${responseText}`);
   }
 }
 
 export async function createGroup(payload: CreateGroupPayload) {
+  const data = await requestAPI(
+    '/api/v1/groups',
+    {
+      body: JSON.stringify(payload),
+      method: 'POST',
+    },
+    'Nao foi possivel criar o grupo.',
+  );
+
+  return data as Group;
+}
+
+export async function listGroups() {
+  const data = await requestAPI(
+    '/api/v1/groups',
+    undefined,
+    'Nao foi possivel carregar seus grupos.',
+  );
+
+  return (data as ListGroupsResponse).groups;
+}
+
+async function requestAPI(path: string, init: RequestInit | undefined, fallbackError: string) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -55,13 +84,13 @@ export async function createGroup(payload: CreateGroupPayload) {
   let response: Response;
 
   try {
-    response = await fetch(`${apiURL}/api/v1/groups`, {
-      body: JSON.stringify(payload),
+    response = await fetch(`${apiURL}${path}`, {
+      ...init,
       headers: {
         Authorization: `Bearer ${session.access_token}`,
         'Content-Type': 'application/json',
+        ...init?.headers,
       },
-      method: 'POST',
     });
   } catch {
     throw new Error(
@@ -72,8 +101,8 @@ export async function createGroup(payload: CreateGroupPayload) {
   const data = await readJSONResponse(response);
 
   if (!response.ok) {
-    throw new Error('error' in data && data.error ? data.error : 'Nao foi possivel criar o grupo.');
+    throw new Error('error' in data && data.error ? data.error : fallbackError);
   }
 
-  return data as Group;
+  return data;
 }

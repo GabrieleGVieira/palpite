@@ -17,6 +17,7 @@ import { createGroup } from '../services/groups';
 
 type CreateGroupScreenProps = {
   onBack: () => void;
+  onGroupCreated: () => void;
 };
 
 const matchScopes = ['Todos os jogos', 'Selecionar selecoes'];
@@ -72,7 +73,7 @@ const worldCupTeams = [
   'Uzbequistao',
 ];
 
-export function CreateGroupScreen({ onBack }: CreateGroupScreenProps) {
+export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenProps) {
   const [groupName, setGroupName] = useState('');
   const [description, setDescription] = useState('');
   const [matchScope, setMatchScope] = useState(matchScopes[0]);
@@ -84,11 +85,9 @@ export function CreateGroupScreen({ onBack }: CreateGroupScreenProps) {
   const [isPrivate, setIsPrivate] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   async function handleCreateGroup() {
     setFormError(null);
-    setSuccessMessage(null);
 
     if (!groupName.trim()) {
       setFormError('Informe o nome do grupo.');
@@ -112,7 +111,7 @@ export function CreateGroupScreen({ onBack }: CreateGroupScreenProps) {
     setIsSubmitting(true);
 
     try {
-      const group = await createGroup({
+      await createGroup({
         description,
         has_unlimited_participants: hasUnlimitedParticipants,
         is_private: isPrivate,
@@ -122,7 +121,7 @@ export function CreateGroupScreen({ onBack }: CreateGroupScreenProps) {
         selected_teams: matchScope === 'Selecionar selecoes' ? selectedTeams : [],
       });
 
-      setSuccessMessage(`Grupo criado. Codigo de convite: ${group.invite_code}`);
+      onGroupCreated();
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'Nao foi possivel criar o grupo.');
     } finally {
@@ -331,8 +330,6 @@ export function CreateGroupScreen({ onBack }: CreateGroupScreenProps) {
             </View>
 
             {formError ? <Text style={styles.errorText}>{formError}</Text> : null}
-            {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
-
             <Pressable
               disabled={isSubmitting}
               onPress={handleCreateGroup}
@@ -614,11 +611,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#a03222',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  successText: {
-    color: '#1f7a4a',
     fontSize: 13,
     lineHeight: 18,
   },

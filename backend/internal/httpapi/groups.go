@@ -26,6 +26,10 @@ type createGroupRequest struct {
 	IsPrivate                bool     `json:"is_private"`
 }
 
+type joinGroupRequest struct {
+	InviteCode string `json:"invite_code"`
+}
+
 type groupResponse struct {
 	ID               string    `json:"id"`
 	OwnerID          string    `json:"owner_id"`
@@ -37,6 +41,32 @@ type groupResponse struct {
 	IsPrivate        bool      `json:"is_private"`
 	InviteCode       string    `json:"invite_code"`
 	CreatedAt        time.Time `json:"created_at"`
+}
+
+type groupListItemResponse struct {
+	groupResponse
+	MemberCount int    `json:"member_count"`
+	Role        string `json:"role"`
+}
+
+func listGroupsHandler(cfg config.Config, db datastore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		groups, err := listGroups(r.Context(), db, userID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Nao foi possivel listar os grupos.")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string][]groupListItemResponse{
+			"groups": groups,
+		})
+	}
 }
 
 func createGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
@@ -67,6 +97,174 @@ func createGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
 
 		writeJSON(w, http.StatusCreated, group)
 	}
+}
+
+func joinGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		var request joinGroupRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			writeError(w, http.StatusBadRequest, "JSON invalido.")
+			return
+		}
+
+		inviteCode := normalizeInviteCode(request.InviteCode)
+		if inviteCode == "" {
+			writeError(w, http.StatusBadRequest, "Informe o codigo do grupo.")
+			return
+		}
+
+		group, err := joinGroup(r.Context(), db, userID, inviteCode)
+		if err != nil {
+			switch {
+			case errors.Is(err, errGroupNotFound):
+				writeError(w, http.StatusNotFound, "Grupo nao encontrado.")
+			case errors.Is(err, errGroupFull):
+				writeError(w, http.StatusConflict, "Este grupo atingiu o limite de participantes.")
+			default:
+				writeError(w, http.StatusInternalServerError, "Nao foi possivel entrar no grupo.")
+			}
+			return
+		}
+
+		writeJSON(w, http.StatusOK, group)
+	}
+}
+
+var (
+	errGroupFull     = errors.New("group is full")
+	errGroupNotFound = errors.New("group not found")
+)
+
+func listGroups(ctx context.Context, db datastore, userID string) ([]groupListItemResponse, error) {
+	rows, err := db.Query(ctx, `
+		select
+			g.id,
+			g.owner_id,
+			g.name,
+			g.description,
+			g.match_scope,
+			g.selected_teams,
+			g.participant_limit,
+			g.is_private,
+			g.invite_code,
+			g.created_at,
+			gm.role,
+			count(all_members.user_id)::int as member_count
+		from groups g
+		join group_members gm on gm.group_id = g.id and gm.user_id = $1
+		left join group_members all_members on all_members.group_id = g.id
+		group by
+			g.id,
+			g.owner_id,
+			g.name,
+			g.description,
+			g.match_scope,
+			g.selected_teams,
+			g.participant_limit,
+			g.is_private,
+			g.invite_code,
+			g.created_at,
+			gm.role
+		order by g.created_at desc
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	groups := []groupListItemResponse{}
+	for rows.Next() {
+		var group groupListItemResponse
+		if err := rows.Scan(
+			&group.ID,
+			&group.OwnerID,
+			&group.Name,
+			&group.Description,
+			&group.MatchScope,
+			&group.SelectedTeams,
+			&group.ParticipantLimit,
+			&group.IsPrivate,
+			&group.InviteCode,
+			&group.CreatedAt,
+			&group.Role,
+			&group.MemberCount,
+		); err != nil {
+			return nil, err
+		}
+
+		groups = append(groups, group)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return groups, nil
+}
+
+func joinGroup(ctx context.Context, db datastore, userID string, inviteCode string) (groupListItemResponse, error) {
+	var groupID string
+	var participantLimit *int
+	var memberCount int
+
+	err := db.QueryRow(ctx, `
+		select
+			g.id,
+			g.participant_limit,
+			count(gm.user_id)::int as member_count
+		from groups g
+		left join group_members gm on gm.group_id = g.id
+		where g.invite_code = $1
+		group by g.id, g.participant_limit
+	`, inviteCode).Scan(&groupID, &participantLimit, &memberCount)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return groupListItemResponse{}, errGroupNotFound
+	}
+	if err != nil {
+		return groupListItemResponse{}, err
+	}
+
+	if participantLimit != nil && memberCount >= *participantLimit {
+		var alreadyMember bool
+		if err := db.QueryRow(ctx, `
+			select exists (
+				select 1 from group_members where group_id = $1 and user_id = $2
+			)
+		`, groupID, userID).Scan(&alreadyMember); err != nil {
+			return groupListItemResponse{}, err
+		}
+
+		if !alreadyMember {
+			return groupListItemResponse{}, errGroupFull
+		}
+	}
+
+	if _, err := db.Exec(ctx, `
+		insert into group_members (group_id, user_id, role)
+		values ($1, $2, 'member')
+		on conflict (group_id, user_id) do nothing
+	`, groupID, userID); err != nil {
+		return groupListItemResponse{}, err
+	}
+
+	groups, err := listGroups(ctx, db, userID)
+	if err != nil {
+		return groupListItemResponse{}, err
+	}
+
+	for _, group := range groups {
+		if group.ID == groupID {
+			return group, nil
+		}
+	}
+
+	return groupListItemResponse{}, errGroupNotFound
 }
 
 func normalizeCreateGroupRequest(request createGroupRequest) (createGroupRequest, error) {
@@ -100,6 +298,15 @@ func normalizeCreateGroupRequest(request createGroupRequest) (createGroupRequest
 	}
 
 	return request, nil
+}
+
+func normalizeInviteCode(inviteCode string) string {
+	inviteCode = strings.TrimSpace(inviteCode)
+	inviteCode = strings.ToUpper(inviteCode)
+	inviteCode = strings.ReplaceAll(inviteCode, " ", "")
+	inviteCode = strings.ReplaceAll(inviteCode, "-", "")
+
+	return inviteCode
 }
 
 func normalizeTeams(teams []string) []string {

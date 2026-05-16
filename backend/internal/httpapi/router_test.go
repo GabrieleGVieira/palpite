@@ -29,12 +29,54 @@ func (db fakeDB) QueryRow(_ context.Context, _ string, _ ...any) pgx.Row {
 	return fakeRow{err: db.err}
 }
 
+func (db fakeDB) Query(_ context.Context, _ string, _ ...any) (pgx.Rows, error) {
+	return fakeRows{err: db.err}, db.err
+}
+
 type fakeRow struct {
 	err error
 }
 
 func (row fakeRow) Scan(_ ...any) error {
 	return row.err
+}
+
+type fakeRows struct {
+	err error
+}
+
+func (rows fakeRows) Close() {}
+
+func (rows fakeRows) Err() error {
+	return rows.err
+}
+
+func (rows fakeRows) CommandTag() pgconn.CommandTag {
+	return pgconn.CommandTag{}
+}
+
+func (rows fakeRows) FieldDescriptions() []pgconn.FieldDescription {
+	return nil
+}
+
+func (rows fakeRows) Next() bool {
+	return false
+}
+
+func (rows fakeRows) Scan(_ ...any) error {
+	return rows.err
+}
+
+func (rows fakeRows) Values() ([]any, error) {
+	return nil, rows.err
+}
+
+func (rows fakeRows) RawValues() [][]byte {
+	return nil
+}
+
+func (rows fakeRows) Conn() *pgx.Conn {
+	return nil
 }
 
 func TestHealthHandler(t *testing.T) {

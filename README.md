@@ -54,7 +54,9 @@ Rotas iniciais:
 ```text
 GET /health
 GET /api/v1/status
+GET /api/v1/groups
 POST /api/v1/groups
+POST /api/v1/groups/join
 ```
 
 ### Frontend

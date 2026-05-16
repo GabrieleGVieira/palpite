@@ -25,7 +25,9 @@ Configure tambem `SUPABASE_URL` e `SUPABASE_KEY` para validar o token recebido d
 ```text
 GET /health
 GET /api/v1/status
+GET /api/v1/groups
 POST /api/v1/groups
+POST /api/v1/groups/join
 ```
 
 As respostas incluem o status da conexao com o banco:
@@ -56,6 +58,24 @@ Payload:
 ```
 
 A rota cria o grupo, gera `invite_code` e adiciona o usuario autenticado em `group_members` com role `owner`.
+
+### Meus grupos
+
+`GET /api/v1/groups` exige `Authorization: Bearer <access_token>` do Supabase Auth e retorna os grupos em que o usuario autenticado participa.
+
+### Entrar no grupo
+
+`POST /api/v1/groups/join` exige `Authorization: Bearer <access_token>` do Supabase Auth.
+
+Payload:
+
+```json
+{
+  "invite_code": "ABCD1234"
+}
+```
+
+A rota adiciona o usuario autenticado em `group_members` como `member`, respeitando o limite de participantes quando existir.
 
 ## Comandos
 
