@@ -27,7 +27,10 @@ GET /health
 GET /api/v1/status
 GET /api/v1/groups
 POST /api/v1/groups
+PUT /api/v1/groups/{groupID}
 POST /api/v1/groups/join
+GET /api/v1/groups/{groupID}/matches
+PUT /api/v1/groups/{groupID}/matches/{matchID}/prediction
 ```
 
 As respostas incluem o status da conexao com o banco:
@@ -76,6 +79,12 @@ Payload:
 ```
 
 A rota adiciona o usuario autenticado em `group_members` como `member`, respeitando o limite de participantes quando existir.
+
+### Jogos e palpites
+
+`GET /api/v1/groups/{groupID}/matches` retorna os jogos do grupo e o palpite do usuario autenticado quando existir.
+
+`PUT /api/v1/groups/{groupID}/matches/{matchID}/prediction` salva ou edita o palpite antes do inicio do jogo.
 
 ## Comandos
 

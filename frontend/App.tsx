@@ -3,17 +3,23 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useAuth } from './src/hooks/useAuth';
 import { CreateGroupScreen } from './src/screens/CreateGroupScreen';
+import { GroupAdminScreen } from './src/screens/GroupAdminScreen';
+import { GroupDetailScreen } from './src/screens/GroupDetailScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { SignupScreen } from './src/screens/SignupScreen';
+import type { Group } from './src/services/groups';
 import { AuthProvider } from './src/store/AuthProvider';
 
 function AppContent() {
   const { isLoading, session } = useAuth();
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
   const [authScreen, setAuthScreen] = useState<'login' | 'signup'>('login');
-  const [appScreen, setAppScreen] = useState<'home' | 'create-group'>('home');
+  const [appScreen, setAppScreen] = useState<
+    'home' | 'create-group' | 'group-detail' | 'group-admin'
+  >('home');
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 
   if (isLoading) {
     return (
@@ -33,7 +39,35 @@ function AppContent() {
       );
     }
 
-    return <HomeScreen onCreateGroup={() => setAppScreen('create-group')} />;
+    if (appScreen === 'group-detail' && selectedGroup) {
+      return (
+        <GroupDetailScreen
+          group={selectedGroup}
+          onBack={() => setAppScreen('home')}
+          onOpenAdmin={() => setAppScreen('group-admin')}
+        />
+      );
+    }
+
+    if (appScreen === 'group-admin' && selectedGroup) {
+      return (
+        <GroupAdminScreen
+          group={selectedGroup}
+          onBack={() => setAppScreen('group-detail')}
+          onGroupUpdated={setSelectedGroup}
+        />
+      );
+    }
+
+    return (
+      <HomeScreen
+        onCreateGroup={() => setAppScreen('create-group')}
+        onOpenGroup={(group) => {
+          setSelectedGroup(group);
+          setAppScreen('group-detail');
+        }}
+      />
+    );
   }
 
   if (!hasSeenOnboarding) {

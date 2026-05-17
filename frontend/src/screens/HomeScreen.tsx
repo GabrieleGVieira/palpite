@@ -13,20 +13,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../hooks/useAuth';
-import {
-  approveJoinRequest,
-  joinGroup,
-  listGroups,
-  listJoinRequests,
-  type Group,
-  type JoinRequest,
-} from '../services/groups';
+import { joinGroup, listGroups, type Group } from '../services/groups';
 
 type HomeScreenProps = {
   onCreateGroup: () => void;
+  onOpenGroup: (group: Group) => void;
 };
 
-export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
+export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
   const { isSubmitting, logout, user } = useAuth();
   const userName = user?.user_metadata.full_name as string | undefined;
   const [groups, setGroups] = useState<Group[]>([]);
@@ -36,8 +30,6 @@ export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [joinSuccess, setJoinSuccess] = useState<string | null>(null);
   const [isJoiningGroup, setIsJoiningGroup] = useState(false);
-  const [joinRequestsByGroup, setJoinRequestsByGroup] = useState<Record<string, JoinRequest[]>>({});
-  const [approvingRequestID, setApprovingRequestID] = useState<string | null>(null);
 
   const loadGroups = useCallback(async () => {
     setGroupsError(null);
@@ -46,7 +38,6 @@ export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
     try {
       const nextGroups = await listGroups();
       setGroups(nextGroups);
-      await loadJoinRequests(nextGroups);
     } catch (error) {
       setGroupsError(
         error instanceof Error ? error.message : 'Nao foi possivel carregar seus grupos.',
@@ -55,17 +46,6 @@ export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
       setIsLoadingGroups(false);
     }
   }, []);
-
-  async function loadJoinRequests(nextGroups: Group[]) {
-    const ownerGroups = nextGroups.filter(
-      (group) => group.role === 'owner' && group.pending_requests_count > 0,
-    );
-    const entries = await Promise.all(
-      ownerGroups.map(async (group) => [group.id, await listJoinRequests(group.id)] as const),
-    );
-
-    setJoinRequestsByGroup(Object.fromEntries(entries));
-  }
 
   useEffect(() => {
     loadGroups();
@@ -95,22 +75,6 @@ export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
       setJoinError(error instanceof Error ? error.message : 'Nao foi possivel entrar no grupo.');
     } finally {
       setIsJoiningGroup(false);
-    }
-  }
-
-  async function handleApproveJoinRequest(groupID: string, request: JoinRequest) {
-    setApprovingRequestID(`${groupID}:${request.user_id}`);
-    setGroupsError(null);
-
-    try {
-      await approveJoinRequest(groupID, request.user_id);
-      await loadGroups();
-    } catch (error) {
-      setGroupsError(
-        error instanceof Error ? error.message : 'Nao foi possivel aprovar a solicitacao.',
-      );
-    } finally {
-      setApprovingRequestID(null);
     }
   }
 
@@ -199,7 +163,7 @@ export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
           ) : null}
 
           {groups.map((group) => (
-            <View key={group.id} style={styles.groupCard}>
+            <Pressable key={group.id} onPress={() => onOpenGroup(group)} style={styles.groupCard}>
               <View style={styles.groupCardHeader}>
                 <View style={styles.groupTitleBlock}>
                   <Text style={styles.groupName}>{group.name}</Text>
@@ -225,34 +189,16 @@ export function HomeScreen({ onCreateGroup }: HomeScreenProps) {
               </Text>
 
               {group.role === 'owner' && group.pending_requests_count > 0 ? (
-                <View style={styles.requestsBox}>
-                  <Text style={styles.requestsTitle}>Solicitacoes pendentes</Text>
-                  {(joinRequestsByGroup[group.id] ?? []).map((request) => {
-                    const requestID = `${group.id}:${request.user_id}`;
-                    const isApproving = approvingRequestID === requestID;
-
-                    return (
-                      <View key={request.user_id} style={styles.requestRow}>
-                        <View style={styles.requestInfo}>
-                          <Text style={styles.requestUser}>
-                            Usuario {request.user_id.slice(0, 8)}
-                          </Text>
-                          <Text style={styles.requestMeta}>Aguardando aprovacao</Text>
-                        </View>
-                        <Pressable
-                          disabled={isApproving}
-                          onPress={() => handleApproveJoinRequest(group.id, request)}
-                          style={[styles.approveButton, isApproving && styles.buttonDisabled]}>
-                          <Text style={styles.approveButtonText}>
-                            {isApproving ? 'Aprovando...' : 'Aprovar'}
-                          </Text>
-                        </Pressable>
-                      </View>
-                    );
-                  })}
+                <View style={styles.requestsSummaryBox}>
+                  <Text style={styles.requestsSummaryText}>
+                    {group.pending_requests_count} solicitacao
+                    {group.pending_requests_count === 1 ? '' : 'es'} pendente
+                    {group.pending_requests_count === 1 ? '' : 's'}
+                  </Text>
+                  <Text style={styles.requestsSummaryHint}>Abra o admin para analisar.</Text>
                 </View>
               ) : null}
-            </View>
+            </Pressable>
           ))}
         </View>
 
@@ -541,6 +487,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     marginTop: 12,
+  },
+  requestsSummaryBox: {
+    backgroundColor: '#edf3e8',
+    borderRadius: 8,
+    marginTop: 14,
+    padding: 12,
+  },
+  requestsSummaryText: {
+    color: '#123d2a',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  requestsSummaryHint: {
+    color: '#486654',
+    fontSize: 12,
+    marginTop: 3,
   },
   requestsBox: {
     borderTopColor: '#edf3e8',
