@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -101,6 +102,8 @@ func groupRankingHandler(cfg config.Config, db datastore) http.HandlerFunc {
 				writeError(w, http.StatusForbidden, "Você precisa participar deste grupo.")
 				return
 			}
+
+			fmt.Printf("Error loading group ranking: %v\n", err)
 
 			writeError(w, http.StatusInternalServerError, "Não foi possível carregar o ranking.")
 			return
@@ -397,7 +400,7 @@ func groupRanking(ctx context.Context, db datastore, userID string, groupID stri
 	ranking := []rankingEntryResponse{}
 	for rows.Next() {
 		var entry rankingEntryResponse
-		if err := rows.Scan(&entry.Position, &entry.UserID, &entry.TotalPoints); err != nil {
+		if err := rows.Scan(&entry.Position, &entry.UserID, &entry.DisplayName, &entry.TotalPoints); err != nil {
 			return nil, err
 		}
 

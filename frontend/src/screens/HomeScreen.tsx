@@ -47,7 +47,7 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
       setGroups(nextGroups);
     } catch (error) {
       setGroupsError(
-        error instanceof Error ? error.message : 'Nao foi possivel carregar seus grupos.',
+        error instanceof Error ? error.message : 'Não foi possível carregar seus grupos.',
       );
     } finally {
       setIsLoadingGroups(false);
@@ -63,7 +63,7 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
       setTotalPoints(score.total_points);
     } catch (error) {
       setScoreError(
-        error instanceof Error ? error.message : 'Nao foi possivel carregar sua pontuacao.',
+        error instanceof Error ? error.message : 'Não foi possível carregar sua pontuação.',
       );
     } finally {
       setIsLoadingScore(false);
@@ -132,12 +132,12 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
       setInviteCode('');
       setJoinSuccess(
         response.membership_status === 'pending'
-          ? 'Solicitacao enviada. Aguarde a aprovacao do dono do grupo.'
-          : 'Voce entrou no grupo.',
+          ? 'Solicitação enviada. Aguarde a aprovação do dono do grupo.'
+          : 'Você entrou no grupo.',
       );
       await refreshHome();
     } catch (error) {
-      setJoinError(error instanceof Error ? error.message : 'Nao foi possivel entrar no grupo.');
+      setJoinError(error instanceof Error ? error.message : 'Não foi possível entrar no grupo.');
     } finally {
       setIsJoiningGroup(false);
     }
@@ -159,21 +159,31 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
               style={styles.logoImage}
             />
           </View>
-          <Text style={styles.title}>PalpitAI</Text>
+          <Text style={styles.title}>Olá, {userName || 'campeão'}</Text>
           <Text style={styles.subtitle}>
-            Sessao ativa via Supabase Auth. Seus grupos, palpites e ranking entram aqui.
+            Aqui você vê seus grupos, entra em bolões e confere seus pontos.
           </Text>
-        </View>
 
-        <View style={styles.sessionBox}>
-          <Text style={styles.sessionLabel}>Conta conectada</Text>
-          <Text style={styles.sessionName}>{userName || user?.email || 'Usuario'}</Text>
-          {user?.email ? <Text style={styles.sessionEmail}>{user.email}</Text> : null}
+          <View style={styles.actionTabs}>
+            <Pressable onPress={onCreateGroup} style={[styles.tabButton, styles.tabPrimary]}>
+              <Text style={styles.tabButtonText}>Criar grupo</Text>
+            </Pressable>
+            <Pressable
+              disabled={isSubmitting}
+              onPress={logout}
+              style={[
+                styles.tabButton,
+                styles.tabSecondary,
+                isSubmitting && styles.buttonDisabled,
+              ]}>
+              <Text style={styles.tabSecondaryText}>{isSubmitting ? 'Saindo...' : 'Sair'}</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.scoreBox}>
           <View>
-            <Text style={styles.scoreLabel}>Pontuacao geral</Text>
+            <Text style={styles.scoreLabel}>Pontuação geral</Text>
             <Text style={styles.scoreHint}>Somando todos os grupos ativos</Text>
           </View>
           <Text style={styles.scoreValue}>{isLoadingScore ? '...' : totalPoints}</Text>
@@ -186,14 +196,14 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
         <View style={styles.joinBox}>
           <View>
             <Text style={styles.joinTitle}>Entrar em um grupo</Text>
-            <Text style={styles.joinSubtitle}>Use o codigo de convite recebido.</Text>
+            <Text style={styles.joinSubtitle}>Use o código de convite recebido.</Text>
           </View>
 
           <View style={styles.joinForm}>
             <TextInput
               autoCapitalize="characters"
               onChangeText={setInviteCode}
-              placeholder="CODIGO"
+              placeholder="CÓDIGO"
               placeholderTextColor="#7c8898"
               style={styles.inviteInput}
               value={inviteCode}
@@ -214,7 +224,7 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.sectionTitle}>Meus grupos</Text>
-              <Text style={styles.sectionSubtitle}>Bolões em que voce participa</Text>
+              <Text style={styles.sectionSubtitle}>Bolões em que você participa</Text>
             </View>
             <Pressable onPress={refreshHome} style={styles.refreshButton}>
               <Text style={styles.refreshButtonText}>Atualizar</Text>
@@ -234,7 +244,7 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
             <View style={styles.emptyBox}>
               <Text style={styles.emptyTitle}>Nenhum grupo ainda</Text>
               <Text style={styles.emptyText}>
-                Crie seu primeiro bolao da Copa para convidar sua turma.
+                Crie seu primeiro bolão da Copa para convidar sua turma.
               </Text>
             </View>
           ) : null}
@@ -262,31 +272,22 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
               <Text style={styles.groupScope}>
                 {group.match_scope === 'all'
                   ? 'Todos os jogos da Copa'
-                  : `Selecoes: ${group.selected_teams.join(', ')}`}
+                  : `Seleções: ${group.selected_teams.join(', ')}`}
               </Text>
 
               {group.role === 'owner' && group.pending_requests_count > 0 ? (
                 <View style={styles.requestsSummaryBox}>
                   <Text style={styles.requestsSummaryText}>
-                    {group.pending_requests_count} solicitacao
-                    {group.pending_requests_count === 1 ? '' : 'es'} pendente
-                    {group.pending_requests_count === 1 ? '' : 's'}
+                    {group.pending_requests_count}{' '}
+                    {group.pending_requests_count === 1
+                      ? 'solicitação pendente'
+                      : 'solicitações pendentes'}
                   </Text>
                   <Text style={styles.requestsSummaryHint}>Abra o admin para analisar.</Text>
                 </View>
               ) : null}
             </Pressable>
           ))}
-        </View>
-
-        <View style={styles.actions}>
-          <Pressable onPress={onCreateGroup} style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Criar grupo</Text>
-          </Pressable>
-
-          <Pressable disabled={isSubmitting} onPress={logout} style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>{isSubmitting ? 'Saindo...' : 'Sair'}</Text>
-          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -648,6 +649,37 @@ const styles = StyleSheet.create({
   approveButtonText: {
     color: '#ffffff',
     fontSize: 13,
+    fontWeight: '800',
+  },
+  actionTabs: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 18,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: 'center',
+    borderRadius: 999,
+    justifyContent: 'center',
+    minHeight: 48,
+    paddingHorizontal: 12,
+  },
+  tabPrimary: {
+    backgroundColor: '#1f7a4a',
+  },
+  tabSecondary: {
+    backgroundColor: '#ffffff',
+    borderColor: '#1f7a4a',
+    borderWidth: 1,
+  },
+  tabButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tabSecondaryText: {
+    color: '#1f7a4a',
+    fontSize: 14,
     fontWeight: '800',
   },
   actions: {
