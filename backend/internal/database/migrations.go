@@ -28,10 +28,14 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 			group_id uuid not null references groups(id) on delete cascade,
 			user_id uuid not null,
 			role text not null check (role in ('owner', 'member')),
+			display_name text not null default '',
 			status text not null default 'active',
 			joined_at timestamptz not null default now(),
 			primary key (group_id, user_id)
 		);
+
+		alter table group_members
+			add column if not exists display_name text not null default '';
 
 		alter table group_members
 			add column if not exists status text not null default 'active';
@@ -120,18 +124,6 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 
 		alter table predictions
 			add column if not exists scored_at timestamptz;
-
-		insert into world_cup_matches (home_team, away_team, stage, kickoff_at)
-		values
-			('Brasil', 'Argentina', 'Fase de grupos', '2026-06-12 16:00:00+00'),
-			('Brasil', 'Alemanha', 'Fase de grupos', '2026-06-16 19:00:00+00'),
-			('Brasil', 'Franca', 'Fase de grupos', '2026-06-21 22:00:00+00'),
-			('Portugal', 'Espanha', 'Fase de grupos', '2026-06-13 18:00:00+00'),
-			('Inglaterra', 'Holanda', 'Fase de grupos', '2026-06-17 21:00:00+00'),
-			('Estados Unidos', 'Mexico', 'Fase de grupos', '2026-06-18 00:00:00+00'),
-			('Uruguai', 'Colombia', 'Fase de grupos', '2026-06-22 19:00:00+00'),
-			('Japao', 'Coreia do Sul', 'Fase de grupos', '2026-06-23 16:00:00+00')
-		on conflict (home_team, away_team, kickoff_at) do nothing;
 	`)
 
 	return err

@@ -62,7 +62,7 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
         setDrafts(buildDrafts(nextMatches));
       } catch (loadError) {
         setError(
-          loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar jogos.',
+          loadError instanceof Error ? loadError.message : 'Não foi possível carregar jogos.',
         );
       } finally {
         if (showLoading) {
@@ -85,7 +85,7 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
         setRanking(nextRanking);
       } catch (loadError) {
         setRankingError(
-          loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar o ranking.',
+          loadError instanceof Error ? loadError.message : 'Não foi possível carregar o ranking.',
         );
       } finally {
         if (showLoading) {
@@ -199,7 +199,7 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
       setSuccessMessage('Palpite salvo.');
     } catch (saveError) {
       setError(
-        saveError instanceof Error ? saveError.message : 'Nao foi possivel salvar o palpite.',
+        saveError instanceof Error ? saveError.message : 'Não foi possível salvar o palpite.',
       );
     } finally {
       setSavingMatchID(null);
@@ -268,7 +268,7 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
         {activeTab === 'matches' && !isLoading && matches.length === 0 ? (
           <View style={styles.emptyBox}>
             <Text style={styles.emptyTitle}>Nenhum jogo encontrado</Text>
-            <Text style={styles.emptyText}>A lista de jogos desse bolao ainda esta vazia.</Text>
+            <Text style={styles.emptyText}>A lista de jogos desse bolão ainda esta vazia.</Text>
           </View>
         ) : null}
 
@@ -332,7 +332,7 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
                     </View>
                   ) : (
                     <Text style={[styles.predictionText, styles.predictionTextSolo]}>
-                      Voce ainda nao palpitou neste jogo.
+                      Você ainda não palpitou neste jogo.
                     </Text>
                   )}
 
@@ -367,7 +367,7 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
         {activeTab === 'ranking' && !isLoadingRanking && !rankingError && ranking.length === 0 ? (
           <View style={styles.emptyBox}>
             <Text style={styles.emptyTitle}>Ranking vazio</Text>
-            <Text style={styles.emptyText}>Os participantes ainda nao pontuaram neste grupo.</Text>
+            <Text style={styles.emptyText}>Os participantes ainda não pontuaram neste grupo.</Text>
           </View>
         ) : null}
 
@@ -378,7 +378,9 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
                   <Text style={styles.positionText}>#{entry.position}</Text>
                 </View>
                 <View style={styles.rankingUserInfo}>
-                  <Text style={styles.rankingUser}>{formatUserID(entry.user_id)}</Text>
+                  <Text style={styles.rankingUser}>
+                    {entry.display_name || formatUserID(entry.user_id)}
+                  </Text>
                   <Text style={styles.rankingMeta}>Participante do grupo</Text>
                 </View>
                 <Text style={styles.rankingPoints}>{entry.total_points} pts</Text>

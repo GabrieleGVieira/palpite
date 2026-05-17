@@ -52,7 +52,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
       setRequests(nextRequests);
     } catch (loadError) {
       setError(
-        loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar solicitacoes.',
+        loadError instanceof Error ? loadError.message : 'Não foi possivel carregar solicitações.',
       );
     } finally {
       setIsLoadingRequests(false);
@@ -91,7 +91,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
       setSuccessMessage('Grupo atualizado.');
     } catch (saveError) {
       setError(
-        saveError instanceof Error ? saveError.message : 'Nao foi possivel atualizar o grupo.',
+        saveError instanceof Error ? saveError.message : 'Não foi possivel atualizar o grupo.',
       );
     } finally {
       setIsSaving(false);
@@ -113,12 +113,12 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
         member_count: group.member_count + 1,
         pending_requests_count: Math.max(group.pending_requests_count - 1, 0),
       });
-      setSuccessMessage('Solicitacao aprovada.');
+      setSuccessMessage('Solicitação aprovada.');
     } catch (approveError) {
       setError(
         approveError instanceof Error
           ? approveError.message
-          : 'Nao foi possivel aprovar a solicitacao.',
+          : 'Não foi possivel aprovar a solicitação.',
       );
     } finally {
       setApprovingUserID(null);
@@ -142,7 +142,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
         {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Informacoes</Text>
+          <Text style={styles.cardTitle}>Informações</Text>
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Nome</Text>
@@ -157,11 +157,11 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Descricao</Text>
+            <Text style={styles.label}>Descrição</Text>
             <TextInput
               multiline
               onChangeText={setDescription}
-              placeholder="Descricao do grupo"
+              placeholder="Descrição do grupo"
               placeholderTextColor="#7c8898"
               style={[styles.input, styles.textArea]}
               textAlignVertical="top"
@@ -200,7 +200,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
           <View style={styles.switchBoxWide}>
             <View>
               <Text style={styles.switchTitle}>Privado</Text>
-              <Text style={styles.switchSubtitle}>Novos membros precisam de aprovacao</Text>
+              <Text style={styles.switchSubtitle}>Novos membros precisam de aprovação</Text>
             </View>
             <Switch
               onValueChange={setIsPrivate}
@@ -221,8 +221,8 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
         <View style={styles.card}>
           <View style={styles.requestsHeader}>
             <View>
-              <Text style={styles.cardTitle}>Solicitacoes</Text>
-              <Text style={styles.cardSubtitle}>Usuarios aguardando aceite</Text>
+              <Text style={styles.cardTitle}>Solicitações</Text>
+              <Text style={styles.cardSubtitle}>Usuários aguardando aceite</Text>
             </View>
             <Pressable onPress={loadRequests} style={styles.refreshButton}>
               <Text style={styles.refreshButtonText}>Atualizar</Text>
@@ -237,7 +237,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
           ) : null}
 
           {!isLoadingRequests && requests.length === 0 ? (
-            <Text style={styles.emptyText}>Nenhuma solicitacao pendente.</Text>
+            <Text style={styles.emptyText}>Nenhuma solicitação pendente.</Text>
           ) : null}
 
           {requests.map((request) => {
@@ -246,7 +246,9 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
             return (
               <View key={request.user_id} style={styles.requestRow}>
                 <View style={styles.requestInfo}>
-                  <Text style={styles.requestUser}>Usuario {request.user_id.slice(0, 8)}</Text>
+                  <Text style={styles.requestUser}>
+                    {request.display_name || `Usuário ${request.user_id.slice(0, 8)}`}
+                  </Text>
                   <Text style={styles.requestMeta}>Solicitou entrada</Text>
                 </View>
                 <Pressable

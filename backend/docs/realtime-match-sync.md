@@ -6,7 +6,7 @@ Arquitetura MVP para sincronizar jogos da Copa via `football-data.org`, atualiza
 
 - Buscar jogos em `GET /v4/competitions/WC/matches`.
 - Evitar polling desnecessario.
-- Nao reprocessar jogos sem mudanca.
+- Não reprocessar jogos sem mudanca.
 - Atualizar ranking somente quando pontos mudarem.
 - Emitir eventos WebSocket somente quando houver diff.
 - Manter a arquitetura pronta para Redis/pubsub sem exigir Redis no MVP.
@@ -32,7 +32,7 @@ No MVP, `matchsync` publica eventos no `realtime.Hub`, que entrega para clientes
 2. Cliente chama `football-data.org` respeitando 10 req/min.
 3. Backend normaliza status e placar.
 4. Backend compara API x DB.
-5. Se nao mudou: nao escreve no DB e nao emite evento.
+5. Se não mudou: não escreve no DB e não emite evento.
 6. Se mudou: atualiza `world_cup_matches`.
 7. Se houver gols novos: insere em `match_events` e emite `match.goal`.
 8. Se placar `live` ou `finished`: recalcula pontos alterados.
@@ -58,7 +58,7 @@ O `upsert` usa `IS DISTINCT FROM` nos campos relevantes:
 - `home_score`
 - `away_score`
 
-Se nada mudou, `RowsAffected = 0`; logo, nao recalcula ranking nem publica websocket.
+Se nada mudou, `RowsAffected = 0`; logo, não recalcula ranking nem publica websocket.
 
 Para eventos:
 

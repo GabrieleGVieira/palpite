@@ -9,7 +9,7 @@ type OnboardingScreenProps = {
 
 const steps = [
   {
-    eyebrow: 'Bolao com amigos',
+    eyebrow: 'Bolão com amigos',
     title: 'Crie grupos e dispute rodada por rodada',
     description:
       'Monte bolões privados, convide sua turma e acompanhe quem está subindo no ranking.',

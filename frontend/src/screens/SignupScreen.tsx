@@ -167,7 +167,7 @@ export function SignupScreen({ onBackToLogin }: SignupScreenProps) {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Ja tem conta?</Text>
+            <Text style={styles.footerText}>Já tem conta?</Text>
             <Pressable onPress={onBackToLogin}>
               <Text style={styles.footerLink}> Entrar</Text>
             </Pressable>

@@ -1,14 +1,14 @@
 # PalpitAI
 
-O bolao inteligente: app mobile de Copa do Mundo com grupos privados, rankings, palpites em tempo real e insights de IA.
+O bolão inteligente: app mobile de Copa do Mundo com grupos privados, rankings, palpites em tempo real e insights de IA.
 
 ## Stack
 
-| Camada | Tecnologias |
-| ------ | ----------- |
-| Mobile | React Native, Expo, TypeScript, Supabase Auth |
-| API | Go, net/http |
-| Qualidade | ESLint, Prettier, Husky, Commitlint |
+| Camada    | Tecnologias                                   |
+| --------- | --------------------------------------------- |
+| Mobile    | React Native, Expo, TypeScript, Supabase Auth |
+| API       | Go, net/http                                  |
+| Qualidade | ESLint, Prettier, Husky, Commitlint           |
 
 ## Estrutura
 

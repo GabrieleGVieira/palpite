@@ -67,6 +67,7 @@ type joinGroupResponse struct {
 type joinRequestResponse struct {
 	RequestedAt time.Time `json:"requested_at"`
 	UserID      string    `json:"user_id"`
+	DisplayName string    `json:"display_name"`
 }
 
 func listGroupsHandler(cfg config.Config, db datastore) http.HandlerFunc {
@@ -79,7 +80,7 @@ func listGroupsHandler(cfg config.Config, db datastore) http.HandlerFunc {
 
 		groups, err := listGroups(r.Context(), db, userID)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Nao foi possivel listar os grupos.")
+			writeError(w, http.StatusInternalServerError, "Não foi possivel listar os grupos.")
 			return
 		}
 
@@ -91,7 +92,7 @@ func listGroupsHandler(cfg config.Config, db datastore) http.HandlerFunc {
 
 func createGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := userIDFromRequest(r, cfg)
+		userID, displayName, err := userIDAndDisplayNameFromRequest(r, cfg)
 		if err != nil {
 			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
 			return
@@ -109,9 +110,9 @@ func createGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
 			return
 		}
 
-		group, err := createGroup(r.Context(), db, userID, normalizedRequest)
+		group, err := createGroup(r.Context(), db, userID, displayName, normalizedRequest)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Nao foi possivel criar o grupo.")
+			writeError(w, http.StatusInternalServerError, "Não foi possivel criar o grupo.")
 			return
 		}
 
@@ -142,11 +143,11 @@ func updateGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
 		group, err := updateGroup(r.Context(), db, ownerID, r.PathValue("groupID"), normalizedRequest)
 		if err != nil {
 			if errors.Is(err, errGroupNotFound) {
-				writeError(w, http.StatusNotFound, "Grupo nao encontrado.")
+				writeError(w, http.StatusNotFound, "Grupo não encontrado.")
 				return
 			}
 
-			writeError(w, http.StatusInternalServerError, "Nao foi possivel atualizar o grupo.")
+			writeError(w, http.StatusInternalServerError, "Não foi possivel atualizar o grupo.")
 			return
 		}
 
@@ -156,7 +157,7 @@ func updateGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
 
 func joinGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := userIDFromRequest(r, cfg)
+		userID, displayName, err := userIDAndDisplayNameFromRequest(r, cfg)
 		if err != nil {
 			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
 			return
@@ -174,15 +175,15 @@ func joinGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
 			return
 		}
 
-		response, err := joinGroup(r.Context(), db, userID, inviteCode)
+		response, err := joinGroup(r.Context(), db, userID, displayName, inviteCode)
 		if err != nil {
 			switch {
 			case errors.Is(err, errGroupNotFound):
-				writeError(w, http.StatusNotFound, "Grupo nao encontrado.")
+				writeError(w, http.StatusNotFound, "Grupo não encontrado.")
 			case errors.Is(err, errGroupFull):
 				writeError(w, http.StatusConflict, "Este grupo atingiu o limite de participantes.")
 			default:
-				writeError(w, http.StatusInternalServerError, "Nao foi possivel entrar no grupo.")
+				writeError(w, http.StatusInternalServerError, "Não foi possivel entrar no grupo.")
 			}
 			return
 		}
@@ -201,7 +202,7 @@ func listJoinRequestsHandler(cfg config.Config, db datastore) http.HandlerFunc {
 
 		requests, err := listJoinRequests(r.Context(), db, userID, r.PathValue("groupID"))
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Nao foi possivel listar as solicitacoes.")
+			writeError(w, http.StatusInternalServerError, "Não foi possivel listar as solicitacoes.")
 			return
 		}
 
@@ -222,11 +223,11 @@ func approveJoinRequestHandler(cfg config.Config, db datastore) http.HandlerFunc
 		if err := approveJoinRequest(r.Context(), db, ownerID, r.PathValue("groupID"), r.PathValue("userID")); err != nil {
 			switch {
 			case errors.Is(err, errGroupNotFound):
-				writeError(w, http.StatusNotFound, "Solicitacao nao encontrada.")
+				writeError(w, http.StatusNotFound, "Solicitacao não encontrada.")
 			case errors.Is(err, errGroupFull):
 				writeError(w, http.StatusConflict, "Este grupo atingiu o limite de participantes.")
 			default:
-				writeError(w, http.StatusInternalServerError, "Nao foi possivel aprovar a solicitacao.")
+				writeError(w, http.StatusInternalServerError, "Não foi possivel aprovar a solicitacao.")
 			}
 			return
 		}
@@ -315,7 +316,7 @@ func listGroups(ctx context.Context, db datastore, userID string) ([]groupListIt
 	return groups, nil
 }
 
-func joinGroup(ctx context.Context, db datastore, userID string, inviteCode string) (joinGroupResponse, error) {
+func joinGroup(ctx context.Context, db datastore, userID string, displayName string, inviteCode string) (joinGroupResponse, error) {
 	var groupID string
 	var isPrivate bool
 	var participantLimit *int
@@ -365,10 +366,10 @@ func joinGroup(ctx context.Context, db datastore, userID string, inviteCode stri
 	}
 
 	if _, err := db.Exec(ctx, `
-		insert into group_members (group_id, user_id, role, status)
-		values ($1, $2, 'member', $3)
+		insert into group_members (group_id, user_id, role, status, display_name)
+		values ($1, $2, 'member', $3, $4)
 		on conflict (group_id, user_id) do nothing
-	`, groupID, userID, nextStatus); err != nil {
+	`, groupID, userID, nextStatus, displayName); err != nil {
 		return joinGroupResponse{}, err
 	}
 
@@ -447,6 +448,7 @@ func listJoinRequests(ctx context.Context, db datastore, ownerID string, groupID
 	rows, err := db.Query(ctx, `
 		select
 			gm.user_id,
+			gm.display_name,
 			gm.joined_at
 		from group_members gm
 		join groups g on g.id = gm.group_id
@@ -463,7 +465,7 @@ func listJoinRequests(ctx context.Context, db datastore, ownerID string, groupID
 	requests := []joinRequestResponse{}
 	for rows.Next() {
 		var request joinRequestResponse
-		if err := rows.Scan(&request.UserID, &request.RequestedAt); err != nil {
+		if err := rows.Scan(&request.UserID, &request.DisplayName, &request.RequestedAt); err != nil {
 			return nil, err
 		}
 
@@ -591,7 +593,7 @@ func normalizeTeams(teams []string) []string {
 	return normalizedTeams
 }
 
-func createGroup(ctx context.Context, db datastore, userID string, request createGroupRequest) (groupResponse, error) {
+func createGroup(ctx context.Context, db datastore, userID string, displayName string, request createGroupRequest) (groupResponse, error) {
 	var group groupResponse
 
 	for range 5 {
@@ -626,8 +628,8 @@ func createGroup(ctx context.Context, db datastore, userID string, request creat
 					created_at
 			),
 			inserted_member as (
-				insert into group_members (group_id, user_id, role)
-				select id, owner_id, 'owner' from inserted_group
+				insert into group_members (group_id, user_id, role, display_name)
+				select id, owner_id, 'owner', $2 from inserted_group
 			)
 			select
 				id,
@@ -643,6 +645,7 @@ func createGroup(ctx context.Context, db datastore, userID string, request creat
 			from inserted_group
 		`,
 			userID,
+			displayName,
 			request.Name,
 			request.Description,
 			request.MatchScope,

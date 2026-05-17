@@ -20,57 +20,58 @@ type CreateGroupScreenProps = {
   onGroupCreated: () => void;
 };
 
-const matchScopes = ['Todos os jogos', 'Selecionar selecoes'];
+const matchScopes = ['Todos os jogos', 'Selecionar seleções'];
 
 const worldCupTeams = [
   'Brasil',
-  'Africa do Sul',
+  'África do Sul',
   'Alemanha',
-  'Argelia',
+  'Arábia Saudita',
+  'Argélia',
   'Argentina',
-  'Australia',
-  'Austria',
-  'Belgica',
-  'Bosnia-Herzegovina',
+  'Austrália',
+  'Áustria',
+  'Bélgica',
+  'Bósnia e Herzegovina',
   'Cabo Verde',
-  'Canada',
+  'Canadá',
   'Colombia',
   'Coreia do Sul',
   'Costa do Marfim',
-  'Croacia',
-  'Curacao',
-  'DR Congo',
+  'Croácia',
+  'Curação',
   'Egito',
   'Equador',
   'Espanha',
   'Estados Unidos',
-  'Franca',
+  'França',
   'Gana',
   'Haiti',
   'Holanda',
   'Inglaterra',
-  'Ira',
+  'Irã',
   'Iraque',
-  'Japao',
-  'Jordania',
+  'Japão',
+  'Jordânia',
   'Marrocos',
-  'Mexico',
+  'México',
   'Noruega',
-  'Nova Zelandia',
-  'Panama',
+  'Nova Zelândia',
+  'Panamá',
   'Paraguai',
   'Portugal',
   'Qatar',
-  'Republica Tcheca',
-  'Arabia Saudita',
-  'Escocia',
+  'Rep. Democrática do Congo',
+  'República Tcheca',
+  'Arábia Saudita',
+  'Escócia',
   'Senegal',
   'Suecia',
-  'Suica',
-  'Tunisia',
+  'Suíça',
+  'Tunísia',
   'Turquia',
   'Uruguai',
-  'Uzbequistao',
+  'Uzbequistão',
 ];
 
 export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenProps) {
@@ -94,8 +95,8 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
       return;
     }
 
-    if (matchScope === 'Selecionar selecoes' && selectedTeams.length === 0) {
-      setFormError('Selecione pelo menos uma selecao para o bolao.');
+    if (matchScope === 'Selecionar seleções' && selectedTeams.length === 0) {
+      setFormError('Selecione pelo menos uma seleção para o bolão.');
       return;
     }
 
@@ -118,12 +119,12 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
         match_scope: matchScope === 'Todos os jogos' ? 'all' : 'selected',
         name: groupName,
         participant_limit: hasUnlimitedParticipants ? null : Number(participantLimit),
-        selected_teams: matchScope === 'Selecionar selecoes' ? selectedTeams : [],
+        selected_teams: matchScope === 'Selecionar seleções' ? selectedTeams : [],
       });
 
       onGroupCreated();
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Nao foi possivel criar o grupo.');
+      setFormError(error instanceof Error ? error.message : 'Não foi possivel criar o grupo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -163,7 +164,7 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
           <View style={styles.header}>
             <Text style={styles.title}>Criar grupo</Text>
             <Text style={styles.subtitle}>
-              Monte um bolao da Copa do Mundo, defina quais jogos entram e convide sua turma para
+              Monte um bolão da Copa do Mundo, defina quais jogos entram e convide sua turma para
               disputar o ranking.
             </Text>
           </View>
@@ -174,7 +175,7 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
               <TextInput
                 autoCapitalize="words"
                 onChangeText={setGroupName}
-                placeholder="Ex: Familia na Copa"
+                placeholder="Ex: Família na Copa"
                 placeholderTextColor="#7c8898"
                 style={styles.input}
                 value={groupName}
@@ -182,11 +183,11 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Descricao</Text>
+              <Text style={styles.label}>Descrição</Text>
               <TextInput
                 multiline
                 onChangeText={setDescription}
-                placeholder="Regras, combinados ou premio simbolico"
+                placeholder="Regras, combinados ou prêmio simbólico"
                 placeholderTextColor="#7c8898"
                 style={[styles.input, styles.textArea]}
                 textAlignVertical="top"
@@ -195,7 +196,7 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Jogos do bolao</Text>
+              <Text style={styles.label}>Jogos do bolão</Text>
               <View style={styles.segmentedControl}>
                 {matchScopes.map((item) => {
                   const isSelected = item === matchScope;
@@ -218,9 +219,9 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
               </View>
             </View>
 
-            {matchScope === 'Selecionar selecoes' ? (
+            {matchScope === 'Selecionar seleções' ? (
               <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Selecoes</Text>
+                <Text style={styles.label}>Seleções</Text>
                 <View style={styles.selectBox}>
                   <Pressable
                     onPress={() => setIsTeamDropdownOpen((isOpen) => !isOpen)}
@@ -228,7 +229,7 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
                     <Text style={styles.dropdownButtonText}>
                       {selectedTeams.length > 0
                         ? `${selectedTeams.length} selecionada${selectedTeams.length > 1 ? 's' : ''}`
-                        : 'Escolha uma ou mais selecoes'}
+                        : 'Escolha uma ou mais seleções'}
                     </Text>
                     <Text style={styles.dropdownIcon}>{isTeamDropdownOpen ? '⌃' : '⌄'}</Text>
                   </Pressable>
@@ -242,7 +243,7 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
                       <TextInput
                         autoCapitalize="words"
                         onChangeText={setTeamSearch}
-                        placeholder="Pesquisar selecao"
+                        placeholder="Pesquisar seleção"
                         placeholderTextColor="#7c8898"
                         style={styles.searchInput}
                         value={teamSearch}
@@ -270,7 +271,7 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
                         })}
 
                         {filteredTeams.length === 0 ? (
-                          <Text style={styles.emptySearchText}>Nenhuma selecao encontrada.</Text>
+                          <Text style={styles.emptySearchText}>Nenhuma seleção encontrada.</Text>
                         ) : null}
                       </ScrollView>
                     </View>
@@ -324,8 +325,8 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
 
             <View style={styles.rulesBox}>
               <Text style={styles.rulesTitle}>Regras iniciais</Text>
-              <Text style={styles.rulesText}>3 pontos por placar exato</Text>
-              <Text style={styles.rulesText}>1 ponto por vencedor ou empate correto</Text>
+              <Text style={styles.rulesText}>10 pontos por placar exato</Text>
+              <Text style={styles.rulesText}>5 pontos por vencedor ou empate correto</Text>
               <Text style={styles.rulesText}>Palpites fecham no inicio de cada jogo</Text>
             </View>
 

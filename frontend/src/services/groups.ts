@@ -40,6 +40,7 @@ export type Group = {
 export type JoinRequest = {
   requested_at: string;
   user_id: string;
+  display_name: string;
 };
 
 export type Prediction = {
@@ -68,6 +69,7 @@ export type RankingEntry = {
   position: number;
   total_points: number;
   user_id: string;
+  display_name: string;
 };
 
 export type UserScore = {
@@ -129,7 +131,7 @@ export async function createGroup(payload: CreateGroupPayload) {
       body: JSON.stringify(payload),
       method: 'POST',
     },
-    'Nao foi possivel criar o grupo.',
+    'Não foi possivel criar o grupo.',
   );
 
   return data as Group;
@@ -139,7 +141,7 @@ export async function listGroups() {
   const data = await requestAPI(
     '/api/v1/groups',
     undefined,
-    'Nao foi possivel carregar seus grupos.',
+    'Não foi possivel carregar seus grupos.',
   );
 
   return (data as ListGroupsResponse).groups;
@@ -149,7 +151,7 @@ export async function getUserScore() {
   const data = await requestAPI(
     '/api/v1/me/score',
     undefined,
-    'Nao foi possivel carregar sua pontuacao.',
+    'Não foi possivel carregar sua pontuacao.',
   );
 
   return data as UserScore;
@@ -162,7 +164,7 @@ export async function joinGroup(inviteCode: string) {
       body: JSON.stringify({ invite_code: inviteCode }),
       method: 'POST',
     },
-    'Nao foi possivel entrar no grupo.',
+    'Não foi possivel entrar no grupo.',
   );
 
   return data as JoinGroupResponse;
@@ -172,7 +174,7 @@ export async function listJoinRequests(groupID: string) {
   const data = await requestAPI(
     `/api/v1/groups/${groupID}/join-requests`,
     undefined,
-    'Nao foi possivel carregar as solicitacoes.',
+    'Não foi possivel carregar as solicitacoes.',
   );
 
   return (data as ListJoinRequestsResponse).requests;
@@ -184,7 +186,7 @@ export async function approveJoinRequest(groupID: string, userID: string) {
     {
       method: 'POST',
     },
-    'Nao foi possivel aprovar a solicitacao.',
+    'Não foi possivel aprovar a solicitacao.',
   );
 }
 
@@ -195,7 +197,7 @@ export async function updateGroup(groupID: string, payload: UpdateGroupPayload) 
       body: JSON.stringify(payload),
       method: 'PUT',
     },
-    'Nao foi possivel atualizar o grupo.',
+    'Não foi possivel atualizar o grupo.',
   );
 
   return data as Group;
@@ -205,7 +207,7 @@ export async function listGroupMatches(groupID: string) {
   const data = await requestAPI(
     `/api/v1/groups/${groupID}/matches`,
     undefined,
-    'Nao foi possivel carregar os jogos.',
+    'Não foi possivel carregar os jogos.',
   );
 
   return (data as ListGroupMatchesResponse).matches;
@@ -215,7 +217,7 @@ export async function listGroupRanking(groupID: string) {
   const data = await requestAPI(
     `/api/v1/groups/${groupID}/ranking`,
     undefined,
-    'Nao foi possivel carregar o ranking.',
+    'Não foi possivel carregar o ranking.',
   );
 
   return (data as GroupRankingResponse).ranking;
@@ -232,7 +234,7 @@ export async function savePrediction(
       body: JSON.stringify(payload),
       method: 'PUT',
     },
-    'Nao foi possivel salvar o palpite.',
+    'Não foi possivel salvar o palpite.',
   );
 
   return data as Prediction;
@@ -260,7 +262,7 @@ async function requestAPI(path: string, init: RequestInit | undefined, fallbackE
     });
   } catch {
     throw new Error(
-      `Nao foi possivel acessar a API em ${apiURL}. Verifique se o backend esta rodando e se o celular esta na mesma rede.`,
+      `Não foi possivel acessar a API em ${apiURL}. Verifique se o backend esta rodando e se o celular esta na mesma rede.`,
     );
   }
 

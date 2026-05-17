@@ -16,7 +16,7 @@ make run
 
 A API inicia em `http://localhost:3000`.
 
-Configure `DATABASE_URL` no `.env` com a connection string PostgreSQL do Supabase. O backend adiciona `sslmode=require` automaticamente quando a URL nao informa `sslmode`.
+Configure `DATABASE_URL` no `.env` com a connection string PostgreSQL do Supabase. O backend adiciona `sslmode=require` automaticamente quando a URL não informa `sslmode`.
 
 Configure tambem `SUPABASE_URL` e `SUPABASE_KEY` para validar o token recebido do Supabase Auth.
 
@@ -68,7 +68,7 @@ Payload:
 ```json
 {
   "name": "Familia na Copa",
-  "description": "Bolao da familia",
+  "description": "Bolão da familia",
   "match_scope": "selected",
   "selected_teams": ["Brasil", "Argentina"],
   "participant_limit": null,

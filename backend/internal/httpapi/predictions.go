@@ -49,6 +49,7 @@ type rankingEntryResponse struct {
 	Position    int    `json:"position"`
 	TotalPoints int    `json:"total_points"`
 	UserID      string `json:"user_id"`
+	DisplayName string `json:"display_name"`
 }
 
 type matchDetails struct {
@@ -76,7 +77,7 @@ func userScoreHandler(cfg config.Config, db datastore) http.HandlerFunc {
 
 		totalScore, err := userTotalScore(r.Context(), db, userID)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Nao foi possivel carregar sua pontuacao.")
+			writeError(w, http.StatusInternalServerError, "Não foi possivel carregar sua pontuacao.")
 			return
 		}
 
@@ -97,11 +98,11 @@ func groupRankingHandler(cfg config.Config, db datastore) http.HandlerFunc {
 		ranking, err := groupRanking(r.Context(), db, userID, r.PathValue("groupID"))
 		if err != nil {
 			if errors.Is(err, errMembershipRequired) {
-				writeError(w, http.StatusForbidden, "Voce precisa participar deste grupo.")
+				writeError(w, http.StatusForbidden, "Você precisa participar deste grupo.")
 				return
 			}
 
-			writeError(w, http.StatusInternalServerError, "Nao foi possivel carregar o ranking.")
+			writeError(w, http.StatusInternalServerError, "Não foi possível carregar o ranking.")
 			return
 		}
 
@@ -122,11 +123,11 @@ func listGroupMatchesHandler(cfg config.Config, db datastore) http.HandlerFunc {
 		matches, err := listGroupMatches(r.Context(), db, userID, r.PathValue("groupID"))
 		if err != nil {
 			if errors.Is(err, errMembershipRequired) {
-				writeError(w, http.StatusForbidden, "Voce precisa participar deste grupo.")
+				writeError(w, http.StatusForbidden, "Você precisa participar deste grupo.")
 				return
 			}
 
-			writeError(w, http.StatusInternalServerError, "Nao foi possivel listar os jogos.")
+			writeError(w, http.StatusInternalServerError, "Não foi possível listar os jogos.")
 			return
 		}
 
@@ -166,11 +167,11 @@ func savePredictionHandler(cfg config.Config, db datastore) http.HandlerFunc {
 		if err != nil {
 			switch {
 			case errors.Is(err, errMembershipRequired):
-				writeError(w, http.StatusForbidden, "Voce precisa participar deste grupo.")
+				writeError(w, http.StatusForbidden, "Você precisa participar deste grupo.")
 			case errors.Is(err, errMatchAlreadyStarted):
-				writeError(w, http.StatusConflict, "O jogo ja comecou. Nao e mais possivel editar o palpite.")
+				writeError(w, http.StatusConflict, "O jogo já começou. Não é mais possível editar o palpite.")
 			default:
-				writeError(w, http.StatusInternalServerError, "Nao foi possivel salvar o palpite.")
+				writeError(w, http.StatusInternalServerError, "Não foi possível salvar o palpite.")
 			}
 			return
 		}
@@ -199,7 +200,7 @@ func saveMatchResultHandler(cfg config.Config, db datastore, publisher realtimeP
 
 		scoredPredictions, err := saveMatchResult(r.Context(), db, r.PathValue("matchID"), request)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Nao foi possivel salvar o resultado.")
+			writeError(w, http.StatusInternalServerError, "Não foi possivel salvar o resultado.")
 			return
 		}
 
@@ -371,20 +372,22 @@ func groupRanking(ctx context.Context, db datastore, userID string, groupID stri
 		with scores as (
 			select
 				gm.user_id,
+				gm.display_name,
 				coalesce(sum(p.points), 0)::int as total_points
 			from group_members gm
 			left join predictions p on p.group_id = gm.group_id
 				and p.user_id = gm.user_id
 			where gm.group_id = $1
 				and gm.status = 'active'
-			group by gm.user_id
+			group by gm.user_id, gm.display_name
 		)
 		select
-			rank() over (order by total_points desc, user_id asc)::int as position,
+			rank() over (order by total_points desc, display_name asc)::int as position,
 			user_id,
+			display_name,
 			total_points
 		from scores
-		order by position asc, user_id asc
+		order by position asc, display_name asc
 	`, groupID)
 	if err != nil {
 		return nil, err

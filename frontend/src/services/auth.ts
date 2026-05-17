@@ -24,7 +24,7 @@ export function getAuthErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return 'Nao foi possivel concluir a acao. Tente novamente.';
+  return 'Não foi possivel concluir a acao. Tente novamente.';
 }
 
 export async function signInWithEmail({ email, password }: SignInPayload) {

@@ -38,7 +38,7 @@ func realtimeHandler(cfg config.Config, db datastore, hub websocketHub) http.Han
 		groupID := r.URL.Query().Get("group_id")
 		if groupID != "" {
 			if err := ensureActiveGroupMember(r.Context(), db, userID, groupID); err != nil {
-				writeError(w, http.StatusForbidden, "Voce precisa participar deste grupo.")
+				writeError(w, http.StatusForbidden, "Você precisa participar deste grupo.")
 				return
 			}
 

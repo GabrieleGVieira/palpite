@@ -11,7 +11,7 @@ export function NotificationBanner({ message }: NotificationBannerProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Atualizacao ao vivo</Text>
+      <Text style={styles.label}>Atualizacão ao vivo</Text>
       <Text style={styles.message}>{message}</Text>
     </View>
   );

@@ -51,7 +51,7 @@ export function LoginScreen({ onCreateAccount }: LoginScreenProps) {
     const sent = await recoverPassword(email);
 
     if (sent) {
-      setSuccessMessage('Enviamos as instrucoes de recuperacao para seu e-mail.');
+      setSuccessMessage('Enviamos as instruções de recuperação para seu e-mail.');
     }
   }
 
@@ -76,7 +76,7 @@ export function LoginScreen({ onCreateAccount }: LoginScreenProps) {
             </View>
             <Text style={styles.appName}>PalpitAI</Text>
             <Text style={styles.tagline}>
-              Entre no seu bolao inteligente e acompanhe palpites, rankings e insights com IA.
+              Entre no seu bolão inteligente e acompanhe palpites, rankings e insights com IA.
             </Text>
           </View>
 
@@ -136,7 +136,7 @@ export function LoginScreen({ onCreateAccount }: LoginScreenProps) {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Ainda nao tem conta?</Text>
+            <Text style={styles.footerText}>Ainda não tem conta?</Text>
             <Pressable onPress={onCreateAccount}>
               <Text style={styles.footerLink}> Criar conta</Text>
             </Pressable>

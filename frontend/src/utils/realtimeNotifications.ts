@@ -23,10 +23,10 @@ export function notificationMessageFromEvent(event: RealtimeEvent, fallbackGroup
     const awayScore = numberPayload(event, 'away_score');
 
     if (homeTeam && awayTeam && homeScore !== null && awayScore !== null) {
-      return `${homeTeam} ${homeScore}x${awayScore} ${awayTeam} - resultado final lancado`;
+      return `${homeTeam} ${homeScore}x${awayScore} ${awayTeam} - resultado final lançado`;
     }
 
-    return 'Resultado final lancado';
+    return 'Resultado final lançado';
   }
 
   return null;
