@@ -11,3 +11,6 @@ fmt:
 
 vet:
 	go vet ./...
+
+seed:
+	go run ./cmd/seed/main.go
