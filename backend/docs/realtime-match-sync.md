@@ -8,7 +8,7 @@ Arquitetura MVP para sincronizar jogos da Copa via `football-data.org`, atualiza
 - Evitar polling desnecessario.
 - Nao reprocessar jogos sem mudanca.
 - Atualizar ranking somente quando pontos mudarem.
-- Emitir eventos Socket.io somente quando houver diff.
+- Emitir eventos WebSocket somente quando houver diff.
 - Manter a arquitetura pronta para Redis/pubsub sem exigir Redis no MVP.
 
 ## Estrutura Go
@@ -20,11 +20,11 @@ backend/internal/
 ├── httpapi/                # REST API
 ├── matchsync/              # football-data client + scheduler + diff
 │   └── syncer.go
-├── realtime/               # futuro Socket.io publisher
+├── realtime/               # hub WebSocket
 └── ranking/                # futuro calculo/materializacao de ranking
 ```
 
-No MVP, `matchsync` publica eventos usando `LogPublisher`. A proxima troca natural e criar `realtime.SocketPublisher` implementando a interface `matchsync.Publisher`.
+No MVP, `matchsync` publica eventos no `realtime.Hub`, que entrega para clientes WebSocket conectados em `/ws`.
 
 ## Fluxo Realtime
 
@@ -37,7 +37,7 @@ No MVP, `matchsync` publica eventos usando `LogPublisher`. A proxima troca natur
 7. Se houver gols novos: insere em `match_events` e emite `match.goal`.
 8. Se placar `live` ou `finished`: recalcula pontos alterados.
 9. Se pontos mudaram: emite `ranking.updated`.
-10. App escuta rooms Socket.io e recarrega ranking/jogos.
+10. App escuta eventos WebSocket e recarrega ranking/jogos.
 
 ## Polling Inteligente
 
@@ -159,7 +159,7 @@ Eventos:
 }
 ```
 
-No MVP, o app pode receber `ranking.updated` e chamar `GET /api/v1/groups/{groupID}/ranking`.
+No MVP, o app recebe `ranking.updated` e chama `GET /api/v1/groups/{groupID}/ranking` automaticamente.
 
 ## Ranking Eficiente
 
@@ -228,7 +228,7 @@ Futuro:
 
 - `scheduler` publica jobs.
 - `worker pool` consome jobs com lock distribuido.
-- `publisher` envia eventos Socket.io.
+- `publisher` envia eventos WebSocket.
 
 ## Clean Architecture
 
@@ -238,7 +238,7 @@ Separar interfaces:
 - `MatchRepository`: upsert/diff.
 - `PredictionScorer`: recalcula pontos.
 - `EventRepository`: persiste eventos de jogo.
-- `Publisher`: Socket.io/Redis/log.
+- `Publisher`: WebSocket/Redis/log.
 - `Scheduler`: decide quando rodar.
 
 No MVP, `syncer.go` concentra isso para manter velocidade. Quando crescer, extraia por responsabilidade sem mudar contrato externo.

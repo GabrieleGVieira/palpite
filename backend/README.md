@@ -37,6 +37,7 @@ A arquitetura completa esta em [`backend/docs/realtime-match-sync.md`](docs/real
 
 ```text
 GET /health
+GET /ws
 GET /api/v1/status
 GET /api/v1/me/score
 GET /api/v1/groups
@@ -114,7 +115,11 @@ A rota adiciona o usuario autenticado em `group_members` como `member`, respeita
 
 `GET /api/v1/groups/{groupID}/ranking` retorna o ranking do grupo com posicao, usuario e pontuacao total de cada participante ativo.
 
-Quando a sincronizacao externa recebe um jogo `live` ou `finished` com placar, o backend atualiza `world_cup_matches`, registra gols em `match_events` e recalcula apenas os palpites com pontos alterados. Isso deixa o ranking pronto para emissao via Socket.io.
+Quando a sincronizacao externa recebe um jogo `live` ou `finished` com placar, o backend atualiza `world_cup_matches`, registra gols em `match_events` e recalcula apenas os palpites com pontos alterados. Isso deixa o ranking pronto para emissao via WebSocket.
+
+### Realtime
+
+`GET /ws?token=<access_token>&group_id=<groupID>` abre uma conexao WebSocket autenticada. Quando o sync ou a rota manual de resultado altera placar/pontos, o backend emite eventos como `match.updated`, `match.finished`, `match.goal` e `ranking.updated`. O app usa esses eventos para recarregar jogos e ranking automaticamente, sem refresh manual.
 
 ## Comandos
 

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
+	"github.com/gabrielevieira/palpitai/backend/internal/matchsync"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -167,7 +168,7 @@ func savePredictionHandler(cfg config.Config, db datastore) http.HandlerFunc {
 	}
 }
 
-func saveMatchResultHandler(cfg config.Config, db datastore) http.HandlerFunc {
+func saveMatchResultHandler(cfg config.Config, db datastore, publisher realtimePublisher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if _, err := userIDFromRequest(r, cfg); err != nil {
 			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
@@ -189,6 +190,31 @@ func saveMatchResultHandler(cfg config.Config, db datastore) http.HandlerFunc {
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "Nao foi possivel salvar o resultado.")
 			return
+		}
+
+		if publisher != nil {
+			publisher.Publish(r.Context(), matchsync.Event{
+				Name: "match.finished",
+				Payload: map[string]any{
+					"away_score": request.AwayScore,
+					"home_score": request.HomeScore,
+					"match_id":   r.PathValue("matchID"),
+					"status":     "finished",
+				},
+				Room: "matches",
+			})
+
+			if scoredPredictions > 0 {
+				publisher.Publish(r.Context(), matchsync.Event{
+					Name: "ranking.updated",
+					Payload: map[string]any{
+						"away_score": request.AwayScore,
+						"home_score": request.HomeScore,
+						"match_id":   r.PathValue("matchID"),
+					},
+					Room: "rankings",
+				})
+			}
 		}
 
 		writeJSON(w, http.StatusOK, map[string]int{

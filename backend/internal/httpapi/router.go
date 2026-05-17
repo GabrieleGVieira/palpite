@@ -26,9 +26,9 @@ type datastore interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-func NewRouter(cfg config.Config, db datastore, hub ...websocketHub) http.Handler {
+func NewRouter(cfg config.Config, db datastore, hub ...realtimeService) http.Handler {
 	mux := http.NewServeMux()
-	var realtimeHub websocketHub
+	var realtimeHub realtimeService
 	if len(hub) > 0 {
 		realtimeHub = hub[0]
 	}
@@ -46,7 +46,7 @@ func NewRouter(cfg config.Config, db datastore, hub ...websocketHub) http.Handle
 	mux.HandleFunc("GET /api/v1/groups/{groupID}/matches", listGroupMatchesHandler(cfg, db))
 	mux.HandleFunc("GET /api/v1/groups/{groupID}/ranking", groupRankingHandler(cfg, db))
 	mux.HandleFunc("PUT /api/v1/groups/{groupID}/matches/{matchID}/prediction", savePredictionHandler(cfg, db))
-	mux.HandleFunc("PUT /api/v1/matches/{matchID}/result", saveMatchResultHandler(cfg, db))
+	mux.HandleFunc("PUT /api/v1/matches/{matchID}/result", saveMatchResultHandler(cfg, db, realtimeHub))
 
 	return withCORS(mux)
 }

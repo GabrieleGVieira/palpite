@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../hooks/useAuth';
 import { getUserScore, joinGroup, listGroups, type Group } from '../services/groups';
+import { connectRealtime } from '../services/realtime';
 
 type HomeScreenProps = {
   onCreateGroup: () => void;
@@ -72,6 +73,34 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
 
   useEffect(() => {
     refreshHome();
+  }, [refreshHome]);
+
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    let isMounted = true;
+
+    connectRealtime({
+      onEvent: (event) => {
+        if (event.name === 'ranking.updated' || event.name === 'match.finished') {
+          void refreshHome();
+        }
+      },
+    })
+      .then((nextCleanup) => {
+        if (isMounted) {
+          cleanup = nextCleanup;
+        } else {
+          nextCleanup();
+        }
+      })
+      .catch(() => {
+        // Home remains usable through REST even when realtime is unavailable.
+      });
+
+    return () => {
+      isMounted = false;
+      cleanup?.();
+    };
   }, [refreshHome]);
 
   async function handleJoinGroup() {

@@ -19,6 +19,7 @@ import {
   type GroupMatch,
   type RankingEntry,
 } from '../services/groups';
+import { connectRealtime } from '../services/realtime';
 
 type GroupDetailScreenProps = {
   group: Group;
@@ -45,36 +46,52 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
   const [rankingError, setRankingError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const loadMatches = useCallback(async () => {
-    setError(null);
-    setIsLoading(true);
+  const loadMatches = useCallback(
+    async (showLoading = true) => {
+      setError(null);
+      if (showLoading) {
+        setIsLoading(true);
+      }
 
-    try {
-      const nextMatches = await listGroupMatches(group.id);
-      setMatches(nextMatches);
-      setDrafts(buildDrafts(nextMatches));
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar jogos.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [group.id]);
+      try {
+        const nextMatches = await listGroupMatches(group.id);
+        setMatches(nextMatches);
+        setDrafts(buildDrafts(nextMatches));
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar jogos.',
+        );
+      } finally {
+        if (showLoading) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [group.id],
+  );
 
-  const loadRanking = useCallback(async () => {
-    setRankingError(null);
-    setIsLoadingRanking(true);
+  const loadRanking = useCallback(
+    async (showLoading = true) => {
+      setRankingError(null);
+      if (showLoading) {
+        setIsLoadingRanking(true);
+      }
 
-    try {
-      const nextRanking = await listGroupRanking(group.id);
-      setRanking(nextRanking);
-    } catch (loadError) {
-      setRankingError(
-        loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar o ranking.',
-      );
-    } finally {
-      setIsLoadingRanking(false);
-    }
-  }, [group.id]);
+      try {
+        const nextRanking = await listGroupRanking(group.id);
+        setRanking(nextRanking);
+      } catch (loadError) {
+        setRankingError(
+          loadError instanceof Error ? loadError.message : 'Nao foi possivel carregar o ranking.',
+        );
+      } finally {
+        if (showLoading) {
+          setIsLoadingRanking(false);
+        }
+      }
+    },
+    [group.id],
+  );
 
   useEffect(() => {
     loadMatches();
@@ -85,6 +102,43 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
       loadRanking();
     }
   }, [activeTab, loadRanking]);
+
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    let isMounted = true;
+
+    connectRealtime({
+      groupID: group.id,
+      onEvent: (event) => {
+        if (
+          event.name === 'match.updated' ||
+          event.name === 'match.finished' ||
+          event.name === 'match.goal'
+        ) {
+          void loadMatches(false);
+        }
+
+        if (event.name === 'ranking.updated' || event.name === 'match.finished') {
+          void loadRanking(false);
+        }
+      },
+    })
+      .then((nextCleanup) => {
+        if (isMounted) {
+          cleanup = nextCleanup;
+        } else {
+          nextCleanup();
+        }
+      })
+      .catch(() => {
+        // REST data still works; realtime reconnects on the next screen mount.
+      });
+
+    return () => {
+      isMounted = false;
+      cleanup?.();
+    };
+  }, [group.id, loadMatches, loadRanking]);
 
   function updateDraft(matchID: string, key: keyof ScoreDraft, value: string) {
     setDrafts((currentDrafts) => ({

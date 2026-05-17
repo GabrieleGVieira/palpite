@@ -64,6 +64,7 @@ Rotas iniciais:
 
 ```text
 GET /health
+GET /ws
 GET /api/v1/status
 GET /api/v1/me/score
 GET /api/v1/groups

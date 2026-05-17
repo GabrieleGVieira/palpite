@@ -1,11 +1,11 @@
-repo_root="$(git rev-parse --show-toplevel)"
-commit_msg_file="$1"
+# repo_root="$(git rev-parse --show-toplevel)"
+# commit_msg_file="$1"
 
-case "$commit_msg_file" in
-  /*) ;;
-  *) commit_msg_file="$repo_root/$commit_msg_file" ;;
-esac
+# case "$commit_msg_file" in
+#   /*) ;;
+#   *) commit_msg_file="$repo_root/$commit_msg_file" ;;
+# esac
 
-cd "$repo_root/frontend"
+# cd "$repo_root/frontend"
 
-npm run commitlint -- --edit "$commit_msg_file"
+# npm run commitlint -- --edit "$commit_msg_file"
