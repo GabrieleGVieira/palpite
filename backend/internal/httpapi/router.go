@@ -33,6 +33,7 @@ func NewRouter(cfg config.Config, db datastore) http.Handler {
 	mux.HandleFunc("GET /api/v1/status", statusHandler(cfg, db))
 	mux.HandleFunc("GET /api/v1/groups", listGroupsHandler(cfg, db))
 	mux.HandleFunc("POST /api/v1/groups", createGroupHandler(cfg, db))
+	mux.HandleFunc("PUT /api/v1/groups/{groupID}", updateGroupHandler(cfg, db))
 	mux.HandleFunc("POST /api/v1/groups/join", joinGroupHandler(cfg, db))
 	mux.HandleFunc("GET /api/v1/groups/{groupID}/join-requests", listJoinRequestsHandler(cfg, db))
 	mux.HandleFunc("POST /api/v1/groups/{groupID}/join-requests/{userID}/approve", approveJoinRequestHandler(cfg, db))

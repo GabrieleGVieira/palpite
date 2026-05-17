@@ -12,6 +12,14 @@ export type CreateGroupPayload = {
   selected_teams: string[];
 };
 
+export type UpdateGroupPayload = {
+  description: string;
+  has_unlimited_participants: boolean;
+  is_private: boolean;
+  name: string;
+  participant_limit: number | null;
+};
+
 export type Group = {
   created_at: string;
   description: string;
@@ -34,12 +42,32 @@ export type JoinRequest = {
   user_id: string;
 };
 
+export type Prediction = {
+  away_score: number;
+  home_score: number;
+  match_id: string;
+  updated_at: string;
+};
+
+export type GroupMatch = {
+  away_team: string;
+  home_team: string;
+  id: string;
+  kickoff_at: string;
+  my_prediction: Prediction | null;
+  stage: string;
+};
+
 type APIError = {
   error?: string;
 };
 
 type ListGroupsResponse = {
   groups: Group[];
+};
+
+type ListGroupMatchesResponse = {
+  matches: GroupMatch[];
 };
 
 type ListJoinRequestsResponse = {
@@ -61,7 +89,9 @@ async function readJSONResponse(response: Response) {
   try {
     return JSON.parse(responseText) as
       | Group
+      | Prediction
       | JoinGroupResponse
+      | ListGroupMatchesResponse
       | ListGroupsResponse
       | ListJoinRequestsResponse
       | APIError;
@@ -124,6 +154,46 @@ export async function approveJoinRequest(groupID: string, userID: string) {
     },
     'Nao foi possivel aprovar a solicitacao.',
   );
+}
+
+export async function updateGroup(groupID: string, payload: UpdateGroupPayload) {
+  const data = await requestAPI(
+    `/api/v1/groups/${groupID}`,
+    {
+      body: JSON.stringify(payload),
+      method: 'PUT',
+    },
+    'Nao foi possivel atualizar o grupo.',
+  );
+
+  return data as Group;
+}
+
+export async function listGroupMatches(groupID: string) {
+  const data = await requestAPI(
+    `/api/v1/groups/${groupID}/matches`,
+    undefined,
+    'Nao foi possivel carregar os jogos.',
+  );
+
+  return (data as ListGroupMatchesResponse).matches;
+}
+
+export async function savePrediction(
+  groupID: string,
+  matchID: string,
+  payload: { away_score: number; home_score: number },
+) {
+  const data = await requestAPI(
+    `/api/v1/groups/${groupID}/matches/${matchID}/prediction`,
+    {
+      body: JSON.stringify(payload),
+      method: 'PUT',
+    },
+    'Nao foi possivel salvar o palpite.',
+  );
+
+  return data as Prediction;
 }
 
 async function requestAPI(path: string, init: RequestInit | undefined, fallbackError: string) {

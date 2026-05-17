@@ -26,6 +26,14 @@ type createGroupRequest struct {
 	IsPrivate                bool     `json:"is_private"`
 }
 
+type updateGroupRequest struct {
+	Name                     string `json:"name"`
+	Description              string `json:"description"`
+	ParticipantLimit         *int   `json:"participant_limit"`
+	HasUnlimitedParticipants bool   `json:"has_unlimited_participants"`
+	IsPrivate                bool   `json:"is_private"`
+}
+
 type joinGroupRequest struct {
 	InviteCode string `json:"invite_code"`
 }
@@ -108,6 +116,41 @@ func createGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
 		}
 
 		writeJSON(w, http.StatusCreated, group)
+	}
+}
+
+func updateGroupHandler(cfg config.Config, db datastore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ownerID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		var request updateGroupRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			writeError(w, http.StatusBadRequest, "JSON invalido.")
+			return
+		}
+
+		normalizedRequest, err := normalizeUpdateGroupRequest(request)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		group, err := updateGroup(r.Context(), db, ownerID, r.PathValue("groupID"), normalizedRequest)
+		if err != nil {
+			if errors.Is(err, errGroupNotFound) {
+				writeError(w, http.StatusNotFound, "Grupo nao encontrado.")
+				return
+			}
+
+			writeError(w, http.StatusInternalServerError, "Nao foi possivel atualizar o grupo.")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, group)
 	}
 }
 
@@ -505,6 +548,23 @@ func normalizeCreateGroupRequest(request createGroupRequest) (createGroupRequest
 	return request, nil
 }
 
+func normalizeUpdateGroupRequest(request updateGroupRequest) (updateGroupRequest, error) {
+	request.Name = strings.TrimSpace(request.Name)
+	request.Description = strings.TrimSpace(request.Description)
+
+	if request.Name == "" {
+		return request, errors.New("Informe o nome do grupo.")
+	}
+
+	if request.HasUnlimitedParticipants {
+		request.ParticipantLimit = nil
+	} else if request.ParticipantLimit == nil || *request.ParticipantLimit < 2 {
+		return request, errors.New("O limite precisa ser maior que 1.")
+	}
+
+	return request, nil
+}
+
 func normalizeInviteCode(inviteCode string) string {
 	inviteCode = strings.TrimSpace(inviteCode)
 	inviteCode = strings.ToUpper(inviteCode)
@@ -619,6 +679,51 @@ func createGroup(ctx context.Context, db datastore, userID string, request creat
 	}
 
 	return group, errors.New("failed to generate unique invite code")
+}
+
+func updateGroup(ctx context.Context, db datastore, ownerID string, groupID string, request updateGroupRequest) (groupResponse, error) {
+	var group groupResponse
+
+	err := db.QueryRow(ctx, `
+		update groups
+		set
+			name = $3,
+			description = $4,
+			participant_limit = $5,
+			is_private = $6,
+			updated_at = now()
+		where id = $1 and owner_id = $2
+		returning
+			id,
+			owner_id,
+			name,
+			description,
+			match_scope,
+			selected_teams,
+			participant_limit,
+			is_private,
+			invite_code,
+			created_at
+	`, groupID, ownerID, request.Name, request.Description, request.ParticipantLimit, request.IsPrivate).Scan(
+		&group.ID,
+		&group.OwnerID,
+		&group.Name,
+		&group.Description,
+		&group.MatchScope,
+		&group.SelectedTeams,
+		&group.ParticipantLimit,
+		&group.IsPrivate,
+		&group.InviteCode,
+		&group.CreatedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return groupResponse{}, errGroupNotFound
+	}
+	if err != nil {
+		return groupResponse{}, err
+	}
+
+	return group, nil
 }
 
 func generateInviteCode() (string, error) {
