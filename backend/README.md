@@ -25,11 +25,13 @@ Configure tambem `SUPABASE_URL` e `SUPABASE_KEY` para validar o token recebido d
 ```text
 GET /health
 GET /api/v1/status
+GET /api/v1/me/score
 GET /api/v1/groups
 POST /api/v1/groups
 PUT /api/v1/groups/{groupID}
 POST /api/v1/groups/join
 GET /api/v1/groups/{groupID}/matches
+GET /api/v1/groups/{groupID}/ranking
 PUT /api/v1/groups/{groupID}/matches/{matchID}/prediction
 PUT /api/v1/matches/{matchID}/result
 ```
@@ -94,6 +96,10 @@ A rota adiciona o usuario autenticado em `group_members` como `member`, respeita
 - placar exato: 10 pontos
 - acertou vencedor ou empate: 5 pontos
 - errou tudo: 0 pontos
+
+`GET /api/v1/me/score` retorna a pontuacao geral do usuario autenticado, somando os palpites pontuados em todos os grupos ativos.
+
+`GET /api/v1/groups/{groupID}/ranking` retorna o ranking do grupo com posicao, usuario e pontuacao total de cada participante ativo.
 
 ## Comandos
 

@@ -200,74 +200,83 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
           </View>
         ) : null}
 
-        {activeTab === 'matches' ? matches.map((match) => {
-          const draft = drafts[match.id] ?? { awayScore: '', homeScore: '' };
-          const hasStarted = new Date(match.kickoff_at).getTime() <= Date.now();
-          const isSaving = savingMatchID === match.id;
+        {activeTab === 'matches'
+          ? matches.map((match) => {
+              const draft = drafts[match.id] ?? { awayScore: '', homeScore: '' };
+              const hasStarted = new Date(match.kickoff_at).getTime() <= Date.now();
+              const isSaving = savingMatchID === match.id;
 
-          return (
-            <View key={match.id} style={styles.matchCard}>
-              <View style={styles.matchHeader}>
-                <Text style={styles.stage}>{match.stage}</Text>
-                <Text style={styles.kickoff}>{formatDate(match.kickoff_at)}</Text>
-              </View>
+              return (
+                <View key={match.id} style={styles.matchCard}>
+                  <View style={styles.matchHeader}>
+                    <Text style={styles.stage}>{match.stage}</Text>
+                    <Text style={styles.kickoff}>{formatDate(match.kickoff_at)}</Text>
+                  </View>
 
-              {match.finished_at &&
-              match.final_home_score !== null &&
-              match.final_away_score !== null ? (
-                <View style={styles.resultBox}>
-                  <Text style={styles.resultLabel}>Resultado final</Text>
-                  <Text style={styles.resultText}>
-                    {match.home_team} {match.final_home_score} x {match.final_away_score}{' '}
-                    {match.away_team}
-                  </Text>
-                </View>
-              ) : null}
-
-              <View style={styles.scoreRow}>
-                <Text style={styles.teamName}>{match.home_team}</Text>
-                <TextInput
-                  editable={!hasStarted && !isSaving}
-                  keyboardType="number-pad"
-                  onChangeText={(value) => updateDraft(match.id, 'homeScore', value)}
-                  style={[styles.scoreInput, hasStarted && styles.inputDisabled]}
-                  value={draft.homeScore}
-                />
-                <Text style={styles.scoreSeparator}>x</Text>
-                <TextInput
-                  editable={!hasStarted && !isSaving}
-                  keyboardType="number-pad"
-                  onChangeText={(value) => updateDraft(match.id, 'awayScore', value)}
-                  style={[styles.scoreInput, hasStarted && styles.inputDisabled]}
-                  value={draft.awayScore}
-                />
-                <Text style={styles.teamName}>{match.away_team}</Text>
-              </View>
-
-              {match.my_prediction ? (
-                <View style={styles.predictionSummary}>
-                  <Text style={styles.predictionText}>
-                    Seu palpite: {match.my_prediction.home_score} x {match.my_prediction.away_score}
-                  </Text>
-                  {match.my_prediction.points !== null ? (
-                    <Text style={styles.pointsText}>{match.my_prediction.points} pts</Text>
+                  {match.finished_at &&
+                  match.final_home_score !== null &&
+                  match.final_away_score !== null ? (
+                    <View style={styles.resultBox}>
+                      <Text style={styles.resultLabel}>Resultado final</Text>
+                      <Text style={styles.resultText}>
+                        {match.home_team} {match.final_home_score} x {match.final_away_score}{' '}
+                        {match.away_team}
+                      </Text>
+                    </View>
                   ) : null}
-                </View>
-              ) : (
-                <Text style={styles.predictionText}>Voce ainda nao palpitou neste jogo.</Text>
-              )}
 
-              <Pressable
-                disabled={hasStarted || isSaving}
-                onPress={() => handleSavePrediction(match)}
-                style={[styles.saveButton, (hasStarted || isSaving) && styles.buttonDisabled]}>
-                <Text style={styles.saveButtonText}>
-                  {hasStarted ? 'Palpites encerrados' : isSaving ? 'Salvando...' : 'Salvar palpite'}
-                </Text>
-              </Pressable>
-            </View>
-          );
-        }) : null}
+                  <View style={styles.scoreRow}>
+                    <Text style={styles.teamName}>{match.home_team}</Text>
+                    <TextInput
+                      editable={!hasStarted && !isSaving}
+                      keyboardType="number-pad"
+                      onChangeText={(value) => updateDraft(match.id, 'homeScore', value)}
+                      style={[styles.scoreInput, hasStarted && styles.inputDisabled]}
+                      value={draft.homeScore}
+                    />
+                    <Text style={styles.scoreSeparator}>x</Text>
+                    <TextInput
+                      editable={!hasStarted && !isSaving}
+                      keyboardType="number-pad"
+                      onChangeText={(value) => updateDraft(match.id, 'awayScore', value)}
+                      style={[styles.scoreInput, hasStarted && styles.inputDisabled]}
+                      value={draft.awayScore}
+                    />
+                    <Text style={styles.teamName}>{match.away_team}</Text>
+                  </View>
+
+                  {match.my_prediction ? (
+                    <View style={styles.predictionSummary}>
+                      <Text style={styles.predictionText}>
+                        Seu palpite: {match.my_prediction.home_score} x{' '}
+                        {match.my_prediction.away_score}
+                      </Text>
+                      {match.my_prediction.points !== null ? (
+                        <Text style={styles.pointsText}>{match.my_prediction.points} pts</Text>
+                      ) : null}
+                    </View>
+                  ) : (
+                    <Text style={[styles.predictionText, styles.predictionTextSolo]}>
+                      Voce ainda nao palpitou neste jogo.
+                    </Text>
+                  )}
+
+                  <Pressable
+                    disabled={hasStarted || isSaving}
+                    onPress={() => handleSavePrediction(match)}
+                    style={[styles.saveButton, (hasStarted || isSaving) && styles.buttonDisabled]}>
+                    <Text style={styles.saveButtonText}>
+                      {hasStarted
+                        ? 'Palpites encerrados'
+                        : isSaving
+                          ? 'Salvando...'
+                          : 'Salvar palpite'}
+                    </Text>
+                  </Pressable>
+                </View>
+              );
+            })
+          : null}
 
         {activeTab === 'ranking' && isLoadingRanking ? (
           <View style={styles.loadingBox}>
@@ -413,6 +422,35 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 8,
   },
+  tabs: {
+    backgroundColor: '#edf3e8',
+    borderRadius: 8,
+    flexDirection: 'row',
+    gap: 6,
+    padding: 6,
+  },
+  tabButton: {
+    alignItems: 'center',
+    borderRadius: 7,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  tabButtonActive: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#1e5c39',
+    shadowOffset: { height: 4, width: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  tabButtonText: {
+    color: '#486654',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  tabButtonTextActive: {
+    color: '#1f7a4a',
+  },
   errorText: {
     color: '#a03222',
     fontSize: 13,
@@ -476,6 +514,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  resultBox: {
+    backgroundColor: '#edf3e8',
+    borderRadius: 8,
+    marginTop: 14,
+    padding: 12,
+  },
+  resultLabel: {
+    color: '#486654',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  resultText: {
+    color: '#123d2a',
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: 4,
+  },
   scoreRow: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -511,9 +567,28 @@ const styles = StyleSheet.create({
   },
   predictionText: {
     color: '#486654',
+    flex: 1,
     fontSize: 13,
     lineHeight: 18,
+  },
+  predictionSummary: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
     marginTop: 12,
+  },
+  predictionTextSolo: {
+    marginTop: 12,
+  },
+  pointsText: {
+    backgroundColor: '#edf3e8',
+    borderRadius: 8,
+    color: '#1f7a4a',
+    fontSize: 13,
+    fontWeight: '900',
+    overflow: 'hidden',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   saveButton: {
     alignItems: 'center',
@@ -530,5 +605,46 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '800',
+  },
+  rankingCard: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderColor: '#cfe0c9',
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    padding: 16,
+  },
+  positionBadge: {
+    alignItems: 'center',
+    backgroundColor: '#123d2a',
+    borderRadius: 8,
+    height: 44,
+    justifyContent: 'center',
+    width: 52,
+  },
+  positionText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  rankingUserInfo: {
+    flex: 1,
+  },
+  rankingUser: {
+    color: '#123d2a',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  rankingMeta: {
+    color: '#486654',
+    fontSize: 12,
+    marginTop: 3,
+  },
+  rankingPoints: {
+    color: '#1f7a4a',
+    fontSize: 16,
+    fontWeight: '900',
   },
 });
