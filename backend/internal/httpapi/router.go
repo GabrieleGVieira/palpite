@@ -26,10 +26,15 @@ type datastore interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-func NewRouter(cfg config.Config, db datastore) http.Handler {
+func NewRouter(cfg config.Config, db datastore, hub ...websocketHub) http.Handler {
 	mux := http.NewServeMux()
+	var realtimeHub websocketHub
+	if len(hub) > 0 {
+		realtimeHub = hub[0]
+	}
 
 	mux.HandleFunc("GET /health", healthHandler(db))
+	mux.HandleFunc("GET /ws", realtimeHandler(cfg, db, realtimeHub))
 	mux.HandleFunc("GET /api/v1/status", statusHandler(cfg, db))
 	mux.HandleFunc("GET /api/v1/me/score", userScoreHandler(cfg, db))
 	mux.HandleFunc("GET /api/v1/groups", listGroupsHandler(cfg, db))

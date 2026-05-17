@@ -49,6 +49,17 @@ make run
 
 A API inicia em `http://localhost:3000`.
 
+Para sincronizar placares automaticamente, configure no `backend/.env`:
+
+```bash
+FOOTBALL_DATA_API_BASE_URL=https://api.football-data.org/v4
+FOOTBALL_DATA_COMPETITION_CODE=WC
+FOOTBALL_DATA_SEASON=2026
+FOOTBALL_DATA_TOKEN=token_football_data
+```
+
+O backend usa polling adaptativo: ao vivo a cada 30s, jogos do dia a cada 5min e proximos jogos a cada 1h, respeitando 10 requests/min. Quando recebe placar `live` ou `finished`, atualiza o banco, registra eventos de gols e recalcula os pontos alterados.
+
 Rotas iniciais:
 
 ```text

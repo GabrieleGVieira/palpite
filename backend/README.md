@@ -20,6 +20,19 @@ Configure `DATABASE_URL` no `.env` com a connection string PostgreSQL do Supabas
 
 Configure tambem `SUPABASE_URL` e `SUPABASE_KEY` para validar o token recebido do Supabase Auth.
 
+Para sincronizar jogos automaticamente via `football-data.org`, configure:
+
+```bash
+FOOTBALL_DATA_API_BASE_URL=https://api.football-data.org/v4
+FOOTBALL_DATA_COMPETITION_CODE=WC
+FOOTBALL_DATA_SEASON=2026
+FOOTBALL_DATA_TOKEN=cole_o_token_aqui
+```
+
+O backend faz uma sincronizacao inicial ao subir e usa polling adaptativo: jogos ao vivo a cada 30s, jogos do dia a cada 5min e proximos jogos a cada 1h. O cliente respeita 10 requests/min com intervalo minimo de 6s entre chamadas.
+
+A arquitetura completa esta em [`backend/docs/realtime-match-sync.md`](docs/realtime-match-sync.md).
+
 ## Rotas iniciais
 
 ```text
@@ -100,6 +113,8 @@ A rota adiciona o usuario autenticado em `group_members` como `member`, respeita
 `GET /api/v1/me/score` retorna a pontuacao geral do usuario autenticado, somando os palpites pontuados em todos os grupos ativos.
 
 `GET /api/v1/groups/{groupID}/ranking` retorna o ranking do grupo com posicao, usuario e pontuacao total de cada participante ativo.
+
+Quando a sincronizacao externa recebe um jogo `live` ou `finished` com placar, o backend atualiza `world_cup_matches`, registra gols em `match_events` e recalcula apenas os palpites com pontos alterados. Isso deixa o ranking pronto para emissao via Socket.io.
 
 ## Comandos
 

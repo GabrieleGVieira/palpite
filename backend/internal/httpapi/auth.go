@@ -23,6 +23,14 @@ func userIDFromRequest(r *http.Request, cfg config.Config) (string, error) {
 		return "", errUnauthorized
 	}
 
+	return userIDFromToken(r, cfg, token)
+}
+
+func userIDFromToken(r *http.Request, cfg config.Config, token string) (string, error) {
+	if strings.TrimSpace(token) == "" {
+		return "", errUnauthorized
+	}
+
 	if strings.TrimSpace(cfg.SupabaseURL) == "" || strings.TrimSpace(cfg.SupabaseKey) == "" {
 		return "", errUnauthorized
 	}

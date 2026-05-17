@@ -209,7 +209,10 @@ export function GroupDetailScreen({ group, onBack, onOpenAdmin }: GroupDetailScr
               return (
                 <View key={match.id} style={styles.matchCard}>
                   <View style={styles.matchHeader}>
-                    <Text style={styles.stage}>{match.stage}</Text>
+                    <View>
+                      <Text style={styles.stage}>{match.stage}</Text>
+                      <Text style={styles.matchStatus}>{formatMatchStatus(match.status)}</Text>
+                    </View>
                     <Text style={styles.kickoff}>{formatDate(match.kickoff_at)}</Text>
                   </View>
 
@@ -340,6 +343,18 @@ function formatUserID(userID: string) {
   }
 
   return `${userID.slice(0, 8)}...${userID.slice(-4)}`;
+}
+
+function formatMatchStatus(status: GroupMatch['status']) {
+  const statusLabels: Record<GroupMatch['status'], string> = {
+    cancelled: 'Cancelado',
+    finished: 'Encerrado',
+    live: 'Ao vivo',
+    postponed: 'Adiado',
+    scheduled: 'Agendado',
+  };
+
+  return statusLabels[status];
 }
 
 const styles = StyleSheet.create({
@@ -508,6 +523,12 @@ const styles = StyleSheet.create({
     color: '#1f7a4a',
     fontSize: 13,
     fontWeight: '800',
+  },
+  matchStatus: {
+    color: '#486654',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 3,
   },
   kickoff: {
     color: '#486654',

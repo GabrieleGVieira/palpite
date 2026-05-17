@@ -40,6 +40,7 @@ type matchResponse struct {
 	KickoffAt      time.Time           `json:"kickoff_at"`
 	MyPrediction   *predictionResponse `json:"my_prediction"`
 	Stage          string              `json:"stage"`
+	Status         string              `json:"status"`
 }
 
 type rankingEntryResponse struct {
@@ -207,6 +208,7 @@ func listGroupMatches(ctx context.Context, db datastore, userID string, groupID 
 			m.home_team,
 			m.away_team,
 			m.stage,
+			m.status,
 			m.kickoff_at,
 			m.home_score,
 			m.away_score,
@@ -246,6 +248,7 @@ func listGroupMatches(ctx context.Context, db datastore, userID string, groupID 
 			&match.HomeTeam,
 			&match.AwayTeam,
 			&match.Stage,
+			&match.Status,
 			&match.KickoffAt,
 			&finalHomeScore,
 			&finalAwayScore,
@@ -406,7 +409,9 @@ func saveMatchResult(ctx context.Context, db datastore, matchID string, request 
 		set
 			home_score = $2,
 			away_score = $3,
-			finished_at = now()
+			status = 'finished',
+			finished_at = now(),
+			last_synced_at = now()
 		where id = $1
 	`, matchID, request.HomeScore, request.AwayScore); err != nil {
 		return 0, err

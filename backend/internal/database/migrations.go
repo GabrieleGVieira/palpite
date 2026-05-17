@@ -40,16 +40,29 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 
 		create table if not exists world_cup_matches (
 			id uuid primary key default gen_random_uuid(),
+			external_id text,
 			home_team text not null,
 			away_team text not null,
 			stage text not null,
 			kickoff_at timestamptz not null,
+			status text not null default 'scheduled' check (status in ('scheduled', 'live', 'finished', 'postponed', 'cancelled')),
 			home_score integer check (home_score is null or (home_score >= 0 and home_score <= 99)),
 			away_score integer check (away_score is null or (away_score >= 0 and away_score <= 99)),
 			finished_at timestamptz,
+			last_synced_at timestamptz,
 			created_at timestamptz not null default now(),
 			unique (home_team, away_team, kickoff_at)
 		);
+
+		alter table world_cup_matches
+			add column if not exists external_id text;
+
+		alter table world_cup_matches
+			drop constraint if exists world_cup_matches_external_id_key;
+
+		alter table world_cup_matches
+			add column if not exists status text not null default 'scheduled'
+			check (status in ('scheduled', 'live', 'finished', 'postponed', 'cancelled'));
 
 		alter table world_cup_matches
 			add column if not exists home_score integer check (home_score is null or (home_score >= 0 and home_score <= 99));
@@ -59,6 +72,35 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 
 		alter table world_cup_matches
 			add column if not exists finished_at timestamptz;
+
+		alter table world_cup_matches
+			add column if not exists last_synced_at timestamptz;
+
+		create index if not exists world_cup_matches_status_kickoff_idx
+			on world_cup_matches (status, kickoff_at);
+
+		create index if not exists world_cup_matches_external_id_idx
+			on world_cup_matches (external_id)
+			where external_id is not null;
+
+		create table if not exists match_events (
+			id uuid primary key default gen_random_uuid(),
+			match_id uuid not null references world_cup_matches(id) on delete cascade,
+			external_key text not null unique,
+			event_type text not null check (event_type in ('goal', 'booking', 'substitution', 'penalty')),
+			team_name text not null default '',
+			player_name text not null default '',
+			assist_name text not null default '',
+			minute integer,
+			injury_time integer,
+			home_score integer,
+			away_score integer,
+			payload jsonb not null default '{}'::jsonb,
+			created_at timestamptz not null default now()
+		);
+
+		create index if not exists match_events_match_id_idx
+			on match_events (match_id, event_type, minute);
 
 		create table if not exists predictions (
 			group_id uuid not null references groups(id) on delete cascade,
