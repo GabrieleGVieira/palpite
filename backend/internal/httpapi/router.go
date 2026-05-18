@@ -7,17 +7,12 @@ import (
 	"time"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
+	"github.com/gabrielevieira/palpitai/backend/internal/dto"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type statusResponse struct {
-	App       string `json:"app"`
-	Database  string `json:"database"`
-	Env       string `json:"env"`
-	Status    string `json:"status"`
-	Timestamp string `json:"timestamp"`
-}
+type statusResponse = dto.StatusResponse
 
 type datastore interface {
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)

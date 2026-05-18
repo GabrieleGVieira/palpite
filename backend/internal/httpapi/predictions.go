@@ -10,58 +10,18 @@ import (
 	"time"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
-	"github.com/gabrielevieira/palpitai/backend/internal/matchsync"
+	"github.com/gabrielevieira/palpitai/backend/internal/domain"
+	"github.com/gabrielevieira/palpitai/backend/internal/dto"
 	"github.com/jackc/pgx/v5"
 )
 
-type predictionRequest struct {
-	HomeScore int `json:"home_score"`
-	AwayScore int `json:"away_score"`
-}
-
-type predictionResponse struct {
-	AwayScore int        `json:"away_score"`
-	HomeScore int        `json:"home_score"`
-	MatchID   string     `json:"match_id"`
-	Points    *int       `json:"points"`
-	ScoredAt  *time.Time `json:"scored_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-}
-
-type matchResultRequest struct {
-	HomeScore int `json:"home_score"`
-	AwayScore int `json:"away_score"`
-}
-
-type matchResponse struct {
-	AwayTeam       string              `json:"away_team"`
-	FinalAwayScore *int                `json:"final_away_score"`
-	FinalHomeScore *int                `json:"final_home_score"`
-	FinishedAt     *time.Time          `json:"finished_at"`
-	HomeTeam       string              `json:"home_team"`
-	ID             string              `json:"id"`
-	KickoffAt      time.Time           `json:"kickoff_at"`
-	MyPrediction   *predictionResponse `json:"my_prediction"`
-	Stage          string              `json:"stage"`
-	Status         string              `json:"status"`
-}
-
-type rankingEntryResponse struct {
-	Position    int    `json:"position"`
-	TotalPoints int    `json:"total_points"`
-	UserID      string `json:"user_id"`
-	DisplayName string `json:"display_name"`
-}
-
-type matchDetails struct {
-	AwayTeam string
-	HomeTeam string
-}
-
-type groupSummary struct {
-	ID   string
-	Name string
-}
+type predictionRequest = dto.PredictionRequest
+type predictionResponse = dto.PredictionResponse
+type matchResultRequest = dto.MatchResultRequest
+type matchResponse = dto.MatchResponse
+type rankingEntryResponse = dto.RankingEntryResponse
+type matchDetails = domain.MatchDetails
+type groupSummary = domain.GroupSummary
 
 var (
 	errMatchAlreadyStarted = errors.New("match already started")
@@ -212,7 +172,7 @@ func saveMatchResultHandler(cfg config.Config, db datastore, publisher realtimeP
 			groups, _ := groupsAffectedByMatch(r.Context(), db, r.PathValue("matchID"))
 			resultMessage := formatResultMessage(details.HomeTeam, details.AwayTeam, request.HomeScore, request.AwayScore)
 
-			publisher.Publish(r.Context(), matchsync.Event{
+			publisher.Publish(r.Context(), domain.Event{
 				Name: "match.finished",
 				Payload: map[string]any{
 					"away_score": request.AwayScore,
@@ -239,12 +199,12 @@ func saveMatchResultHandler(cfg config.Config, db datastore, publisher realtimeP
 						"message":    "Ranking do grupo " + group.Name + " atualizado",
 					}
 
-					publisher.Publish(r.Context(), matchsync.Event{
+					publisher.Publish(r.Context(), domain.Event{
 						Name:    "ranking.updated",
 						Payload: payload,
 						Room:    "rankings",
 					})
-					publisher.Publish(r.Context(), matchsync.Event{
+					publisher.Publish(r.Context(), domain.Event{
 						Name:    "ranking.updated",
 						Payload: payload,
 						Room:    "group:" + group.ID,

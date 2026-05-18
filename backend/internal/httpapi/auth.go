@@ -8,17 +8,12 @@ import (
 	"strings"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
+	"github.com/gabrielevieira/palpitai/backend/internal/dto"
 )
 
 var errUnauthorized = errors.New("unauthorized")
 
-type supabaseUserResponse struct {
-	ID           string `json:"id"`
-	Email        string `json:"email"`
-	UserMetadata struct {
-		FullName string `json:"full_name"`
-	} `json:"user_metadata"`
-}
+type supabaseUserResponse = dto.SupabaseUserResponse
 
 func userIDFromRequest(r *http.Request, cfg config.Config) (string, error) {
 	header := r.Header.Get("Authorization")

@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
+	"github.com/gabrielevieira/palpitai/backend/internal/domain"
+	"github.com/gabrielevieira/palpitai/backend/internal/dto"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -37,12 +39,7 @@ type Publisher interface {
 	Publish(ctx context.Context, event Event)
 }
 
-type Event struct {
-	GroupID string         `json:"group_id,omitempty"`
-	Name    string         `json:"name"`
-	Payload map[string]any `json:"payload"`
-	Room    string         `json:"room,omitempty"`
-}
+type Event = domain.Event
 
 type LogPublisher struct {
 	logger *slog.Logger
@@ -71,13 +68,7 @@ type Syncer struct {
 	token           string
 }
 
-type Summary struct {
-	ChangedMatches     int
-	CreatedEvents      int
-	ScoredPredictions  int
-	SyncedMatches      int
-	UpdatedLiveMatches int
-}
+type Summary = domain.SyncSummary
 
 type syncKind string
 
@@ -87,99 +78,13 @@ const (
 	syncUpcoming syncKind = "upcoming"
 )
 
-type footballDataResponse struct {
-	Matches []footballDataMatch `json:"matches"`
-}
-
-type footballDataMatch struct {
-	AwayTeam      footballDataTeam   `json:"awayTeam"`
-	Bookings      []json.RawMessage  `json:"bookings"`
-	Goals         []footballDataGoal `json:"goals"`
-	Group         *string            `json:"group"`
-	HomeTeam      footballDataTeam   `json:"homeTeam"`
-	ID            int                `json:"id"`
-	LastUpdated   string             `json:"lastUpdated"`
-	Matchday      *int               `json:"matchday"`
-	Minute        *string            `json:"minute"`
-	Penalties     []json.RawMessage  `json:"penalties"`
-	Score         footballDataScore  `json:"score"`
-	Stage         string             `json:"stage"`
-	Status        string             `json:"status"`
-	Substitutions []json.RawMessage  `json:"substitutions"`
-	UTCDate       time.Time          `json:"utcDate"`
-	Venue         *string            `json:"venue"`
-}
-
-type footballDataTeam struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	ShortName string `json:"shortName"`
-	TLA       string `json:"tla"`
-}
-
-type footballDataScore struct {
-	Duration string             `json:"duration"`
-	FullTime footballDataResult `json:"fullTime"`
-	HalfTime footballDataResult `json:"halfTime"`
-	Winner   *string            `json:"winner"`
-}
-
-type footballDataResult struct {
-	Away *int `json:"away"`
-	Home *int `json:"home"`
-}
-
-type footballDataGoal struct {
-	Assist     *footballDataPerson `json:"assist"`
-	InjuryTime *int                `json:"injuryTime"`
-	Minute     int                 `json:"minute"`
-	Score      footballDataResult  `json:"score"`
-	Scorer     footballDataPerson  `json:"scorer"`
-	Team       footballDataTeam    `json:"team"`
-	Type       string              `json:"type"`
-}
-
-type footballDataPerson struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-type providerMatch struct {
-	AwayScore   *int
-	AwayTeam    string
-	ExternalID  string
-	Goals       []providerGoal
-	HomeScore   *int
-	HomeTeam    string
-	KickoffAt   time.Time
-	ProviderRaw footballDataMatch
-	Stage       string
-	Status      string
-}
-
-type providerGoal struct {
-	AssistName string
-	AwayScore  *int
-	EventKey   string
-	HomeScore  *int
-	InjuryTime *int
-	Minute     int
-	PlayerName string
-	TeamName   string
-	Type       string
-}
-
-type matchSnapshot struct {
-	AwayScore *int
-	HomeScore *int
-	ID        string
-	Status    string
-}
-
-type affectedGroup struct {
-	ID   string
-	Name string
-}
+type footballDataResponse = dto.FootballDataResponse
+type footballDataMatch = dto.FootballDataMatch
+type footballDataTeam = dto.FootballDataTeam
+type providerMatch = domain.ProviderMatch
+type providerGoal = domain.ProviderGoal
+type matchSnapshot = domain.MatchSnapshot
+type affectedGroup = domain.AffectedGroup
 
 func New(cfg config.Config, db datastore, logger *slog.Logger) (*Syncer, bool) {
 	if strings.TrimSpace(cfg.FootballDataToken) == "" {
@@ -716,16 +621,15 @@ func fromFootballData(match footballDataMatch) providerMatch {
 	}
 
 	provider := providerMatch{
-		AwayScore:   awayScore,
-		AwayTeam:    teamName(match.AwayTeam),
-		ExternalID:  strconv.Itoa(match.ID),
-		Goals:       make([]providerGoal, 0, len(match.Goals)),
-		HomeScore:   homeScore,
-		HomeTeam:    teamName(match.HomeTeam),
-		KickoffAt:   match.UTCDate,
-		ProviderRaw: match,
-		Stage:       match.Stage,
-		Status:      normalizeStatus(match.Status),
+		AwayScore:  awayScore,
+		AwayTeam:   teamName(match.AwayTeam),
+		ExternalID: strconv.Itoa(match.ID),
+		Goals:      make([]providerGoal, 0, len(match.Goals)),
+		HomeScore:  homeScore,
+		HomeTeam:   teamName(match.HomeTeam),
+		KickoffAt:  match.UTCDate,
+		Stage:      match.Stage,
+		Status:     normalizeStatus(match.Status),
 	}
 
 	for _, goal := range match.Goals {

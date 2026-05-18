@@ -7,68 +7,22 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
+	"github.com/gabrielevieira/palpitai/backend/internal/dto"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const inviteCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
-type createGroupRequest struct {
-	Name                     string   `json:"name"`
-	Description              string   `json:"description"`
-	MatchScope               string   `json:"match_scope"`
-	SelectedTeams            []string `json:"selected_teams"`
-	ParticipantLimit         *int     `json:"participant_limit"`
-	HasUnlimitedParticipants bool     `json:"has_unlimited_participants"`
-	IsPrivate                bool     `json:"is_private"`
-}
-
-type updateGroupRequest struct {
-	Name                     string `json:"name"`
-	Description              string `json:"description"`
-	ParticipantLimit         *int   `json:"participant_limit"`
-	HasUnlimitedParticipants bool   `json:"has_unlimited_participants"`
-	IsPrivate                bool   `json:"is_private"`
-}
-
-type joinGroupRequest struct {
-	InviteCode string `json:"invite_code"`
-}
-
-type groupResponse struct {
-	ID               string    `json:"id"`
-	OwnerID          string    `json:"owner_id"`
-	Name             string    `json:"name"`
-	Description      string    `json:"description"`
-	MatchScope       string    `json:"match_scope"`
-	SelectedTeams    []string  `json:"selected_teams"`
-	ParticipantLimit *int      `json:"participant_limit"`
-	IsPrivate        bool      `json:"is_private"`
-	InviteCode       string    `json:"invite_code"`
-	CreatedAt        time.Time `json:"created_at"`
-}
-
-type groupListItemResponse struct {
-	groupResponse
-	MemberCount          int    `json:"member_count"`
-	PendingRequestsCount int    `json:"pending_requests_count"`
-	Role                 string `json:"role"`
-	Status               string `json:"status"`
-}
-
-type joinGroupResponse struct {
-	Group            groupListItemResponse `json:"group"`
-	MembershipStatus string                `json:"membership_status"`
-}
-
-type joinRequestResponse struct {
-	RequestedAt time.Time `json:"requested_at"`
-	UserID      string    `json:"user_id"`
-	DisplayName string    `json:"display_name"`
-}
+type createGroupRequest = dto.CreateGroupRequest
+type updateGroupRequest = dto.UpdateGroupRequest
+type joinGroupRequest = dto.JoinGroupRequest
+type groupResponse = dto.GroupResponse
+type groupListItemResponse = dto.GroupListItemResponse
+type joinGroupResponse = dto.JoinGroupResponse
+type joinRequestResponse = dto.JoinRequestResponse
 
 func listGroupsHandler(cfg config.Config, db datastore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
+	"github.com/gabrielevieira/palpitai/backend/internal/dto"
 	"github.com/gabrielevieira/palpitai/backend/internal/utils"
 )
 
@@ -19,34 +20,8 @@ const (
 	apiURL = "https://api.football-data.org/v4/competitions/WC/matches?stage=GROUP_STAGE"
 )
 
-type MatchesResponse struct {
-	Matches []Match `json:"matches"`
-}
-
-type Match struct {
-	ID      int       `json:"id"`
-	UtcDate time.Time `json:"utcDate"`
-	Status  string    `json:"status"`
-	Stage   string    `json:"stage"`
-
-	HomeTeam Team `json:"homeTeam"`
-	AwayTeam Team `json:"awayTeam"`
-
-	Score Score `json:"score"`
-}
-
-type Team struct {
-	Name string `json:"name"`
-}
-
-type Score struct {
-	FullTime FullTimeScore `json:"fullTime"`
-}
-
-type FullTimeScore struct {
-	Home *int `json:"home"`
-	Away *int `json:"away"`
-}
+type MatchesResponse = dto.FootballDataResponse
+type Match = dto.FootballDataMatch
 
 func RunWorldCupMatchSeed() {
 	ctx := context.Background()
@@ -179,7 +154,7 @@ func upsertMatch(
 		utils.TranslateTeam(match.HomeTeam.Name),
 		utils.TranslateTeam(match.AwayTeam.Name),
 		match.Stage,
-		match.UtcDate,
+		match.UTCDate,
 		status,
 		match.Score.FullTime.Home,
 		match.Score.FullTime.Away,

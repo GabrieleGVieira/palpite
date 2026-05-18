@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
-	"github.com/gabrielevieira/palpitai/backend/internal/matchsync"
+	"github.com/gabrielevieira/palpitai/backend/internal/domain"
 )
 
 type websocketHub interface {
@@ -13,7 +13,7 @@ type websocketHub interface {
 }
 
 type realtimePublisher interface {
-	Publish(ctx context.Context, event matchsync.Event)
+	Publish(ctx context.Context, event domain.Event)
 }
 
 type realtimeService interface {

@@ -8,7 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gabrielevieira/palpitai/backend/internal/matchsync"
+	"github.com/gabrielevieira/palpitai/backend/internal/domain"
+	"github.com/gabrielevieira/palpitai/backend/internal/dto"
 	"github.com/gorilla/websocket"
 )
 
@@ -32,11 +33,7 @@ type client struct {
 	userID string
 }
 
-type outboundEvent struct {
-	Name    string         `json:"name"`
-	Payload map[string]any `json:"payload"`
-	Room    string         `json:"room,omitempty"`
-}
+type outboundEvent = dto.RealtimeEvent
 
 func NewHub(logger *slog.Logger) *Hub {
 	if logger == nil {
@@ -87,7 +84,7 @@ func (hub *Hub) ServeWS(w http.ResponseWriter, r *http.Request, userID string, r
 	hub.readPump(nextClient)
 }
 
-func (hub *Hub) Publish(_ context.Context, event matchsync.Event) {
+func (hub *Hub) Publish(_ context.Context, event domain.Event) {
 	outbound := outboundEvent{
 		Name:    event.Name,
 		Payload: event.Payload,
