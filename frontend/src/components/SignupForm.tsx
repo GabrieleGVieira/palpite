@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AuthInputField } from './global/AuthInputField';
 import { FinishButton } from './global/FinishButton';
 

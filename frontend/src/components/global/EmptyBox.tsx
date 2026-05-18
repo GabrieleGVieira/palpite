@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 
-export function EmptyBox({title, text}: {title: string; text: string}) {
+export function EmptyBox({ title, text }: { title: string; text: string }) {
   return (
     <View style={styles.emptyBox}>
       <Text style={styles.emptyTitle}>{title}</Text>

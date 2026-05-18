@@ -1,6 +1,6 @@
-import { ActivityIndicator, View, Text, StyleSheet } from "react-native";
+import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
 
-export function LoadingIndicator({text} : {text: string}) {
+export function LoadingIndicator({ text }: { text: string }) {
   return (
     <View style={styles.loadingBox}>
       <ActivityIndicator color="#1f7a4a" />

@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { EmptyBox } from '../../global/EmptyBox';
+import { EmptyBox } from '../global/EmptyBox';
 import { GroupAdminRequestItem } from './GroupAdminRequestItem';
-import { LoadingIndicator } from '../../global/LoadingIndicator';
-import type { JoinRequest } from '../../../services/groups';
+import { LoadingIndicator } from '../global/LoadingIndicator';
+import type { JoinRequest } from '../../services/groups';
 
 type GroupAdminRequestsProps = {
   approvingUserID: string | null;

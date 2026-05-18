@@ -1,6 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Header } from '../global/Header';
-import { FinishButton } from '../global/FinishButton';
 
 type HomeHeaderProps = {
   userName?: string;

@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { NotificationBanner } from '../global/NotificationBanner';
 import type { Group } from '../../services/groups';
-import type { GroupDetailTab } from '../../hooks/useGroupDetailScreen';
+import type { GroupDetailTab } from '../../types/groupDetail';
 import { BackButton } from '../global/BackButton';
 
 type Props = {

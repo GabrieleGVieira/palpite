@@ -17,7 +17,7 @@ export function GroupDetailRankingCard({ entry, key }: { entry: RankingEntry; ke
 }
 
 const styles = StyleSheet.create({
-     rankingCard: {
+  rankingCard: {
     alignItems: 'center',
     backgroundColor: '#ffffff',
     borderColor: '#cfe0c9',
@@ -58,4 +58,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
   },
-})
+});

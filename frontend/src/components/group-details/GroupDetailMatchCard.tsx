@@ -1,8 +1,8 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import type { GroupMatch } from '../../services/groups';
-import type { ScoreDraft } from '../../hooks/useGroupDetailScreen';
-import { formatDate, formatMatchStage, formatMatchStatus } from '../../hooks/useGroupDetailScreen';
+import type { ScoreDraft } from '../../types/groupDetail';
+import { formatDate, formatMatchStage, formatMatchStatus } from '../../utils/groupDetailFormatters';
 import { FinishButton } from '../global/FinishButton';
 
 type Props = {
