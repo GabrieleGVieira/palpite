@@ -1,39 +1,92 @@
 # PalpitAI Backend
 
-API inicial em Go para o PalpitAI.
+Backend em Go do PalpitAI. Ele expoe a API HTTP, valida usuarios autenticados pelo Supabase Auth, persiste dados no Supabase/Postgres, emite eventos realtime por WebSocket e sincroniza placares da Copa do Mundo via football-data.org.
 
 ## Requisitos
 
 - Go 1.24+
+- Banco Supabase/Postgres
+- URL e chave publica do Supabase
+- Token do football-data.org
 
-## Como rodar
+## Configuracao
 
 ```bash
-cd backend
 cp .env.example .env
-make run
 ```
 
-A API inicia em `http://localhost:3000`.
-
-Configure `DATABASE_URL` no `.env` com a connection string PostgreSQL do Supabase. O backend adiciona `sslmode=require` automaticamente quando a URL não informa `sslmode`.
-
-Configure tambem `SUPABASE_URL` e `SUPABASE_KEY` para validar o token recebido do Supabase Auth.
-
-Para sincronizar jogos automaticamente via `football-data.org`, configure:
+Variaveis:
 
 ```bash
+APP_ENV=development
+PORT=3000
+DATABASE_URL=postgresql://postgres:password@db.project.supabase.co:5432/postgres
+SUPABASE_URL=https://project.supabase.co
+SUPABASE_KEY=cole_a_chave_publica_aqui
 FOOTBALL_DATA_API_BASE_URL=https://api.football-data.org/v4
 FOOTBALL_DATA_COMPETITION_CODE=WC
 FOOTBALL_DATA_SEASON=2026
 FOOTBALL_DATA_TOKEN=cole_o_token_aqui
 ```
 
-O backend faz uma sincronizacao inicial ao subir e usa polling adaptativo: jogos ao vivo a cada 30s, jogos do dia a cada 5min e proximos jogos a cada 1h. O cliente respeita 10 requests/min com intervalo minimo de 6s entre chamadas.
+O backend adiciona `sslmode=require` automaticamente quando `DATABASE_URL` nao informa `sslmode`.
 
-A arquitetura completa esta em [`backend/docs/realtime-match-sync.md`](docs/realtime-match-sync.md).
+## Como rodar
 
-## Rotas iniciais
+API HTTP/WebSocket:
+
+```bash
+make run
+```
+
+Worker de sincronizacao de jogos:
+
+```bash
+go run ./cmd/matchsync
+```
+
+Seed inicial:
+
+```bash
+make seed
+```
+
+## Arquitetura
+
+```text
+backend/
+├── cmd/
+│   ├── api/          # entrada da API HTTP/WebSocket
+│   ├── matchsync/    # worker separado para sincronizar partidas
+│   └── seed/         # comando de seed
+├── docs/
+│   └── realtime-match-sync.md
+└── internal/
+    ├── apperrors/    # erros de aplicacao
+    ├── config/       # leitura de env/config
+    ├── controller/   # handlers HTTP/WebSocket
+    ├── database/     # conexao, migrations e seed
+    ├── domain/       # regras puras de dominio
+    ├── dto/          # contratos externos/HTTP e mappers
+    ├── matchsync/    # client, scheduler, syncer e publicacao de eventos
+    ├── realtime/     # hub WebSocket e broadcast
+    ├── repositories/ # queries SQL por tabela/contexto
+    ├── route/        # roteamento HTTP
+    ├── usecase/      # casos de uso da aplicacao
+    └── utils/        # helpers compartilhados
+```
+
+Separacao principal:
+
+- `controller`: parseia request, chama usecase e escreve response.
+- `usecase`: orquestra regras de negocio e transacoes.
+- `repositories`: concentra SQL e acesso ao banco.
+- `domain`: mantem regras puras, como calculo de pontos e normalizacao de status.
+- `dto`: define payloads HTTP e modelos da API football-data.org.
+- `matchsync`: sincroniza jogos, detecta alteracoes e publica eventos.
+- `realtime`: gerencia conexoes WebSocket e envia eventos para grupos.
+
+## Rotas
 
 ```text
 GET /health
@@ -50,25 +103,18 @@ PUT /api/v1/groups/{groupID}/matches/{matchID}/prediction
 PUT /api/v1/matches/{matchID}/result
 ```
 
-As respostas incluem o status da conexao com o banco:
+Todas as rotas de usuario exigem `Authorization: Bearer <access_token>` do Supabase Auth.
 
-```json
-{
-  "database": "ok",
-  "status": "ok"
-}
-```
+## Grupos
 
 ### Criar grupo
 
-`POST /api/v1/groups` exige `Authorization: Bearer <access_token>` do Supabase Auth.
-
-Payload:
+`POST /api/v1/groups`
 
 ```json
 {
   "name": "Familia na Copa",
-  "description": "Bolão da familia",
+  "description": "Bolao da familia",
   "match_scope": "selected",
   "selected_teams": ["Brasil", "Argentina"],
   "participant_limit": null,
@@ -77,17 +123,17 @@ Payload:
 }
 ```
 
-A rota cria o grupo, gera `invite_code` e adiciona o usuario autenticado em `group_members` com role `owner`.
+A rota cria o grupo, gera `invite_code` e adiciona o usuario autenticado em `group_members` como `owner`.
 
-### Meus grupos
+### Listar meus grupos
 
-`GET /api/v1/groups` exige `Authorization: Bearer <access_token>` do Supabase Auth e retorna os grupos em que o usuario autenticado participa.
+`GET /api/v1/groups`
 
-### Entrar no grupo
+Retorna os grupos em que o usuario participa, incluindo informacoes usadas pela Home, como pontuacao e pendencias de aprovacao quando o usuario e owner.
 
-`POST /api/v1/groups/join` exige `Authorization: Bearer <access_token>` do Supabase Auth.
+### Entrar em grupo
 
-Payload:
+`POST /api/v1/groups/join`
 
 ```json
 {
@@ -95,37 +141,104 @@ Payload:
 }
 ```
 
-A rota adiciona o usuario autenticado em `group_members` como `member`, respeitando o limite de participantes quando existir.
+Se o grupo for publico, o usuario entra como membro ativo. Se o grupo for privado, a entrada fica pendente ate o owner aprovar.
 
-### Jogos e palpites
+## Jogos, palpites e ranking
 
 `GET /api/v1/groups/{groupID}/matches` retorna os jogos do grupo e o palpite do usuario autenticado quando existir.
 
 `PUT /api/v1/groups/{groupID}/matches/{matchID}/prediction` salva ou edita o palpite antes do inicio do jogo.
 
-### Resultado e pontuacao
+`PUT /api/v1/matches/{matchID}/result` registra ou altera um placar manualmente, recalcula pontos e emite eventos realtime quando houver mudanca.
 
-`PUT /api/v1/matches/{matchID}/result` registra o placar final e calcula os pontos dos palpites da partida:
+`GET /api/v1/me/score` retorna a pontuacao geral do usuario autenticado.
 
-- placar exato: 10 pontos
-- acertou vencedor ou empate: 5 pontos
-- errou tudo: 0 pontos
+`GET /api/v1/groups/{groupID}/ranking` retorna posicao, usuario e pontuacao total dos participantes ativos do grupo.
 
-`GET /api/v1/me/score` retorna a pontuacao geral do usuario autenticado, somando os palpites pontuados em todos os grupos ativos.
+Pontuacao atual:
 
-`GET /api/v1/groups/{groupID}/ranking` retorna o ranking do grupo com posicao, usuario e pontuacao total de cada participante ativo.
+- Placar exato: 10 pontos
+- Acertou vencedor ou empate: 5 pontos
+- Errou tudo: 0 pontos
 
-Quando a sincronizacao externa recebe um jogo `live` ou `finished` com placar, o backend atualiza `world_cup_matches`, registra gols em `match_events` e recalcula apenas os palpites com pontos alterados. Isso deixa o ranking pronto para emissao via WebSocket.
+## Sincronizacao de partidas
 
-### Realtime
+O comando `cmd/matchsync` consome:
 
-`GET /ws?token=<access_token>&group_id=<groupID>` abre uma conexao WebSocket autenticada. Quando o sync ou a rota manual de resultado altera placar/pontos, o backend emite eventos como `match.updated`, `match.finished`, `match.goal` e `ranking.updated`. O app usa esses eventos para recarregar jogos e ranking automaticamente, sem refresh manual.
+```text
+GET https://api.football-data.org/v4/competitions/WC/matches
+```
 
-## Comandos
+E usa polling adaptativo:
+
+- Jogos ao vivo: a cada 30s
+- Jogos do dia: a cada 5min
+- Proximos jogos: a cada 1h
+- Limite respeitado: 10 requests/min, com intervalo minimo entre chamadas
+
+O syncer compara resposta externa com o estado atual do banco. Ele atualiza o banco e publica eventos apenas quando existe alteracao real de status, placar, gols ou resultado final.
+
+Mais detalhes: [`docs/realtime-match-sync.md`](docs/realtime-match-sync.md).
+
+## Realtime
+
+`GET /ws?token=<access_token>&group_id=<groupID>` abre uma conexao WebSocket autenticada.
+
+Eventos emitidos:
+
+```json
+{
+  "type": "match.updated",
+  "group_id": "uuid",
+  "payload": {
+    "match_id": "uuid"
+  }
+}
+```
+
+```json
+{
+  "type": "ranking.updated",
+  "group_id": "uuid",
+  "payload": {
+    "group_id": "uuid"
+  }
+}
+```
+
+```json
+{
+  "type": "match.finished",
+  "group_id": "uuid",
+  "payload": {
+    "message": "Brasil 2x1 Croacia - resultado final lancado"
+  }
+}
+```
+
+O frontend usa esses eventos para invalidar dados de jogos/ranking e mostrar notificacoes temporarias.
+
+## Banco
+
+As migrations sao aplicadas na inicializacao da API. As principais tabelas sao:
+
+- `groups`
+- `group_members`
+- `world_cup_matches`
+- `predictions`
+- `match_events`
+
+Regras importantes:
+
+- Owner tambem e membro do grupo.
+- Grupo privado cria solicitacao pendente antes de virar membro ativo.
+- Palpite so pode ser editado antes do inicio da partida.
+- Ranking e derivado dos palpites pontuados por grupo.
+
+## Qualidade
 
 ```bash
-make run
-make test
 make fmt
 make vet
+make test
 ```
