@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gabrielevieira/palpitai/backend/internal/cache"
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
 	"github.com/gabrielevieira/palpitai/backend/internal/database"
 	"github.com/gabrielevieira/palpitai/backend/internal/realtime"
@@ -30,6 +31,17 @@ func main() {
 	}
 	defer db.Close()
 
+	redisClient, err := cache.NewRedisClient(startupCtx, cfg.RedisURL)
+	if err != nil {
+		logger.Error("redis connection failed", "error", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			logger.Error("redis close failed", "error", err)
+		}
+	}()
+
 	if err := database.Migrate(startupCtx, db); err != nil {
 		logger.Error("database migration failed", "error", err)
 		os.Exit(1)
@@ -39,12 +51,12 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           route.NewRouter(cfg, db, realtimeHub),
+		Handler:           route.NewRouter(cfg, db, route.Services{Realtime: realtimeHub, Redis: redisClient}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	go func() {
-		logger.Info("api server started", "addr", server.Addr, "env", cfg.Env, "database", "connected")
+		logger.Info("api server started", "addr", server.Addr, "env", cfg.Env, "database", "connected", "redis", "connected")
 
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Error("api server failed", "error", err)

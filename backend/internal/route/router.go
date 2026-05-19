@@ -8,18 +8,25 @@ import (
 	"github.com/gabrielevieira/palpitai/backend/internal/usecase"
 )
 
-func NewRouter(cfg config.Config, db usecase.Datastore, hub ...controller.RealtimeService) http.Handler {
+type Services struct {
+	Realtime controller.RealtimeService
+	Redis    controller.PingService
+}
+
+func NewRouter(cfg config.Config, db usecase.Datastore, services ...Services) http.Handler {
 	mux := http.NewServeMux()
 	var realtimeHub controller.RealtimeService
-	if len(hub) > 0 {
-		realtimeHub = hub[0]
+	var redis controller.PingService
+	if len(services) > 0 {
+		realtimeHub = services[0].Realtime
+		redis = services[0].Redis
 	}
 	groups := usecase.NewGroupUsecase(db)
 	predictions := usecase.NewPredictionUsecase(db)
 
-	mux.HandleFunc("GET /health", controller.HealthHandler(db))
+	mux.HandleFunc("GET /health", controller.HealthHandler(db, redis))
 	mux.HandleFunc("GET /ws", controller.RealtimeHandler(cfg, db, realtimeHub))
-	mux.HandleFunc("GET /api/v1/status", controller.StatusHandler(cfg, db))
+	mux.HandleFunc("GET /api/v1/status", controller.StatusHandler(cfg, db, redis))
 	mux.HandleFunc("GET /api/v1/me/score", controller.UserScoreHandler(cfg, predictions))
 	mux.HandleFunc("GET /api/v1/groups", controller.ListGroupsHandler(cfg, groups))
 	mux.HandleFunc("POST /api/v1/groups", controller.CreateGroupHandler(cfg, groups))

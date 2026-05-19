@@ -10,6 +10,7 @@ type Config struct {
 	FootballDataSeason          string
 	FootballDataToken           string
 	Port                        string
+	RedisURL                    string
 	SupabaseKey                 string
 	SupabaseURL                 string
 }
@@ -23,6 +24,7 @@ func Load() Config {
 		FootballDataSeason:          getEnv("FOOTBALL_DATA_SEASON", ""),
 		FootballDataToken:           getEnv("FOOTBALL_DATA_TOKEN", ""),
 		Port:                        getEnv("PORT", "3000"),
+		RedisURL:                    getEnv("REDIS_URL", ""),
 		SupabaseKey:                 getEnv("SUPABASE_KEY", ""),
 		SupabaseURL:                 getEnv("SUPABASE_URL", ""),
 	}

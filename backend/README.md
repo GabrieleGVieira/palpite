@@ -6,6 +6,7 @@ Backend em Go do PalpitAI. Ele expoe a API HTTP, valida usuarios autenticados pe
 
 - Go 1.24+
 - Banco Supabase/Postgres
+- Redis Upstash
 - URL e chave publica do Supabase
 - Token do football-data.org
 
@@ -21,6 +22,7 @@ Variaveis:
 APP_ENV=development
 PORT=3000
 DATABASE_URL=postgresql://postgres:password@db.project.supabase.co:5432/postgres
+REDIS_URL=redis://default:token@host.upstash.io:6379
 SUPABASE_URL=https://project.supabase.co
 SUPABASE_KEY=cole_a_chave_publica_aqui
 FOOTBALL_DATA_API_BASE_URL=https://api.football-data.org/v4
@@ -30,6 +32,7 @@ FOOTBALL_DATA_TOKEN=cole_o_token_aqui
 ```
 
 O backend adiciona `sslmode=require` automaticamente quando `DATABASE_URL` nao informa `sslmode`.
+O cliente Redis usa TLS automaticamente para conectar no Upstash via `REDIS_URL`.
 
 ## Como rodar
 

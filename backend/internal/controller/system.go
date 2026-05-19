@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -9,7 +10,11 @@ import (
 	"github.com/gabrielevieira/palpitai/backend/internal/usecase"
 )
 
-func HealthHandler(db usecase.Datastore) http.HandlerFunc {
+type PingService interface {
+	Ping(ctx context.Context) error
+}
+
+func HealthHandler(db usecase.Datastore, redis PingService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if db == nil {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]string{
@@ -27,16 +32,28 @@ func HealthHandler(db usecase.Datastore) http.HandlerFunc {
 			return
 		}
 
+		redisStatus := pingStatus(r.Context(), redis)
+		if redisStatus == "unavailable" {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]string{
+				"database": "ok",
+				"redis":    redisStatus,
+				"status":   "degraded",
+			})
+			return
+		}
+
 		writeJSON(w, http.StatusOK, map[string]string{
 			"database": "ok",
+			"redis":    redisStatus,
 			"status":   "ok",
 		})
 	}
 }
 
-func StatusHandler(cfg config.Config, db usecase.Datastore) http.HandlerFunc {
+func StatusHandler(cfg config.Config, db usecase.Datastore, redis PingService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		databaseStatus := "ok"
+		redisStatus := pingStatus(r.Context(), redis)
 		responseStatus := "ok"
 
 		if db == nil {
@@ -46,13 +63,29 @@ func StatusHandler(cfg config.Config, db usecase.Datastore) http.HandlerFunc {
 			databaseStatus = "unavailable"
 			responseStatus = "degraded"
 		}
+		if redisStatus == "unavailable" {
+			responseStatus = "degraded"
+		}
 
 		writeJSON(w, http.StatusOK, dto.StatusResponse{
 			App:       "palpitai-api",
 			Database:  databaseStatus,
 			Env:       cfg.Env,
+			Redis:     redisStatus,
 			Status:    responseStatus,
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 		})
 	}
+}
+
+func pingStatus(ctx context.Context, service PingService) string {
+	if service == nil {
+		return "not_configured"
+	}
+
+	if err := service.Ping(ctx); err != nil {
+		return "unavailable"
+	}
+
+	return "ok"
 }

@@ -6,6 +6,7 @@ type StatusResponse struct {
 	App       string `json:"app"`
 	Database  string `json:"database"`
 	Env       string `json:"env"`
+	Redis     string `json:"redis"`
 	Status    string `json:"status"`
 	Timestamp string `json:"timestamp"`
 }
