@@ -32,6 +32,7 @@ func (hub *Hub) ServeWS(w http.ResponseWriter, r *http.Request, userID string, r
 
 	nextClient := newClient(userID, rooms, conn)
 	hub.registerClient(nextClient)
+	hub.logger.Info("websocket client connected", "user_id", userID, "rooms", rooms)
 
 	go hub.writePump(nextClient)
 	hub.readPump(nextClient)
@@ -54,4 +55,5 @@ func (hub *Hub) closeClient(client *client) {
 	if client.conn != nil {
 		_ = client.conn.Close()
 	}
+	hub.logger.Info("websocket client disconnected", "user_id", client.userID)
 }

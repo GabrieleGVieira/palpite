@@ -18,6 +18,7 @@ func (hub *Hub) Publish(_ context.Context, event domain.Event) {
 	}
 
 	staleClients := []*client{}
+	deliveredClients := 0
 
 	hub.mu.RLock()
 	for client := range hub.clients {
@@ -27,11 +28,22 @@ func (hub *Hub) Publish(_ context.Context, event domain.Event) {
 
 		select {
 		case client.send <- outbound:
+			deliveredClients++
 		default:
 			staleClients = append(staleClients, client)
 		}
 	}
 	hub.mu.RUnlock()
+
+	hub.logger.Info(
+		"realtime event delivered to websocket clients",
+		"name", event.Name,
+		"room", event.Room,
+		"match_id", event.Payload["match_id"],
+		"group_id", event.Payload["group_id"],
+		"clients", deliveredClients,
+		"stale_clients", len(staleClients),
+	)
 
 	for _, client := range staleClients {
 		hub.closeClient(client)

@@ -82,6 +82,13 @@ func SubscribeRedis(ctx context.Context, client *cache.RedisClient, hub Publishe
 				continue
 			}
 
+			logger.Info(
+				"redis realtime event received",
+				"name", event.Name,
+				"room", event.Room,
+				"match_id", event.Payload["match_id"],
+				"group_id", event.Payload["group_id"],
+			)
 			hub.Publish(ctx, event)
 		}
 	}

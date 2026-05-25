@@ -12,7 +12,7 @@ const (
 	// livePollInterval define a frequencia de atualizacao para partidas ao vivo.
 	livePollInterval = 30 * time.Second
 	// liveRecentWindow define uma margem para capturar jogos que sairam de live entre polls.
-	liveRecentWindow = 24 * time.Hour
+	liveRecentWindow = 5 * time.Hour
 	// rateLimitGap mantem um espacamento minimo entre chamadas ao football-data.
 	rateLimitGap = 6 * time.Second
 	// todayPollInterval define a frequencia para revisar jogos do dia.

@@ -166,8 +166,8 @@ func (syncer *Syncer) syncMatch(ctx context.Context, match domain.ProviderMatch)
 		return domain.SyncSummary{}, err
 	}
 
-	// 7. Se a pontuacao mudou por causa de uma mudanca da partida, notifica rankings afetados.
-	if scoredPredictions > 0 && changedRows > 0 {
+	// 7. Se a pontuacao final mudou por causa de uma partida encerrada, notifica rankings afetados.
+	if match.Status == "finished" && scoredPredictions > 0 && changedRows > 0 {
 		if err := syncer.publishRankingChanged(ctx, matchID, match); err != nil {
 			return domain.SyncSummary{}, err
 		}
@@ -199,7 +199,7 @@ func (syncer *Syncer) syncGoals(ctx context.Context, matchID string, match domai
 
 		// 4. Para gol novo, incrementa o contador e publica o evento na sala da partida.
 		created++
-		syncer.publisher.Publish(ctx, domain.Event{
+		syncer.publishRealtimeEvent(ctx, domain.Event{
 			Name: "match.goal",
 			Payload: map[string]any{
 				"away_score":  goal.AwayScore,

@@ -27,7 +27,7 @@ func (syncer *Syncer) publishMatchChanged(ctx context.Context, matchID string, p
 	}
 
 	// 2. Publica a atualizacao geral para clientes inscritos na sala de partidas.
-	syncer.publisher.Publish(ctx, domain.Event{
+	syncer.publishRealtimeEvent(ctx, domain.Event{
 		Name:    "match.updated",
 		Payload: payload,
 		Room:    "matches",
@@ -35,7 +35,7 @@ func (syncer *Syncer) publishMatchChanged(ctx context.Context, matchID string, p
 
 	// 3. Quando a partida termina, publica tambem um evento semantico de encerramento.
 	if match.Status == "finished" {
-		syncer.publisher.Publish(ctx, domain.Event{
+		syncer.publishRealtimeEvent(ctx, domain.Event{
 			Name:    "match.finished",
 			Payload: payload,
 			Room:    "matches",
@@ -64,13 +64,13 @@ func (syncer *Syncer) publishRankingChanged(ctx context.Context, matchID string,
 		}
 
 		// 3. Publica em uma sala geral de rankings para telas agregadas.
-		syncer.publisher.Publish(ctx, domain.Event{
+		syncer.publishRealtimeEvent(ctx, domain.Event{
 			Name:    "ranking.updated",
 			Payload: payload,
 			Room:    "rankings",
 		})
 		// 4. Publica tambem na sala especifica do grupo para atualizar detalhes em tempo real.
-		syncer.publisher.Publish(ctx, domain.Event{
+		syncer.publishRealtimeEvent(ctx, domain.Event{
 			Name:    "ranking.updated",
 			Payload: payload,
 			Room:    "group:" + group.ID,
@@ -78,6 +78,18 @@ func (syncer *Syncer) publishRankingChanged(ctx context.Context, matchID string,
 	}
 
 	return nil
+}
+
+func (syncer *Syncer) publishRealtimeEvent(ctx context.Context, event domain.Event) {
+	syncer.logger.Info(
+		"realtime event sent to frontend",
+		"name", event.Name,
+		"room", event.Room,
+		"match_id", event.Payload["match_id"],
+		"group_id", event.Payload["group_id"],
+		"status", event.Payload["status"],
+	)
+	syncer.publisher.Publish(ctx, event)
 }
 
 func scorePair(homeScore *int, awayScore *int) map[string]*int {
