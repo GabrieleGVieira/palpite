@@ -19,10 +19,10 @@ func New(db repositories.Querier) Repository {
 	return Repository{db: db}
 }
 
-func (r Repository) FindPendingMatchesForExplanation(ctx context.Context, fromDate time.Time, toDate time.Time, limit int, promptVersion string) ([]models.ExplanationCandidate, error) {
+func (r Repository) FindPendingMatchesForExplanation(ctx context.Context, fromDate time.Time, toDate time.Time, limit int, promptVersion string, staleBefore time.Time) ([]models.ExplanationCandidate, error) {
 	rows, err := r.db.Query(ctx, `
 		select
-			coalesce(mp.match_id, mgp.match_id)::text as match_id,
+			wm.id::text as match_id,
 			mf.match_date,
 			mf.stage,
 			mf.home_team_id::text,
@@ -53,7 +53,10 @@ func (r Repository) FindPendingMatchesForExplanation(ctx context.Context, fromDa
 			mf.away_recent_form_score::float8,
 			mf.home_world_cup_history_score::float8,
 			mf.away_world_cup_history_score::float8,
-			pe.id::text as existing_explanation_id
+			pe.id::text as existing_explanation_id,
+			pe.ai_explanation_generated_at as existing_generated_at,
+			pe.status as existing_status,
+			coalesce(pe.ai_explanation_retry_count, 0) as existing_retry_count
 		from match_features mf
 		join world_cup_matches wm on wm.id = mf.match_id
 		join teams ht on ht.id = mf.home_team_id
@@ -80,17 +83,19 @@ func (r Repository) FindPendingMatchesForExplanation(ctx context.Context, fromDa
 			and pe.home_team_id = mf.home_team_id
 			and pe.away_team_id = mf.away_team_id
 			and pe.prompt_version = $3
-			and pe.status = 'generated'
 		where mf.match_date between $1 and $2
 			and lower(wm.status) in ('scheduled', 'schedule', 'timed')
 			and (
 				pe.id is null
+				or pe.status <> 'generated'
+				or pe.ai_explanation_generated_at is null
+				or pe.ai_explanation_generated_at < $5
 				or pe.match_prediction_id is distinct from mp.id
 				or pe.goal_prediction_id is distinct from mgp.id
 			)
 		order by wm.kickoff_at asc, mf.match_date asc, mf.id asc
 		limit $4
-	`, fromDate, toDate, promptVersion, limit)
+	`, fromDate, toDate, promptVersion, limit, staleBefore)
 	if err != nil {
 		return nil, err
 	}
@@ -132,6 +137,9 @@ func (r Repository) FindPendingMatchesForExplanation(ctx context.Context, fromDa
 			&candidate.HomeWorldCupHistoryScore,
 			&candidate.AwayWorldCupHistoryScore,
 			&candidate.ExistingExplanationID,
+			&candidate.ExistingGeneratedAt,
+			&candidate.ExistingStatus,
+			&candidate.ExistingRetryCount,
 		); err != nil {
 			return nil, err
 		}
@@ -145,6 +153,29 @@ func (r Repository) FindPendingMatchesForExplanation(ctx context.Context, fromDa
 		candidates = append(candidates, candidate)
 	}
 	return candidates, rows.Err()
+}
+
+func (r Repository) MarkGenerating(ctx context.Context, candidate models.ExplanationCandidate, promptVersion string, modelName string, inputSnapshot json.RawMessage) error {
+	_, err := r.UpsertExplanation(ctx, models.UpsertExplanationParams{
+		MatchID:           candidate.MatchID,
+		MatchPredictionID: candidate.MatchPredictionID,
+		GoalPredictionID:  candidate.GoalPredictionID,
+		HomeTeamID:        candidate.HomeTeamID,
+		AwayTeamID:        candidate.AwayTeamID,
+		MatchDate:         candidate.MatchDate,
+		Summary:           "Gerando explicacao.",
+		MainReasons:       []string{},
+		ModelName:         modelName,
+		PromptVersion:     promptVersion,
+		InputSnapshot:     inputSnapshot,
+		RawResponse:       json.RawMessage(`null`),
+		Status:            "generating",
+		RetryCount:        candidate.ExistingRetryCount,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	return err
 }
 
 func (r Repository) ScoreProbabilities(ctx context.Context, goalPredictionID string) ([]models.ScoreProbability, error) {
@@ -180,9 +211,16 @@ func (r Repository) UpsertExplanation(ctx context.Context, params models.UpsertE
 		insert into prediction_explanations (
 			match_id, match_prediction_id, goal_prediction_id, home_team_id, away_team_id,
 			match_date, summary, main_reasons, risk_alert, bet_style, user_tip,
-			model_name, prompt_version, input_snapshot, raw_response, status, error_message
+			model_name, prompt_version, input_snapshot, raw_response, status, error_message,
+			ai_explanation_generated_at, ai_explanation_version, ai_explanation_retry_count
 		)
-		values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14::jsonb, $15::jsonb, $16, $17)
+		values (
+			$1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13,
+			$14::jsonb, $15::jsonb, $16, $17,
+			case when $16 = 'generated' then now() else null end,
+			1,
+			$18
+		)
 		on conflict (match_date, home_team_id, away_team_id, prompt_version) do update set
 			match_id = excluded.match_id,
 			match_prediction_id = excluded.match_prediction_id,
@@ -197,13 +235,26 @@ func (r Repository) UpsertExplanation(ctx context.Context, params models.UpsertE
 			raw_response = excluded.raw_response,
 			status = excluded.status,
 			error_message = excluded.error_message,
+			ai_explanation_generated_at = case
+				when excluded.status = 'generated' then now()
+				else prediction_explanations.ai_explanation_generated_at
+			end,
+			ai_explanation_version = case
+				when excluded.status = 'generated' then prediction_explanations.ai_explanation_version + 1
+				else prediction_explanations.ai_explanation_version
+			end,
+			ai_explanation_retry_count = excluded.ai_explanation_retry_count,
 			updated_at = now()
-		where excluded.status = 'generated'
-			or prediction_explanations.status <> 'generated'
+		where not (
+			prediction_explanations.status = 'generated'
+			and excluded.status in ('generating', 'failed')
+			and prediction_explanations.match_prediction_id is not distinct from excluded.match_prediction_id
+			and prediction_explanations.goal_prediction_id is not distinct from excluded.goal_prediction_id
+		)
 		returning id::text
 	`, params.MatchID, params.MatchPredictionID, params.GoalPredictionID, params.HomeTeamID, params.AwayTeamID,
 		params.MatchDate, params.Summary, string(reasons), params.RiskAlert, params.BetStyle, params.UserTip,
-		params.ModelName, params.PromptVersion, string(ensureJSON(params.InputSnapshot, `{}`)), string(ensureJSON(params.RawResponse, `null`)), params.Status, params.ErrorMessage).Scan(&id)
+		params.ModelName, params.PromptVersion, string(ensureJSON(params.InputSnapshot, `{}`)), string(ensureJSON(params.RawResponse, `null`)), params.Status, params.ErrorMessage, params.RetryCount).Scan(&id)
 	return id, err
 }
 
@@ -223,29 +274,7 @@ func (r Repository) MarkFailed(ctx context.Context, candidate models.Explanation
 		RawResponse:       rawResponse,
 		Status:            "failed",
 		ErrorMessage:      &message,
-	})
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil
-	}
-	return err
-}
-
-func (r Repository) MarkSkipped(ctx context.Context, candidate models.ExplanationCandidate, promptVersion string, reason string) error {
-	_, err := r.UpsertExplanation(ctx, models.UpsertExplanationParams{
-		MatchID:           candidate.MatchID,
-		MatchPredictionID: candidate.MatchPredictionID,
-		GoalPredictionID:  candidate.GoalPredictionID,
-		HomeTeamID:        candidate.HomeTeamID,
-		AwayTeamID:        candidate.AwayTeamID,
-		MatchDate:         candidate.MatchDate,
-		Summary:           "Explicacao ignorada por dados insuficientes.",
-		MainReasons:       []string{},
-		ModelName:         "none",
-		PromptVersion:     promptVersion,
-		InputSnapshot:     json.RawMessage(`{}`),
-		RawResponse:       json.RawMessage(`null`),
-		Status:            "skipped",
-		ErrorMessage:      &reason,
+		RetryCount:        candidate.ExistingRetryCount,
 	})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil
@@ -266,7 +295,8 @@ func (r Repository) findOne(ctx context.Context, where string, args ...any) (mod
 		select id::text, match_id::text, match_prediction_id::text, goal_prediction_id::text,
 			home_team_id::text, away_team_id::text, match_date, summary, main_reasons,
 			risk_alert, bet_style, user_tip, model_name, prompt_version,
-			input_snapshot, raw_response, status, error_message, created_at, updated_at
+			input_snapshot, raw_response, status, error_message, ai_explanation_generated_at,
+			ai_explanation_version, ai_explanation_retry_count, created_at, updated_at
 		from prediction_explanations
 		where ` + where + `
 		order by created_at desc
@@ -293,6 +323,9 @@ func (r Repository) findOne(ctx context.Context, where string, args ...any) (mod
 		&explanation.RawResponse,
 		&explanation.Status,
 		&explanation.ErrorMessage,
+		&explanation.GeneratedAt,
+		&explanation.Version,
+		&explanation.RetryCount,
 		&explanation.CreatedAt,
 		&explanation.UpdatedAt,
 	)

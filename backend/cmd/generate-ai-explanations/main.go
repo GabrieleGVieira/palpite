@@ -36,11 +36,13 @@ func main() {
 	seedDays, _ := strconv.Atoi(cfg.AIExplanationSeedDays)
 	refreshDays, _ := strconv.Atoi(cfg.AIExplanationRefreshDays)
 	maxAgeHours, _ := strconv.Atoi(cfg.AIExplanationMaxAgeHours)
+
 	fromDate, toDate, err := explanationWindow(*mode, *fromDateArg, *toDateArg, seedDays, refreshDays)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+
 	aiClient, err := ai.NewGeminiClient(cfg.GeminiAPIKey, cfg.GeminiModel, time.Duration(timeoutSeconds)*time.Second)
 	if err != nil {
 		logger.Error("ai client setup failed", "error", err)
@@ -72,6 +74,9 @@ func main() {
 	}
 
 	fmt.Println("AI explanation generation finished")
+	fmt.Printf("Mode: %s\n", *mode)
+	fmt.Printf("From: %s\n", fromDate.Format("2006-01-02"))
+	fmt.Printf("To: %s\n", toDate.Format("2006-01-02"))
 	fmt.Printf("Processed: %d\n", summary.Processed)
 	fmt.Printf("Generated: %d\n", summary.Generated)
 	fmt.Printf("Failed: %d\n", summary.Failed)

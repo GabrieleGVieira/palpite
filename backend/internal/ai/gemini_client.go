@@ -62,7 +62,7 @@ func (c *GeminiClient) GeneratePredictionExplanation(ctx context.Context, input 
 	if err != nil {
 		return nil, err
 	}
-	raw, err := c.generateContent(ctx, prompt.User, prompt.System)
+	raw, err := c.generateContent(ctx, prompt.User, prompt.System, GeminiExplanationSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +73,39 @@ func (c *GeminiClient) GeneratePredictionExplanation(ctx context.Context, input 
 	}
 
 	correctionPrompt := prompt.User + "\n\nA resposta anterior foi invalida pelo seguinte motivo: " + validationErr.Error() + ". Retorne novamente apenas JSON valido seguindo o schema."
-	raw, err = c.generateContent(ctx, correctionPrompt, prompt.System)
+	raw, err = c.generateContent(ctx, correctionPrompt, prompt.System, GeminiExplanationSchema())
 	if err != nil {
 		return nil, err
 	}
 	parsed, validationErr = ParseAndValidateExplanation(raw, input)
+	if validationErr != nil {
+		return nil, InvalidResponseError{RawResponse: raw, Err: validationErr}
+	}
+	parsed.RawResponse = raw
+	return parsed, nil
+}
+
+func (c *GeminiClient) GeneratePredictionExplanations(ctx context.Context, inputs []ExplanationPromptInput) (*BatchExplanationAIResponse, error) {
+	prompt, err := BuildBatchPredictionExplanationPrompt(inputs)
+	if err != nil {
+		return nil, err
+	}
+	raw, err := c.generateContent(ctx, prompt.User, prompt.System, GeminiBatchExplanationSchema())
+	if err != nil {
+		return nil, err
+	}
+	parsed, validationErr := ParseAndValidateBatchExplanations(raw, inputs)
+	if validationErr == nil {
+		parsed.RawResponse = raw
+		return parsed, nil
+	}
+
+	correctionPrompt := prompt.User + "\n\nA resposta anterior foi invalida pelo seguinte motivo: " + validationErr.Error() + ". Retorne novamente apenas JSON valido seguindo o schema. O array predictions deve ter exatamente " + strconv.Itoa(len(inputs)) + " itens, um para cada match_id enviado, sem omitir partidas."
+	raw, err = c.generateContent(ctx, correctionPrompt, prompt.System, GeminiBatchExplanationSchema())
+	if err != nil {
+		return nil, err
+	}
+	parsed, validationErr = ParseAndValidateBatchExplanations(raw, inputs)
 	if validationErr != nil {
 		return nil, InvalidResponseError{RawResponse: raw, Err: validationErr}
 	}
@@ -98,7 +126,7 @@ func (e InvalidResponseError) Unwrap() error {
 	return e.Err
 }
 
-func (c *GeminiClient) generateContent(ctx context.Context, userPrompt string, systemPrompt string) ([]byte, error) {
+func (c *GeminiClient) generateContent(ctx context.Context, userPrompt string, systemPrompt string, responseSchema map[string]any) ([]byte, error) {
 	requestBody := map[string]any{
 		"contents": []map[string]any{
 			{
@@ -115,7 +143,7 @@ func (c *GeminiClient) generateContent(ctx context.Context, userPrompt string, s
 		},
 		"generationConfig": map[string]any{
 			"responseMimeType": "application/json",
-			"responseSchema":   GeminiExplanationSchema(),
+			"responseSchema":   responseSchema,
 		},
 	}
 	payload, err := json.Marshal(requestBody)

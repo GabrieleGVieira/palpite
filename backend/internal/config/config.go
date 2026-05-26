@@ -19,6 +19,13 @@ type Config struct {
 	GeminiRateLimitMaxWaits        string
 	GeminiRequestDelaySeconds      string
 	GeminiTimeoutSeconds           string
+	AIExplanationBatchSize         string
+	AIExplanationMinBatchSize      string
+	AIExplanationRetryMissing      string
+	AIExplanationMaxMissingRetries string
+	AIExplanationSeedDays          string
+	AIExplanationRefreshDays       string
+	AIExplanationMaxAgeHours       string
 	Port                           string
 	RedisURL                       string
 	SupabaseKey                    string
@@ -41,6 +48,13 @@ func Load() Config {
 		GeminiRateLimitMaxWaits:        getEnv("GEMINI_RATE_LIMIT_MAX_WAITS", "1"),
 		GeminiRequestDelaySeconds:      getEnv("GEMINI_REQUEST_DELAY_SECONDS", "15"),
 		GeminiTimeoutSeconds:           getEnv("GEMINI_TIMEOUT_SECONDS", "30"),
+		AIExplanationBatchSize:         getEnv("AI_EXPLANATION_BATCH_SIZE", "2"),
+		AIExplanationMinBatchSize:      getEnv("AI_EXPLANATION_MIN_BATCH_SIZE", "1"),
+		AIExplanationRetryMissing:      getEnv("AI_EXPLANATION_RETRY_MISSING", "true"),
+		AIExplanationMaxMissingRetries: getEnv("AI_EXPLANATION_MAX_MISSING_RETRIES", "2"),
+		AIExplanationSeedDays:          getEnv("AI_EXPLANATION_SEED_DAYS", "90"),
+		AIExplanationRefreshDays:       getEnv("AI_EXPLANATION_REFRESH_DAYS", "7"),
+		AIExplanationMaxAgeHours:       getEnv("AI_EXPLANATION_MAX_AGE_HOURS", "24"),
 		Port:                           getEnv("PORT", "3000"),
 		RedisURL:                       getEnv("REDIS_URL", ""),
 		SupabaseKey:                    getEnv("SUPABASE_KEY", ""),

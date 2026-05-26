@@ -27,7 +27,7 @@ export function CreateGroupTeamSelector({
             ? `${selectedTeams.length} selecionada${selectedTeams.length > 1 ? 's' : ''}`
             : 'Escolha uma ou mais seleções'}
         </Text>
-        <Text style={styles.dropdownIcon}>{isOpen ? '⌃' : '⌄'}</Text>
+        <Text style={styles.dropdownIcon}>{isOpen ? '▲' : '▼'}</Text>
       </Pressable>
 
       {selectedTeams.length > 0 ? (

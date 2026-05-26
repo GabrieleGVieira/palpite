@@ -24,6 +24,9 @@ type PredictionExplanation struct {
 	RawResponse       json.RawMessage
 	Status            string
 	ErrorMessage      *string
+	GeneratedAt       *time.Time
+	Version           int
+	RetryCount        int
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 }
@@ -62,6 +65,9 @@ type ExplanationCandidate struct {
 	AwayWorldCupHistoryScore  *float64
 	TopScoreProbabilities     []ScoreProbability
 	ExistingExplanationID     *string
+	ExistingGeneratedAt       *time.Time
+	ExistingStatus            *string
+	ExistingRetryCount        int
 }
 
 type ScoreProbability struct {
@@ -88,4 +94,5 @@ type UpsertExplanationParams struct {
 	RawResponse       json.RawMessage
 	Status            string
 	ErrorMessage      *string
+	RetryCount        int
 }

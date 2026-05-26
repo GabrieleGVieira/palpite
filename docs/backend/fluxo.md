@@ -214,7 +214,49 @@ flowchart TD
 
 ---
 
-## 5. Geração de explicações de IA
+## 5. Leitura de previsão de partida
+
+O endpoint `GET /api/v1/matches/{matchID}/prediction` agrega probabilidades, expected goals, top placares e explicação de IA em uma única resposta.
+
+```mermaid
+sequenceDiagram
+    participant App as App Mobile
+    participant Controller as GetMatchPredictionHandler
+    participant Reader as PredictionReadService
+    participant DB as PostgreSQL
+
+    App->>Controller: GET /api/v1/matches/{matchID}/prediction
+    Note right of App: Authorization: Bearer <token>
+
+    Controller->>Controller: valida token via Supabase
+
+    Controller->>Reader: MatchPredictionByMatchID(matchID)
+    Reader->>DB: SELECT FROM match_predictions
+    DB-->>Reader: MatchPrediction (probabilidades)
+
+    Controller->>Reader: GoalPredictionByMatchID(matchID)
+    Reader->>DB: SELECT FROM match_goal_predictions + match_score_probabilities
+    DB-->>Reader: MatchGoalPrediction (xG, placar mais provável, top scores)
+
+    Controller->>Reader: ExplanationByMatchID(matchID, promptVersion)
+    Reader->>DB: SELECT FROM prediction_explanations WHERE status = 'generated'
+    DB-->>Reader: PredictionExplanation (opcional)
+
+    Controller-->>App: 200 OK { match_id, probabilities, goals?, top_scores?, explanation? }
+```
+
+**Comportamento por campo:**
+
+| Campo | Obrigatório | Comportamento se ausente |
+| --- | --- | --- |
+| `probabilities` | Sim | 404 se `match_prediction` não existir |
+| `goals` | Não | Campo omitido na resposta |
+| `top_scores` | Não | Campo omitido na resposta |
+| `explanation` | Não | Campo omitido se não gerado ainda |
+
+---
+
+## 6. Geração de explicações de IA
 
 O worker `cmd/workers/generate_prediction_explanations` lê previsões do ML e gera explicações em português via Gemini API.
 

@@ -108,11 +108,11 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
 
             <View style={styles.rulesBox}>
               <Text style={styles.rulesTitle}>Regras iniciais</Text>
-              <Text style={styles.rulesText}>10 pontos por placar exato</Text>
-              <Text style={styles.rulesText}>7 pontos por vencedor/empate correto e quantidade  de gols de um dos times</Text>
-              <Text style={styles.rulesText}>5 pontos por vencedor ou empate correto</Text>
-              <Text style={styles.rulesText}>3 pontos por quantidade de gols de um dos times mas sem acertar o vencedor</Text>
-              <Text style={styles.rulesText}>Palpites fecham no início de cada jogo</Text>
+              <Text style={styles.rulesText}>• 10 pontos por placar exato</Text>
+              <Text style={styles.rulesText}>• 7 pontos por vencedor/empate e quantidade de gols de um dos times corretos</Text>
+              <Text style={styles.rulesText}>• 5 pontos por vencedor ou empate correto</Text>
+              <Text style={styles.rulesText}>• 3 pontos por quantidade de gols de um dos times mas sem acertar o vencedor</Text>
+              <Text style={styles.rulesText}>• Palpites fecham no início de cada jogo</Text>
             </View>
 
             {formError ? <Text style={styles.errorText}>{formError}</Text> : null}

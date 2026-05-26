@@ -13,14 +13,20 @@ import (
 )
 
 type fakeRepository struct {
-	candidates []models.ExplanationCandidate
-	generated  int
-	skipped    int
-	failed     int
+	candidates  []models.ExplanationCandidate
+	generated   int
+	failed      int
+	generating  int
+	retryCounts []int
 }
 
-func (r *fakeRepository) FindPendingMatchesForExplanation(ctx context.Context, fromDate time.Time, toDate time.Time, limit int, promptVersion string) ([]models.ExplanationCandidate, error) {
+func (r *fakeRepository) FindPendingMatchesForExplanation(ctx context.Context, fromDate time.Time, toDate time.Time, limit int, promptVersion string, staleBefore time.Time) ([]models.ExplanationCandidate, error) {
 	return r.candidates, nil
+}
+
+func (r *fakeRepository) MarkGenerating(ctx context.Context, candidate models.ExplanationCandidate, promptVersion string, modelName string, inputSnapshot json.RawMessage) error {
+	r.generating++
+	return nil
 }
 
 func (r *fakeRepository) UpsertExplanation(ctx context.Context, params models.UpsertExplanationParams) (string, error) {
@@ -30,21 +36,25 @@ func (r *fakeRepository) UpsertExplanation(ctx context.Context, params models.Up
 
 func (r *fakeRepository) MarkFailed(ctx context.Context, candidate models.ExplanationCandidate, promptVersion string, modelName string, inputSnapshot json.RawMessage, rawResponse json.RawMessage, message string) error {
 	r.failed++
-	return nil
-}
-
-func (r *fakeRepository) MarkSkipped(ctx context.Context, candidate models.ExplanationCandidate, promptVersion string, reason string) error {
-	r.skipped++
+	r.retryCounts = append(r.retryCounts, candidate.ExistingRetryCount)
 	return nil
 }
 
 type fakeAIClient struct {
-	err   error
-	errs  []error
-	calls int
+	err               error
+	errs              []error
+	predictions       []ai.BatchPredictionExplanation
+	predictionBatches [][]ai.BatchPredictionExplanation
+	callMatchIDs      [][]string
+	calls             int
 }
 
-func (c *fakeAIClient) GeneratePredictionExplanation(ctx context.Context, input ai.ExplanationPromptInput) (*ai.ExplanationAIResponse, error) {
+func (c *fakeAIClient) GeneratePredictionExplanations(ctx context.Context, inputs []ai.ExplanationPromptInput) (*ai.BatchExplanationAIResponse, error) {
+	matchIDs := make([]string, 0, len(inputs))
+	for _, input := range inputs {
+		matchIDs = append(matchIDs, *input.Match.MatchID)
+	}
+	c.callMatchIDs = append(c.callMatchIDs, matchIDs)
 	if c.calls < len(c.errs) {
 		err := c.errs[c.calls]
 		c.calls++
@@ -57,49 +67,152 @@ func (c *fakeAIClient) GeneratePredictionExplanation(ctx context.Context, input 
 	if c.err != nil {
 		return nil, c.err
 	}
-	risk := "Ha incerteza relevante."
-	return &ai.ExplanationAIResponse{
-		Summary:     "Brasil aparece como leve favorito.",
-		MainReasons: []string{"Tem leve vantagem nas metricas.", "Os placares indicam equilibrio."},
-		RiskAlert:   &risk,
-		BetStyle:    "moderate",
-		UserTip:     "Use como leitura de tendencia, sem promessa de acerto.",
-		RawResponse: []byte(`{"summary":"Brasil aparece como leve favorito.","main_reasons":["Tem leve vantagem nas metricas.","Os placares indicam equilibrio."],"risk_alert":"Ha incerteza relevante.","bet_style":"moderate","user_tip":"Use como leitura de tendencia, sem promessa de acerto."}`),
+	if c.calls-1 < len(c.predictionBatches) {
+		return &ai.BatchExplanationAIResponse{
+			Predictions: c.predictionBatches[c.calls-1],
+			RawResponse: []byte(`{"predictions":[]}`),
+		}, nil
+	}
+	if c.predictions != nil {
+		return &ai.BatchExplanationAIResponse{
+			Predictions: c.predictions,
+			RawResponse: []byte(`{"predictions":[]}`),
+		}, nil
+	}
+	predictions := make([]ai.BatchPredictionExplanation, 0, len(inputs))
+	for _, input := range inputs {
+		predictions = append(predictions, ai.BatchPredictionExplanation{
+			MatchID:     *input.Match.MatchID,
+			Explanation: "Brasil aparece como leve favorito.",
+			KeyFactors:  []string{"Tem leve vantagem nas metricas.", "Os placares indicam equilibrio."},
+			RiskLevel:   "medium",
+		})
+	}
+	return &ai.BatchExplanationAIResponse{
+		Predictions: predictions,
+		RawResponse: []byte(`{"predictions":[]}`),
 	}, nil
 }
 
-func TestServiceMarksSkippedWhenMissingMatchPrediction(t *testing.T) {
+func TestServiceSavesReturnedMatchesAndFailsMissingMatches(t *testing.T) {
+	secondMatchID := "match-2"
+	repo := &fakeRepository{candidates: []models.ExplanationCandidate{
+		validCandidate(nil),
+		validCandidate(func(c *models.ExplanationCandidate) {
+			c.MatchID = &secondMatchID
+		}),
+	}}
+	client := &fakeAIClient{predictions: []ai.BatchPredictionExplanation{
+		{
+			MatchID:     "match",
+			Explanation: "Brasil aparece como leve favorito.",
+			KeyFactors:  []string{"Tem leve vantagem nas metricas.", "Os placares indicam equilibrio."},
+			RiskLevel:   "medium",
+		},
+	}}
+	service := NewExplanationGenerationService(repo, client, "gemini-test", slog.Default())
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10, 5, time.Hour)
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+	if summary.Generated != 1 || repo.generated != 1 {
+		t.Fatalf("Generated = %d repo=%d", summary.Generated, repo.generated)
+	}
+	if summary.Failed != 1 || repo.failed != 1 {
+		t.Fatalf("Failed = %d repo=%d", summary.Failed, repo.failed)
+	}
+}
+
+func TestServiceRetriesOnlyMissingMatchesWithFallbackBatchSize(t *testing.T) {
+	secondMatchID := "match-2"
+	thirdMatchID := "match-3"
+	repo := &fakeRepository{candidates: []models.ExplanationCandidate{
+		validCandidate(nil),
+		validCandidate(func(c *models.ExplanationCandidate) {
+			c.MatchID = &secondMatchID
+		}),
+		validCandidate(func(c *models.ExplanationCandidate) {
+			c.MatchID = &thirdMatchID
+		}),
+	}}
+	client := &fakeAIClient{predictionBatches: [][]ai.BatchPredictionExplanation{
+		{
+			{
+				MatchID:     "match",
+				Explanation: "Brasil aparece como leve favorito.",
+				KeyFactors:  []string{"Tem leve vantagem nas metricas.", "Os placares indicam equilibrio."},
+				RiskLevel:   "medium",
+			},
+		},
+		{
+			{
+				MatchID:     "match-2",
+				Explanation: "Brasil aparece como leve favorito.",
+				KeyFactors:  []string{"Tem leve vantagem nas metricas.", "Os placares indicam equilibrio."},
+				RiskLevel:   "medium",
+			},
+		},
+		{
+			{
+				MatchID:     "match-3",
+				Explanation: "Brasil aparece como leve favorito.",
+				KeyFactors:  []string{"Tem leve vantagem nas metricas.", "Os placares indicam equilibrio."},
+				RiskLevel:   "medium",
+			},
+		},
+	}}
+	service := NewExplanationGenerationService(repo, client, "gemini-test", slog.Default()).
+		WithMissingRetry(1, true, 2)
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10, 3, time.Hour)
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+	if summary.Generated != 3 || repo.generated != 3 || summary.Failed != 0 {
+		t.Fatalf("summary = %+v repo generated=%d failed=%d", summary, repo.generated, repo.failed)
+	}
+	if len(client.callMatchIDs) != 3 {
+		t.Fatalf("callMatchIDs = %+v", client.callMatchIDs)
+	}
+	if got := client.callMatchIDs[1]; len(got) != 1 || got[0] != "match-2" {
+		t.Fatalf("second call processed %+v, want [match-2]", got)
+	}
+	if got := client.callMatchIDs[2]; len(got) != 1 || got[0] != "match-3" {
+		t.Fatalf("third call processed %+v, want [match-3]", got)
+	}
+}
+
+func TestServiceMarksFailedWhenMissingMatchPrediction(t *testing.T) {
 	repo := &fakeRepository{candidates: []models.ExplanationCandidate{validCandidate(func(c *models.ExplanationCandidate) {
 		c.MatchPredictionID = nil
 	})}}
 	service := NewExplanationGenerationService(repo, &fakeAIClient{}, "gpt-test", slog.Default())
-	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10, 5, time.Hour)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
-	if summary.Skipped != 1 || repo.skipped != 1 {
-		t.Fatalf("Skipped = %d repo=%d", summary.Skipped, repo.skipped)
+	if summary.Failed != 1 || repo.failed != 1 {
+		t.Fatalf("Failed = %d repo=%d", summary.Failed, repo.failed)
 	}
 }
 
-func TestServiceMarksSkippedWhenMissingGoalPrediction(t *testing.T) {
+func TestServiceMarksFailedWhenMissingGoalPrediction(t *testing.T) {
 	repo := &fakeRepository{candidates: []models.ExplanationCandidate{validCandidate(func(c *models.ExplanationCandidate) {
 		c.GoalPredictionID = nil
 	})}}
 	service := NewExplanationGenerationService(repo, &fakeAIClient{}, "gpt-test", slog.Default())
-	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10, 5, time.Hour)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
-	if summary.Skipped != 1 {
-		t.Fatalf("Skipped = %d", summary.Skipped)
+	if summary.Failed != 1 {
+		t.Fatalf("Failed = %d", summary.Failed)
 	}
 }
 
 func TestServiceDoesNotRegenerateWhenRepositoryReturnsNoPending(t *testing.T) {
 	repo := &fakeRepository{}
 	service := NewExplanationGenerationService(repo, &fakeAIClient{}, "gpt-test", slog.Default())
-	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10, 5, time.Hour)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
@@ -111,7 +224,7 @@ func TestServiceDoesNotRegenerateWhenRepositoryReturnsNoPending(t *testing.T) {
 func TestServiceSavesFailedWhenAIReturnsInvalidTwice(t *testing.T) {
 	repo := &fakeRepository{candidates: []models.ExplanationCandidate{validCandidate(nil)}}
 	service := NewExplanationGenerationService(repo, &fakeAIClient{err: errors.New("invalid response after retry")}, "gpt-test", slog.Default())
-	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10, 5, time.Hour)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
@@ -123,21 +236,24 @@ func TestServiceSavesFailedWhenAIReturnsInvalidTwice(t *testing.T) {
 func TestServiceStopsWithoutMarkingFailedWhenRateLimited(t *testing.T) {
 	repo := &fakeRepository{candidates: []models.ExplanationCandidate{
 		validCandidate(nil),
-		validCandidate(nil),
+		validCandidate(func(c *models.ExplanationCandidate) {
+			matchID := "match-2"
+			c.MatchID = &matchID
+		}),
 	}}
 	client := &fakeAIClient{err: ai.RateLimitError{RetryAfter: time.Minute, Message: "quota exceeded"}}
 	service := NewExplanationGenerationService(repo, client, "gemini-test", slog.Default())
-	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10, 5, time.Hour)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
 	if !summary.RateLimited {
 		t.Fatalf("expected RateLimited summary")
 	}
-	if summary.Processed != 1 {
+	if summary.Processed != 2 {
 		t.Fatalf("Processed = %d", summary.Processed)
 	}
-	if summary.Failed != 0 || repo.failed != 0 {
+	if summary.Failed != 2 || repo.failed != 2 {
 		t.Fatalf("Failed = %d repo=%d", summary.Failed, repo.failed)
 	}
 	if repo.generated != 0 {
@@ -153,7 +269,7 @@ func TestServiceWaitsAndRetriesSameCandidateWhenRateLimited(t *testing.T) {
 	}}
 	service := NewExplanationGenerationService(repo, client, "gemini-test", slog.Default()).
 		WithRateLimitCooldown(time.Millisecond, 1)
-	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10, 5, time.Hour)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
@@ -169,6 +285,7 @@ func TestServiceWaitsAndRetriesSameCandidateWhenRateLimited(t *testing.T) {
 }
 
 func validCandidate(mutator func(*models.ExplanationCandidate)) models.ExplanationCandidate {
+	matchID := "match"
 	matchPredictionID := "mp"
 	goalPredictionID := "gp"
 	homeWin := 0.46
@@ -184,6 +301,7 @@ func validCandidate(mutator func(*models.ExplanationCandidate)) models.Explanati
 	btts := 0.52
 	candidate := models.ExplanationCandidate{
 		MatchDate:                 time.Date(2026, 6, 20, 0, 0, 0, 0, time.UTC),
+		MatchID:                   &matchID,
 		HomeTeamID:                "home",
 		AwayTeamID:                "away",
 		HomeTeam:                  "Brasil",

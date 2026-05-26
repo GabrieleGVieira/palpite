@@ -28,6 +28,9 @@ graph TD
     HOME -- "WebSocket" --> REALTIME["useRealtimeEvents"]
     DETAIL -- "WebSocket" --> REALTIME
     REALTIME --> CACHE["Invalida cache\nReact Query"]
+
+    DETAIL -- "abre partida" --> PRED["MatchPredictionCard\n(useMatchPrediction)"]
+    PRED -- "GET /api/v1/matches/{id}/prediction" --> BACKEND["Backend Go"]
 ```
 
 ---
@@ -127,6 +130,11 @@ flowchart TD
     EDIT_PRED --> SAVE_PRED["PUT /api/v1/groups/{gid}/matches/{mid}/prediction"]
     SAVE_PRED --> UPDATE_CACHE["Atualiza cache in-place\nInvalida ranking + score"]
 
+    CARD --> AI_PRED["MatchPredictionCard\n(visível só para partidas scheduled)"]
+    AI_PRED --> FETCH_PRED["GET /api/v1/matches/{mid}/prediction\n(useMatchPrediction)"]
+    FETCH_PRED --> AI_BOX["AiExplanationBox\nProbabilityBar\nExpectedGoalsRow\nTopScoresList"]
+    AI_BOX --> SUGGEST["Sugerir placar\n(onUseSuggestion → preenche palpite)"]
+
     SELECT_GROUP --> IS_OWNER{"é owner?"}
     IS_OWNER -- Sim --> ADMIN_BTN["→ GroupAdminScreen"]
     ADMIN_BTN --> EDIT_GROUP["PUT /api/v1/groups/{gid}"]
@@ -222,6 +230,7 @@ graph LR
         M["['groups', gid, 'matches']"]
         R["['groups', gid, 'ranking']"]
         J["['groups', gid, 'join-requests']"]
+        P["['matchPrediction', matchID]"]
     end
 
     subgraph "Context (global)"
@@ -245,3 +254,46 @@ graph LR
 - `staleTime: 15.000ms` — dados frescos por 15s, sem refetch desnecessário
 - `refetchOnReconnect: true` — revalida ao reconectar
 - Mutations com `retry: 0` — sem auto-retry em erros
+- `['matchPrediction', matchID]` com `staleTime: 5min` — previsões mudam pouco; `retry: 1`
+
+---
+
+## 7. Feature de previsões de IA
+
+O módulo `features/predictions` exibe a previsão gerada pelo ML+IA diretamente no card de partida, antes do kickoff.
+
+```mermaid
+flowchart TD
+    CARD["GroupDetailMatchCard\n(partida selecionada)"] --> STATUS{"status =\nscheduled?"}
+    STATUS -- Não --> HIDE["MatchPredictionCard oculto"]
+    STATUS -- Sim --> HOOK["useMatchPrediction(matchId, status)"]
+
+    HOOK --> QUERY["GET /api/v1/matches/{matchID}/prediction\n(React Query cache 5min)"]
+
+    QUERY --> LOADING["Estado: isLoading\n→ 'Carregando previsão...'"]
+    QUERY --> ERROR["Estado: error\n→ 'Não foi possível carregar'"]
+    QUERY --> NULL["Retorno: null (404)\n→ 'Previsão ainda não disponível'"]
+    QUERY --> DATA["Retorno: MatchPrediction"]
+
+    DATA --> PROB["ProbabilityBar\n(home_win / draw / away_win em %)"]
+    DATA --> GOALS["ExpectedGoalsRow\n(xG casa, xG fora, placar mais provável)"]
+    DATA --> TOP["TopScoresList\n(top placares com % individual)"]
+    DATA --> EXPL{"explanation\npresente?"}
+
+    EXPL -- Sim --> AI["AiExplanationBox\n(summary, main_reasons, risk_alert, user_tip)"]
+    EXPL -- Não --> HIDE2["AiExplanationBox oculto"]
+
+    DATA --> SUGGEST["Botão 'Usar sugestão'\nonUseSuggestion → preenche palpite"]
+```
+
+**Componentes do módulo:**
+
+| Componente | Responsabilidade |
+| --- | --- |
+| `MatchPredictionCard` | Container principal; orquestra loading/error/empty states |
+| `ProbabilityBar` | Barra visual de probabilidades home/draw/away |
+| `ExpectedGoalsRow` | xG de cada time e placar mais provável |
+| `TopScoresList` | Lista os top placares por probabilidade |
+| `AiExplanationBox` | Exibe a explicação gerada pelo Gemini (condicional) |
+
+**Regra de visibilidade:** `useMatchPrediction` só busca dados quando `isScheduledStatus(status) = true`. Para partidas live, finished ou timed, o card não é exibido.

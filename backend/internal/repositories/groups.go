@@ -214,7 +214,7 @@ func InsertGroupWithOwner(ctx context.Context, db Querier, userID string, displa
 		),
 		inserted_member as (
 			insert into group_members (group_id, user_id, role, display_name)
-			select id, owner_id, 'owner', $2 from inserted_group
+			select id, owner_id, 'owner', $9 from inserted_group
 		)
 		select
 			id,
@@ -230,7 +230,6 @@ func InsertGroupWithOwner(ctx context.Context, db Querier, userID string, displa
 		from inserted_group
 	`,
 		userID,
-		displayName,
 		request.Name,
 		request.Description,
 		request.MatchScope,
@@ -238,6 +237,7 @@ func InsertGroupWithOwner(ctx context.Context, db Querier, userID string, displa
 		request.ParticipantLimit,
 		request.IsPrivate,
 		inviteCode,
+		displayName,
 	).Scan(
 		&group.ID,
 		&group.OwnerID,

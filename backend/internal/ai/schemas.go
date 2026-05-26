@@ -9,7 +9,7 @@ import (
 const PromptVersionPredictionExplanationV1 = "prediction-explanation-v1"
 
 type AIClient interface {
-	GeneratePredictionExplanation(ctx context.Context, input ExplanationPromptInput) (*ExplanationAIResponse, error)
+	GeneratePredictionExplanations(ctx context.Context, inputs []ExplanationPromptInput) (*BatchExplanationAIResponse, error)
 }
 
 type ExplanationPromptInput struct {
@@ -71,4 +71,16 @@ type ExplanationAIResponse struct {
 	BetStyle    string   `json:"bet_style"`
 	UserTip     string   `json:"user_tip"`
 	RawResponse []byte   `json:"-"`
+}
+
+type BatchExplanationAIResponse struct {
+	Predictions []BatchPredictionExplanation `json:"predictions"`
+	RawResponse []byte                       `json:"-"`
+}
+
+type BatchPredictionExplanation struct {
+	MatchID     string   `json:"match_id"`
+	Explanation string   `json:"explanation"`
+	KeyFactors  []string `json:"key_factors"`
+	RiskLevel   string   `json:"risk_level"`
 }

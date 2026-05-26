@@ -50,6 +50,14 @@ GEMINI_TIMEOUT_SECONDS=30
 ```bash
 cd backend
 make migrate
+make explanations FROM_DATE=2026-06-01 TO_DATE=2026-07-31 LIMIT=50
+```
+
+`FROM_DATE` e `TO_DATE` são obrigatórios. `LIMIT` é opcional (default: 15).
+
+Equivalente direto:
+
+```bash
 go run ./internal/workers/generate_prediction_explanations \
   --from-date=2026-06-01 \
   --to-date=2026-07-31 \
@@ -113,8 +121,17 @@ Formato obrigatório:
 - Sobrescrever explicação `generated` somente quando a nova geração também terminar como `generated`.
 - Permitir reprocessar registros `failed` ou `skipped`.
 
+## Endpoint de leitura
+
+As explicações geradas são retornadas pelo endpoint:
+
+```
+GET /api/v1/matches/{matchID}/prediction
+```
+
+O campo `explanation` é opcional na resposta: se ainda não houver explicação gerada para a partida, o campo é omitido. O app lida com a ausência sem erro.
+
 ## Próximos passos
 
-- Expor explicação no endpoint futuro de leitura de previsão.
 - Adicionar dashboard operacional para falhas de geração.
 - Versionar novos prompts com `prediction-explanation-v2`.
