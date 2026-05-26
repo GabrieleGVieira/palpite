@@ -192,6 +192,10 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 			on world_cup_matches (external_id)
 			where external_id is not null;
 
+		create unique index if not exists world_cup_matches_external_id_unique_idx
+			on world_cup_matches (external_id)
+			where external_id is not null;
+
 		create table if not exists match_events (
 			id uuid primary key default gen_random_uuid(),
 			match_id uuid not null references world_cup_matches(id) on delete cascade,

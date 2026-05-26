@@ -17,8 +17,7 @@ import (
 )
 
 const (
-	// apiURL = "https://api.football-data.org/v4/competitions/BSA/matches?stage=GROUP_STAGE"
-	apiURL = "https://api.football-data.org/v4/competitions/BSA/matches?matchday=17"
+	apiURL = "https://api.football-data.org/v4/competitions/WC/matches?stage=GROUP_STAGE"
 )
 
 type MatchesResponse = dto.FootballDataResponse
@@ -28,14 +27,14 @@ func RunWorldCupMatchSeed() {
 	ctx := context.Background()
 
 	dbURL := os.Getenv("DATABASE_URL")
-	apiKey := os.Getenv("FOOTBALL_DATA_API_KEY")
+	apiKey := os.Getenv("FOOTBALL_DATA_TOKEN")
 
 	if dbURL == "" {
 		log.Fatal("DATABASE_URL not set")
 	}
 
 	if apiKey == "" {
-		log.Fatal("FOOTBALL_DATA_API_KEY not set")
+		log.Fatal("FOOTBALL_DATA_TOKEN not set")
 	}
 
 	db, err := sql.Open("pgx", dbURL)
@@ -132,8 +131,11 @@ func upsertMatch(
 			$9,
 			now()
 		)
-		on conflict (home_team, away_team, kickoff_at)
+		on conflict (external_id) where external_id is not null
 		do update set
+			home_team = excluded.home_team,
+			away_team = excluded.away_team,
+			stage = excluded.stage,
 			status = excluded.status,
 			home_score = excluded.home_score,
 			away_score = excluded.away_score,

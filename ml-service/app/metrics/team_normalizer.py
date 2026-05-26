@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from .schemas import Team
+from .team_translations import translate_team
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +32,13 @@ class TeamNormalizer:
 
     def team_id_for(self, raw_name: str, record_unmapped: bool = True) -> str | None:
         key = normalize_key(raw_name)
-        team_id = self._alias_to_id.get(key) or self._name_to_id.get(key)
+        translated_key = normalize_key(translate_team(raw_name))
+        team_id = (
+            self._alias_to_id.get(key)
+            or self._name_to_id.get(key)
+            or self._alias_to_id.get(translated_key)
+            or self._name_to_id.get(translated_key)
+        )
         if team_id is None and record_unmapped:
             self.unresolved.add(raw_name)
         return team_id

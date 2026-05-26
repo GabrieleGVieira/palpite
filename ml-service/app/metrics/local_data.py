@@ -8,6 +8,7 @@ import pandas as pd
 
 from .schemas import Team
 from .team_normalizer import normalize_key
+from .team_translations import translate_team
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 DEFAULT_ALIASES_FILE = DEFAULT_DATA_DIR / "team_aliases.json"
@@ -107,7 +108,7 @@ def load_alias_config(file_path: str | Path | None = None) -> dict[str, Any]:
 
 
 def target_team_names(config: dict[str, Any]) -> set[str]:
-    return {team["db_name"] for team in config["teams"]}
+    return {translate_team(team["db_name"]) for team in config["teams"]}
 
 
 def build_aliases_for_existing_teams(teams: list[Team], config: dict[str, Any]) -> tuple[dict[str, str], list[Team]]:
@@ -116,7 +117,7 @@ def build_aliases_for_existing_teams(teams: list[Team], config: dict[str, Any]) 
     target_team_ids: set[str] = set()
 
     for item in config["teams"]:
-        names = [item["db_name"], item["source_name"], *item.get("aliases", [])]
+        names = [translate_team(item["db_name"]), item["db_name"], item["source_name"], *item.get("aliases", [])]
         team_id = next((team_id_by_name[normalize_key(name)] for name in names if normalize_key(name) in team_id_by_name), None)
         if team_id is None:
             continue

@@ -29,13 +29,21 @@ func HasLiveOrSoonMatches(ctx context.Context, db Querier) (bool, error) {
 }
 
 func MatchSnapshotByProviderMatch(ctx context.Context, db Querier, match domain.ProviderMatch) (domain.MatchSnapshot, error) {
-	// 1. Procura a partida pela chave natural usada no upsert: mandante, visitante e horario.
+	// 1. Procura a partida pela identidade do provedor; nomes sao fallback para partidas manuais.
 	var snapshot domain.MatchSnapshot
 	err := db.QueryRow(ctx, `
 		select id, status, home_score, away_score
 		from world_cup_matches
-		where home_team = $1 and away_team = $2 and kickoff_at = $3
-	`, match.HomeTeam, match.AwayTeam, match.KickoffAt).Scan(
+		where (
+				$1::text is not null
+				and external_id = $1
+			)
+			or (
+				home_team = $2
+				and away_team = $3
+				and kickoff_at = $4
+			)
+	`, nullableString(match.ExternalID), match.HomeTeam, match.AwayTeam, match.KickoffAt).Scan(
 		&snapshot.ID,
 		&snapshot.Status,
 		&snapshot.HomeScore,
@@ -56,7 +64,40 @@ func UpsertProviderMatch(ctx context.Context, db Querier, match domain.ProviderM
 	var changed bool
 	// 2. Insere a partida ou atualiza campos que mudaram no provedor.
 	err := db.QueryRow(ctx, `
-		with upserted as (
+		with updated_by_external_id as (
+			update world_cup_matches
+			set
+				home_team = $2,
+				away_team = $3,
+				stage = $4,
+				status = $6,
+				home_score = $7,
+				away_score = $8,
+				finished_at = case
+					when $6 = 'finished' then coalesce(finished_at, now())
+					else null
+				end,
+				last_synced_at = now()
+			where $1::text is not null
+				and external_id = $1
+				and (
+					home_team is distinct from $2
+					or away_team is distinct from $3
+					or stage is distinct from $4
+					or status is distinct from $6
+					or home_score is distinct from $7
+					or away_score is distinct from $8
+				)
+			returning id, true as changed
+		),
+		existing_by_external_id as (
+			select id, false as changed
+			from world_cup_matches
+			where $1::text is not null
+				and external_id = $1
+				and not exists (select 1 from updated_by_external_id)
+		),
+		upserted_by_match_key as (
 			insert into world_cup_matches (
 				external_id,
 				home_team,
@@ -69,7 +110,7 @@ func UpsertProviderMatch(ctx context.Context, db Querier, match domain.ProviderM
 				finished_at,
 				last_synced_at
 			)
-			values (
+			select
 				$1,
 				$2,
 				$3,
@@ -80,10 +121,10 @@ func UpsertProviderMatch(ctx context.Context, db Querier, match domain.ProviderM
 				$8,
 				case when $6 = 'finished' then now() else null end,
 				now()
-			)
+			where not exists (select 1 from updated_by_external_id)
+				and not exists (select 1 from existing_by_external_id)
 			on conflict (home_team, away_team, kickoff_at)
 			do update set
-				-- 3. Preserva external_id antigo quando o provedor nao envia um novo valor.
 				external_id = coalesce(excluded.external_id, world_cup_matches.external_id),
 				stage = excluded.stage,
 				status = excluded.status,
@@ -94,7 +135,6 @@ func UpsertProviderMatch(ctx context.Context, db Querier, match domain.ProviderM
 					else null
 				end,
 				last_synced_at = now()
-			-- 4. So executa update quando algum campo relevante mudou.
 			where world_cup_matches.external_id is distinct from coalesce(excluded.external_id, world_cup_matches.external_id)
 				or world_cup_matches.stage is distinct from excluded.stage
 				or world_cup_matches.status is distinct from excluded.status
@@ -105,9 +145,13 @@ func UpsertProviderMatch(ctx context.Context, db Querier, match domain.ProviderM
 		select id, changed
 		from (
 			-- 5. Se houve insert/update, retorna essa linha marcada como alterada.
-			select id, changed from upserted
+			select id, changed from updated_by_external_id
+			union all
+			select id, changed from upserted_by_match_key
 			union all
 			-- 6. Se nada mudou, recupera o ID da partida existente marcada como nao alterada.
+			select id, changed from existing_by_external_id
+			union all
 			select id, false as changed
 			from world_cup_matches
 			where home_team = $2 and away_team = $3 and kickoff_at = $5

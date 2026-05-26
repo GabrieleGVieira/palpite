@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/domain"
+	"github.com/gabrielevieira/palpitai/backend/internal/utils"
 )
 
 func FromFootballDataMatch(match FootballDataMatch) domain.ProviderMatch {
@@ -17,11 +18,11 @@ func FromFootballDataMatch(match FootballDataMatch) domain.ProviderMatch {
 
 	provider := domain.ProviderMatch{
 		AwayScore:  awayScore,
-		AwayTeam:   footballDataTeamName(match.AwayTeam),
+		AwayTeam:   utils.TranslateTeam(footballDataTeamName(match.AwayTeam)),
 		ExternalID: strconv.Itoa(match.ID),
 		Goals:      make([]domain.ProviderGoal, 0, len(match.Goals)),
 		HomeScore:  homeScore,
-		HomeTeam:   footballDataTeamName(match.HomeTeam),
+		HomeTeam:   utils.TranslateTeam(footballDataTeamName(match.HomeTeam)),
 		KickoffAt:  match.UTCDate,
 		Stage:      match.Stage,
 		Status:     normalizeFootballDataStatus(match.Status),
@@ -51,7 +52,7 @@ func FromFootballDataMatch(match FootballDataMatch) domain.ProviderMatch {
 			InjuryTime: goal.InjuryTime,
 			Minute:     goal.Minute,
 			PlayerName: goal.Scorer.Name,
-			TeamName:   footballDataTeamName(goal.Team),
+			TeamName:   utils.TranslateTeam(footballDataTeamName(goal.Team)),
 			Type:       goal.Type,
 		})
 	}

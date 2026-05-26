@@ -11,6 +11,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from .schemas import MatchTarget, Snapshot, Team, TeamMetric
+from .team_translations import translate_team
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class Database:
         with self.connect() as conn:
             with conn.cursor() as cur:
                 for item in alias_config["teams"]:
-                    db_name = item["db_name"]
+                    db_name = translate_team(item["db_name"])
                     row = cur.execute(
                         """
                         insert into teams (name)
@@ -59,7 +60,7 @@ class Database:
                     else:
                         teams_updated += 1
 
-                    for alias in _unique_aliases([item["source_name"], db_name, *item.get("aliases", [])]):
+                    for alias in _unique_aliases([item["source_name"], item["db_name"], db_name, *item.get("aliases", [])]):
                         alias_row = cur.execute(
                             """
                             insert into team_aliases (team_id, alias)
