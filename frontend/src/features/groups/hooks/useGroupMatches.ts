@@ -171,14 +171,8 @@ function numberValue(value: unknown) {
 }
 
 function matchStatusValue(value: unknown): GroupMatch['status'] | null {
-  if (
-    value === 'scheduled' ||
-    value === 'live' ||
-    value === 'finished' ||
-    value === 'postponed' ||
-    value === 'cancelled'
-  ) {
-    return value;
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim().toLowerCase();
   }
 
   return null;

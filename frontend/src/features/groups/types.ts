@@ -58,7 +58,7 @@ export type GroupMatch = {
   kickoff_at: string;
   my_prediction: Prediction | null;
   stage: string;
-  status: 'scheduled' | 'live' | 'finished' | 'postponed' | 'cancelled';
+  status: string;
 };
 
 export type RankingEntry = {

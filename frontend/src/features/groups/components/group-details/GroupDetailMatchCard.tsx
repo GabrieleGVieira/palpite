@@ -3,6 +3,9 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-nati
 import type { GroupMatch } from '../../services/groups';
 import type { ScoreDraft } from '../../types';
 import { formatDate, formatMatchStage, formatMatchStatus } from '../../utils/groupDetailFormatters';
+import { MatchPredictionCard } from '../../../predictions/components/MatchPredictionCard';
+import { useMatchPrediction } from '../../../predictions/hooks/useMatchPrediction';
+import { isScheduledStatus } from '../../../predictions/utils/predictionStatus';
 import { FinishButton } from '../../../../shared/components/FinishButton';
 
 type Props = {
@@ -21,11 +24,18 @@ export function GroupDetailMatchCard({
   onSavePrediction,
 }: Props) {
   const hasStarted = new Date(match.kickoff_at).getTime() <= Date.now();
-  const isLive = match.status === 'live';
-  const isPredictionClosed = hasStarted || match.status !== 'scheduled';
+  const normalizedStatus = match.status.trim().toLowerCase();
+  const isLive = normalizedStatus === 'live' || normalizedStatus === 'in_play';
+  const isPredictionClosed = hasStarted || !isScheduledStatus(match.status);
   const liveHomeScore = match.final_home_score ?? '-';
   const liveAwayScore = match.final_away_score ?? '-';
   const disabledLabel = getDisabledPredictionLabel(match.status, hasStarted);
+  const matchPrediction = useMatchPrediction(match.id, match.status);
+
+  function handleUseSuggestion(score: { away: number; home: number }) {
+    onChangeDraft(match.id, 'homeScore', String(score.home));
+    onChangeDraft(match.id, 'awayScore', String(score.away));
+  }
 
   return (
     <View style={styles.matchCard}>
@@ -71,7 +81,7 @@ export function GroupDetailMatchCard({
           <Text style={styles.predictionText}>
             Seu palpite: {match.my_prediction.home_score} x {match.my_prediction.away_score}
           </Text>
-          {match.my_prediction.points !== null && match.status === "finished" ? (
+          {match.my_prediction.points !== null && normalizedStatus === 'finished' ? (
             <Text style={styles.pointsText}>{match.my_prediction.points} pts</Text>
           ) : null}
         </View>
@@ -80,6 +90,16 @@ export function GroupDetailMatchCard({
           Você não palpitou neste jogo.
         </Text>
       )}
+
+      {matchPrediction.shouldShowPrediction ? (
+        <MatchPredictionCard
+          error={matchPrediction.error}
+          isLoading={matchPrediction.isLoading}
+          match={match}
+          onUseSuggestion={handleUseSuggestion}
+          prediction={matchPrediction.data}
+        />
+      ) : null}
 
       {isLive ? (
         <View style={styles.liveBox}>
@@ -106,15 +126,17 @@ export function GroupDetailMatchCard({
 }
 
 function getDisabledPredictionLabel(status: GroupMatch['status'], hasStarted: boolean) {
-  if (status === 'finished') {
+  const normalizedStatus = status.trim().toLowerCase();
+
+  if (normalizedStatus === 'finished') {
     return 'Jogo encerrado';
   }
 
-  if (status === 'cancelled') {
+  if (normalizedStatus === 'cancelled') {
     return 'Jogo cancelado';
   }
 
-  if (status === 'postponed') {
+  if (normalizedStatus === 'postponed') {
     return 'Palpite indisponível';
   }
 

@@ -7,11 +7,12 @@ type APIError = {
   error?: string;
 };
 
-type RequestOptions = RequestInit & {
+type RequestOptions<T = never> = RequestInit & {
   fallbackError: string;
+  notFoundValue?: T;
 };
 
-export async function apiClient<T>(path: string, options: RequestOptions): Promise<T> {
+export async function apiClient<T>(path: string, options: RequestOptions<T>): Promise<T> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -43,6 +44,10 @@ export async function apiClient<T>(path: string, options: RequestOptions): Promi
   }
 
   const data = await parseJSON<T | APIError>(response);
+
+  if (response.status === 404 && 'notFoundValue' in options) {
+    return options.notFoundValue as T;
+  }
 
   if (!response.ok) {
     const apiError = data as APIError;

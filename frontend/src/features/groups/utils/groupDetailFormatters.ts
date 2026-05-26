@@ -16,15 +16,19 @@ export function formatUserID(userID: string) {
 }
 
 export function formatMatchStatus(status: GroupMatch['status']) {
-  const statusLabels: Record<GroupMatch['status'], string> = {
+  const statusLabels: Record<string, string> = {
     cancelled: 'Cancelado',
     finished: 'Encerrado',
+    in_play: 'Ao vivo',
     live: 'Ao vivo',
+    paused: 'Pausado',
     postponed: 'Adiado',
     scheduled: 'Agendado',
+    suspended: 'Suspenso',
+    timed: 'Agendado',
   };
 
-  return statusLabels[status];
+  return statusLabels[status.trim().toLowerCase()] ?? status;
 }
 
 export function formatMatchStage(stage: GroupMatch['stage']) {
