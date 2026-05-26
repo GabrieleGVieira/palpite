@@ -1,4 +1,4 @@
-.PHONY: run test fmt vet
+.PHONY: run test fmt vet migrate
 
 run:
 	set -a; [ -f .env ] && . ./.env; set +a; go run ./cmd/api
@@ -11,6 +11,9 @@ fmt:
 
 vet:
 	go vet ./...
+
+migrate:
+	set -a; [ -f .env ] && . ./.env; set +a; go run ./cmd/migrate
 
 seed:
 	go run ./cmd/seed/main.go

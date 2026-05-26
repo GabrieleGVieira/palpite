@@ -34,6 +34,54 @@ class Database:
             rows = conn.execute("select alias, team_id::text from team_aliases").fetchall()
         return {row["alias"]: row["team_id"] for row in rows}
 
+    def seed_teams_and_aliases(self, alias_config: dict) -> dict[str, int]:
+        teams_inserted = 0
+        teams_updated = 0
+        aliases_inserted = 0
+        aliases_updated = 0
+
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                for item in alias_config["teams"]:
+                    db_name = item["db_name"]
+                    row = cur.execute(
+                        """
+                        insert into teams (name)
+                        values (%s)
+                        on conflict (name) do update set updated_at = now()
+                        returning id::text, (xmax = 0) as inserted
+                        """,
+                        (db_name,),
+                    ).fetchone()
+                    team_id = row["id"]
+                    if row["inserted"]:
+                        teams_inserted += 1
+                    else:
+                        teams_updated += 1
+
+                    for alias in _unique_aliases([item["source_name"], db_name, *item.get("aliases", [])]):
+                        alias_row = cur.execute(
+                            """
+                            insert into team_aliases (team_id, alias)
+                            values (%s, %s)
+                            on conflict (alias) do update set team_id = excluded.team_id
+                            returning (xmax = 0) as inserted
+                            """,
+                            (team_id, alias),
+                        ).fetchone()
+                        if alias_row["inserted"]:
+                            aliases_inserted += 1
+                        else:
+                            aliases_updated += 1
+            conn.commit()
+
+        return {
+            "teams_inserted": teams_inserted,
+            "teams_updated": teams_updated,
+            "aliases_inserted": aliases_inserted,
+            "aliases_updated": aliases_updated,
+        }
+
     def upsert_team_metrics(self, metrics: list[TeamMetric]) -> None:
         if not metrics:
             return
@@ -274,3 +322,14 @@ class Database:
             with conn.cursor() as cur:
                 cur.executemany(sql, rows)
             conn.commit()
+
+
+def _unique_aliases(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    aliases: list[str] = []
+    for value in values:
+        alias = str(value).strip()
+        if alias and alias not in seen:
+            seen.add(alias)
+            aliases.append(alias)
+    return aliases
