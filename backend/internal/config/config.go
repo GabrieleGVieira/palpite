@@ -13,6 +13,9 @@ type Config struct {
 	FootballDataCompetitionCode string
 	FootballDataSeason          string
 	FootballDataToken           string
+	OpenAIAPIKey                string
+	OpenAIModel                 string
+	OpenAITimeoutSeconds        string
 	Port                        string
 	RedisURL                    string
 	SupabaseKey                 string
@@ -29,6 +32,9 @@ func Load() Config {
 		FootballDataCompetitionCode: getEnv("FOOTBALL_DATA_COMPETITION_CODE", "BSA"),
 		FootballDataSeason:          getEnv("FOOTBALL_DATA_SEASON", ""),
 		FootballDataToken:           getEnv("FOOTBALL_DATA_TOKEN", ""),
+		OpenAIAPIKey:                getEnv("OPENAI_API_KEY", ""),
+		OpenAIModel:                 getEnv("OPENAI_MODEL", "gpt-4.1-mini"),
+		OpenAITimeoutSeconds:        getEnv("OPENAI_TIMEOUT_SECONDS", "30"),
 		Port:                        getEnv("PORT", "3000"),
 		RedisURL:                    getEnv("REDIS_URL", ""),
 		SupabaseKey:                 getEnv("SUPABASE_KEY", ""),
