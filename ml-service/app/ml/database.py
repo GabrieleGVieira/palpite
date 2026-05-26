@@ -84,10 +84,12 @@ class Database:
         with self.connect() as conn:
             rows = conn.execute(
                 """
-                select *
-                from match_features
-                where match_date between %s and %s
-                order by match_date asc, id asc
+                select mf.*
+                from match_features mf
+                join world_cup_matches wm on wm.id = mf.match_id
+                where mf.match_date between %s and %s
+                    and lower(wm.status) in ('scheduled', 'schedule', 'timed')
+                order by wm.kickoff_at asc, mf.match_date asc, mf.id asc
                 """,
                 (from_date, to_date),
             ).fetchall()

@@ -35,9 +35,11 @@ def load_prediction_pairs(
                 and mp.home_team_id = mgp.home_team_id
                 and mp.away_team_id = mgp.away_team_id
                 and mp.model_id = %s
+            join world_cup_matches wm on wm.id = mgp.match_id
             where mgp.goal_model_id = %s
                 and mgp.match_date between %s and %s
-            order by mgp.match_date asc, mgp.id asc
+                and lower(wm.status) in ('scheduled', 'schedule', 'timed')
+            order by wm.kickoff_at asc, mgp.match_date asc, mgp.id asc
             """,
             (result_model_id, goal_model_id, from_date, to_date),
         ).fetchall()
@@ -113,4 +115,3 @@ def update_calibrated_goal_prediction(
                     ],
                 )
         conn.commit()
-

@@ -6,15 +6,25 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gabrielevieira/palpitai/backend/internal/ai"
 	"github.com/gabrielevieira/palpitai/backend/internal/apperrors"
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
 	"github.com/gabrielevieira/palpitai/backend/internal/domain"
 	"github.com/gabrielevieira/palpitai/backend/internal/dto"
+	explanationmodels "github.com/gabrielevieira/palpitai/backend/internal/explanations/models"
+	goalmodels "github.com/gabrielevieira/palpitai/backend/internal/goalpredictions/models"
+	predictionmodels "github.com/gabrielevieira/palpitai/backend/internal/predictions/models"
 	"github.com/gabrielevieira/palpitai/backend/internal/usecase"
 )
 
 type RealtimePublisher interface {
 	Publish(ctx context.Context, event domain.Event)
+}
+
+type PredictionReader interface {
+	ExplanationByMatchID(ctx context.Context, matchID string, promptVersion string) (explanationmodels.PredictionExplanation, error)
+	GoalPredictionByMatchID(ctx context.Context, matchID string) (goalmodels.MatchGoalPrediction, error)
+	MatchPredictionByMatchID(ctx context.Context, matchID string) (predictionmodels.MatchPrediction, error)
 }
 
 func UserScoreHandler(cfg config.Config, predictions usecase.PredictionUsecase) http.HandlerFunc {
@@ -34,6 +44,61 @@ func UserScoreHandler(cfg config.Config, predictions usecase.PredictionUsecase) 
 		writeJSON(w, http.StatusOK, map[string]int{
 			"total_points": totalScore,
 		})
+	}
+}
+
+func GetMatchPredictionHandler(cfg config.Config, predictions PredictionReader) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if _, err := userIDFromRequest(r, cfg); err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		matchID := r.PathValue("matchID")
+		prediction, err := predictions.MatchPredictionByMatchID(r.Context(), matchID)
+		if err != nil {
+			if apperrors.IsNotFound(err) {
+				writeError(w, http.StatusNotFound, "Previsão ainda não disponível para este jogo.")
+				return
+			}
+
+			writeError(w, http.StatusInternalServerError, "Não foi possível carregar a previsão.")
+			return
+		}
+
+		response := dto.MatchPredictionAIResponse{
+			MatchID: predictionResponseMatchID(prediction, matchID),
+			Probabilities: dto.MatchPredictionProbabilities{
+				AwayWin: probabilityPercent(prediction.AwayWinProbability),
+				Draw:    probabilityPercent(prediction.DrawProbability),
+				HomeWin: probabilityPercent(prediction.HomeWinProbability),
+			},
+		}
+
+		goalPrediction, err := predictions.GoalPredictionByMatchID(r.Context(), matchID)
+		if err == nil {
+			response.Goals = mapGoalPredictionResponse(goalPrediction)
+			response.TopScores = mapTopScoreResponses(goalPrediction.TopScoreProbabilities)
+		} else if !apperrors.IsNotFound(err) {
+			writeError(w, http.StatusInternalServerError, "Não foi possível carregar a previsão.")
+			return
+		}
+
+		explanation, err := predictions.ExplanationByMatchID(r.Context(), matchID, ai.PromptVersionPredictionExplanationV1)
+		if err == nil {
+			response.Explanation = &dto.PredictionExplanationResponse{
+				BetStyle:    explanation.BetStyle,
+				MainReasons: explanation.MainReasons,
+				RiskAlert:   explanation.RiskAlert,
+				Summary:     explanation.Summary,
+				UserTip:     explanation.UserTip,
+			}
+		} else if !apperrors.IsNotFound(err) {
+			writeError(w, http.StatusInternalServerError, "Não foi possível carregar a previsão.")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, response)
 	}
 }
 
@@ -62,6 +127,46 @@ func GroupRankingHandler(cfg config.Config, predictions usecase.PredictionUsecas
 			"ranking": ranking,
 		})
 	}
+}
+
+func predictionResponseMatchID(prediction predictionmodels.MatchPrediction, fallback string) string {
+	if prediction.MatchID != nil {
+		return *prediction.MatchID
+	}
+	return fallback
+}
+
+func mapGoalPredictionResponse(prediction goalmodels.MatchGoalPrediction) *dto.MatchPredictionGoalsResponse {
+	var mostLikelyScore *string
+	if prediction.MostLikelyHomeScore != nil && prediction.MostLikelyAwayScore != nil {
+		score := fmt.Sprintf("%d x %d", *prediction.MostLikelyHomeScore, *prediction.MostLikelyAwayScore)
+		mostLikelyScore = &score
+	}
+
+	return &dto.MatchPredictionGoalsResponse{
+		ExpectedAwayGoals: prediction.ExpectedAwayGoals,
+		ExpectedHomeGoals: prediction.ExpectedHomeGoals,
+		MostLikelyScore:   mostLikelyScore,
+	}
+}
+
+func mapTopScoreResponses(scores []goalmodels.MatchScoreProbability) []dto.PredictionScoreResponse {
+	if len(scores) == 0 {
+		return nil
+	}
+
+	responses := make([]dto.PredictionScoreResponse, 0, len(scores))
+	for _, score := range scores {
+		responses = append(responses, dto.PredictionScoreResponse{
+			Probability: probabilityPercent(score.Probability),
+			Score:       fmt.Sprintf("%d x %d", score.HomeScore, score.AwayScore),
+		})
+	}
+	return responses
+}
+
+func probabilityPercent(value float64) float64 {
+	return value * 100
 }
 
 func ListGroupMatchesHandler(cfg config.Config, predictions usecase.PredictionUsecase) http.HandlerFunc {

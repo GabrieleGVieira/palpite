@@ -78,3 +78,38 @@ func ExplanationJSONSchema() map[string]any {
 		},
 	}
 }
+
+func GeminiExplanationSchema() map[string]any {
+	return map[string]any{
+		"type":     "OBJECT",
+		"required": []string{"summary", "main_reasons", "risk_alert", "bet_style", "user_tip"},
+		"properties": map[string]any{
+			"summary": map[string]any{
+				"type":      "STRING",
+				"maxLength": 240,
+			},
+			"main_reasons": map[string]any{
+				"type":     "ARRAY",
+				"minItems": 2,
+				"maxItems": 4,
+				"items": map[string]any{
+					"type":      "STRING",
+					"maxLength": 180,
+				},
+			},
+			"risk_alert": map[string]any{
+				"type":      "STRING",
+				"nullable":  true,
+				"maxLength": 180,
+			},
+			"bet_style": map[string]any{
+				"type": "STRING",
+				"enum": []string{"conservative", "moderate", "risky"},
+			},
+			"user_tip": map[string]any{
+				"type":      "STRING",
+				"maxLength": 220,
+			},
+		},
+	}
+}

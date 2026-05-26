@@ -87,6 +87,39 @@ type PredictionResponse struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 
+type MatchPredictionAIResponse struct {
+	Explanation   *PredictionExplanationResponse `json:"explanation,omitempty"`
+	Goals         *MatchPredictionGoalsResponse  `json:"goals,omitempty"`
+	MatchID       string                         `json:"match_id"`
+	Probabilities MatchPredictionProbabilities   `json:"probabilities"`
+	TopScores     []PredictionScoreResponse      `json:"top_scores,omitempty"`
+}
+
+type MatchPredictionProbabilities struct {
+	AwayWin float64 `json:"away_win"`
+	Draw    float64 `json:"draw"`
+	HomeWin float64 `json:"home_win"`
+}
+
+type MatchPredictionGoalsResponse struct {
+	ExpectedAwayGoals float64 `json:"expected_away_goals"`
+	ExpectedHomeGoals float64 `json:"expected_home_goals"`
+	MostLikelyScore   *string `json:"most_likely_score,omitempty"`
+}
+
+type PredictionScoreResponse struct {
+	Probability float64 `json:"probability"`
+	Score       string  `json:"score"`
+}
+
+type PredictionExplanationResponse struct {
+	BetStyle    *string  `json:"bet_style,omitempty"`
+	MainReasons []string `json:"main_reasons"`
+	RiskAlert   *string  `json:"risk_alert"`
+	Summary     string   `json:"summary"`
+	UserTip     *string  `json:"user_tip"`
+}
+
 type MatchResultRequest struct {
 	HomeScore int `json:"home_score"`
 	AwayScore int `json:"away_score"`

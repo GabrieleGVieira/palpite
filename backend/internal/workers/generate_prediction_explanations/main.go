@@ -19,7 +19,7 @@ import (
 func main() {
 	fromDateArg := flag.String("from-date", "", "start date in YYYY-MM-DD")
 	toDateArg := flag.String("to-date", "", "end date in YYYY-MM-DD")
-	limit := flag.Int("limit", 50, "maximum matches to process")
+	limit := flag.Int("limit", 15, "maximum matches to process")
 	flag.Parse()
 
 	if *fromDateArg == "" || *toDateArg == "" {
@@ -39,14 +39,21 @@ func main() {
 
 	cfg := config.Load()
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	timeoutSeconds, _ := strconv.Atoi(cfg.OpenAITimeoutSeconds)
-	aiClient, err := ai.NewOpenAIClient(cfg.OpenAIAPIKey, cfg.OpenAIModel, time.Duration(timeoutSeconds)*time.Second)
+	timeoutSeconds, _ := strconv.Atoi(cfg.GeminiTimeoutSeconds)
+	requestDelaySeconds, _ := strconv.Atoi(cfg.GeminiRequestDelaySeconds)
+	rateLimitCooldownSeconds, _ := strconv.Atoi(cfg.GeminiRateLimitCooldownSeconds)
+	rateLimitMaxWaits, _ := strconv.Atoi(cfg.GeminiRateLimitMaxWaits)
+	aiClient, err := ai.NewGeminiClient(cfg.GeminiAPIKey, cfg.GeminiModel, time.Duration(timeoutSeconds)*time.Second)
 	if err != nil {
 		logger.Error("ai client setup failed", "error", err)
 		os.Exit(1)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	workerTimeout := time.Duration(rateLimitCooldownSeconds*rateLimitMaxWaits+requestDelaySeconds*max(*limit, 1)+600) * time.Second
+	if workerTimeout < 30*time.Minute {
+		workerTimeout = 30 * time.Minute
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), workerTimeout)
 	defer cancel()
 	db, err := database.NewPostgresPool(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -56,7 +63,9 @@ func main() {
 	defer db.Close()
 
 	repo := explanationrepo.New(db)
-	service := explanationservice.NewExplanationGenerationService(repo, aiClient, cfg.OpenAIModel, logger)
+	service := explanationservice.NewExplanationGenerationService(repo, aiClient, cfg.GeminiModel, logger).
+		WithRequestDelay(time.Duration(requestDelaySeconds)*time.Second).
+		WithRateLimitCooldown(time.Duration(rateLimitCooldownSeconds)*time.Second, rateLimitMaxWaits)
 	summary, err := service.Generate(ctx, fromDate, toDate, *limit)
 	if err != nil {
 		logger.Error("ai explanation generation failed", "error", err)
@@ -68,5 +77,14 @@ func main() {
 	fmt.Printf("Generated: %d\n", summary.Generated)
 	fmt.Printf("Skipped: %d\n", summary.Skipped)
 	fmt.Printf("Failed: %d\n", summary.Failed)
+	fmt.Printf("Rate limited: %t\n", summary.RateLimited)
+	fmt.Printf("Rate limit waits: %d\n", summary.RateLimitWaits)
 	fmt.Printf("Prompt version: %s\n", summary.PromptVersion)
+}
+
+func max(left int, right int) int {
+	if left > right {
+		return left
+	}
+	return right
 }

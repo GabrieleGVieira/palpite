@@ -5,6 +5,7 @@ import (
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
 	"github.com/gabrielevieira/palpitai/backend/internal/controller"
+	predictionservice "github.com/gabrielevieira/palpitai/backend/internal/predictions/service"
 	"github.com/gabrielevieira/palpitai/backend/internal/usecase"
 )
 
@@ -23,11 +24,13 @@ func NewRouter(cfg config.Config, db usecase.Datastore, services ...Services) ht
 	}
 	groups := usecase.NewGroupUsecase(db)
 	predictions := usecase.NewPredictionUsecase(db)
+	predictionReader := predictionservice.NewPredictionReadService(db)
 
 	mux.HandleFunc("GET /health", controller.HealthHandler(db, redis))
 	mux.HandleFunc("GET /ws", controller.RealtimeHandler(cfg, db, realtimeHub))
 	mux.HandleFunc("GET /api/v1/status", controller.StatusHandler(cfg, db, redis))
 	mux.HandleFunc("GET /api/v1/me/score", controller.UserScoreHandler(cfg, predictions))
+	mux.HandleFunc("GET /api/v1/matches/{matchID}/prediction", controller.GetMatchPredictionHandler(cfg, predictionReader))
 	mux.HandleFunc("GET /api/v1/groups", controller.ListGroupsHandler(cfg, groups))
 	mux.HandleFunc("POST /api/v1/groups", controller.CreateGroupHandler(cfg, groups))
 	mux.HandleFunc("PUT /api/v1/groups/{groupID}", controller.UpdateGroupHandler(cfg, groups))

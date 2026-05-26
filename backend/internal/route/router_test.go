@@ -145,3 +145,15 @@ func TestStatusHandler(t *testing.T) {
 		t.Fatalf("expected database ok, got %q", payload.Database)
 	}
 }
+
+func TestGetMatchPredictionRouteRequiresAuth(t *testing.T) {
+	router := NewRouter(config.Config{Env: "test", Port: "3000"}, fakeDB{})
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/matches/match-1/prediction", nil)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, response.Code)
+	}
+}

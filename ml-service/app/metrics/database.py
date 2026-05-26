@@ -191,6 +191,7 @@ class Database:
                 left join team_aliases ata on lower(ata.alias) = lower(m.away_team)
                 left join teams ata_team on ata_team.id = ata.team_id
                 where m.kickoff_at::date between %s and %s
+                    and lower(m.status) in ('scheduled', 'schedule', 'timed')
                     and coalesce(ht.id, hta_team.id) is not null
                     and coalesce(at.id, ata_team.id) is not null
                 order by m.kickoff_at
@@ -224,6 +225,7 @@ class Database:
                     false as neutral
                 from world_cup_matches m
                 where m.kickoff_at::date between %s and %s
+                    and lower(m.status) in ('scheduled', 'schedule', 'timed')
                 order by m.kickoff_at
                 """,
                 (from_date, to_date),

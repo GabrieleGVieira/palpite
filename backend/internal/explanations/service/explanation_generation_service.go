@@ -21,19 +21,24 @@ type Repository interface {
 }
 
 type GenerationSummary struct {
-	Processed     int
-	Generated     int
-	Skipped       int
-	Failed        int
-	PromptVersion string
+	Processed      int
+	Generated      int
+	Skipped        int
+	Failed         int
+	RateLimited    bool
+	RateLimitWaits int
+	PromptVersion  string
 }
 
 type ExplanationGenerationService struct {
-	repository    Repository
-	aiClient      ai.AIClient
-	modelName     string
-	promptVersion string
-	logger        *slog.Logger
+	repository        Repository
+	aiClient          ai.AIClient
+	modelName         string
+	promptVersion     string
+	requestDelay      time.Duration
+	rateLimitCooldown time.Duration
+	maxRateLimitWaits int
+	logger            *slog.Logger
 }
 
 func NewExplanationGenerationService(repository Repository, aiClient ai.AIClient, modelName string, logger *slog.Logger) ExplanationGenerationService {
@@ -49,6 +54,23 @@ func NewExplanationGenerationService(repository Repository, aiClient ai.AIClient
 	}
 }
 
+func (s ExplanationGenerationService) WithRequestDelay(delay time.Duration) ExplanationGenerationService {
+	if delay > 0 {
+		s.requestDelay = delay
+	}
+	return s
+}
+
+func (s ExplanationGenerationService) WithRateLimitCooldown(delay time.Duration, maxWaits int) ExplanationGenerationService {
+	if delay > 0 {
+		s.rateLimitCooldown = delay
+	}
+	if maxWaits > 0 {
+		s.maxRateLimitWaits = maxWaits
+	}
+	return s
+}
+
 func (s ExplanationGenerationService) Generate(ctx context.Context, fromDate time.Time, toDate time.Time, limit int) (GenerationSummary, error) {
 	if limit <= 0 {
 		limit = 50
@@ -59,6 +81,7 @@ func (s ExplanationGenerationService) Generate(ctx context.Context, fromDate tim
 	}
 
 	summary := GenerationSummary{PromptVersion: s.promptVersion}
+	aiRequests := 0
 	for _, candidate := range candidates {
 		summary.Processed++
 		input, skipReason, err := BuildPromptInput(candidate, s.promptVersion)
@@ -77,8 +100,40 @@ func (s ExplanationGenerationService) Generate(ctx context.Context, fromDate tim
 		if err != nil {
 			return summary, err
 		}
-		response, err := s.aiClient.GeneratePredictionExplanation(ctx, input)
-		if err != nil {
+		if aiRequests > 0 && s.requestDelay > 0 {
+			if err := sleep(ctx, s.requestDelay); err != nil {
+				return summary, err
+			}
+		}
+		aiRequests++
+
+		var response *ai.ExplanationAIResponse
+		for {
+			response, err = s.aiClient.GeneratePredictionExplanation(ctx, input)
+			if err == nil {
+				break
+			}
+
+			var rateLimit ai.RateLimitError
+			if errors.As(err, &rateLimit) {
+				summary.RateLimited = true
+				if summary.RateLimitWaits >= s.maxRateLimitWaits || s.rateLimitCooldown <= 0 {
+					s.logger.Warn("prediction explanation generation stopped by gemini rate limit", "match_date", candidate.MatchDate, "home_team_id", candidate.HomeTeamID, "away_team_id", candidate.AwayTeamID, "retry_after", rateLimit.RetryAfter, "error", err)
+					return summary, nil
+				}
+
+				delay := s.rateLimitCooldown
+				if rateLimit.RetryAfter > delay {
+					delay = rateLimit.RetryAfter
+				}
+				summary.RateLimitWaits++
+				s.logger.Warn("prediction explanation generation waiting after gemini rate limit", "match_date", candidate.MatchDate, "home_team_id", candidate.HomeTeamID, "away_team_id", candidate.AwayTeamID, "delay", delay, "waits", summary.RateLimitWaits, "error", err)
+				if err := sleep(ctx, delay); err != nil {
+					return summary, err
+				}
+				continue
+			}
+
 			message := err.Error()
 			var invalidResponse ai.InvalidResponseError
 			var rawResponse json.RawMessage
@@ -90,6 +145,9 @@ func (s ExplanationGenerationService) Generate(ctx context.Context, fromDate tim
 			}
 			s.logger.Warn("prediction explanation generation failed", "match_date", candidate.MatchDate, "home_team_id", candidate.HomeTeamID, "away_team_id", candidate.AwayTeamID, "error", err)
 			summary.Failed++
+			break
+		}
+		if response == nil {
 			continue
 		}
 		rawResponse := response.RawResponse
@@ -120,6 +178,17 @@ func (s ExplanationGenerationService) Generate(ctx context.Context, fromDate tim
 		summary.Generated++
 	}
 	return summary, nil
+}
+
+func sleep(ctx context.Context, delay time.Duration) error {
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
 
 func BuildPromptInput(candidate models.ExplanationCandidate, promptVersion string) (ai.ExplanationPromptInput, string, error) {

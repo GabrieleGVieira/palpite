@@ -55,6 +55,7 @@ func (r Repository) FindPendingMatchesForExplanation(ctx context.Context, fromDa
 			mf.away_world_cup_history_score::float8,
 			pe.id::text as existing_explanation_id
 		from match_features mf
+		join world_cup_matches wm on wm.id = mf.match_id
 		join teams ht on ht.id = mf.home_team_id
 		join teams at on at.id = mf.away_team_id
 		left join lateral (
@@ -81,8 +82,13 @@ func (r Repository) FindPendingMatchesForExplanation(ctx context.Context, fromDa
 			and pe.prompt_version = $3
 			and pe.status = 'generated'
 		where mf.match_date between $1 and $2
-			and pe.id is null
-		order by mf.match_date asc, mf.id asc
+			and lower(wm.status) in ('scheduled', 'schedule', 'timed')
+			and (
+				pe.id is null
+				or pe.match_prediction_id is distinct from mp.id
+				or pe.goal_prediction_id is distinct from mgp.id
+			)
+		order by wm.kickoff_at asc, mf.match_date asc, mf.id asc
 		limit $4
 	`, fromDate, toDate, promptVersion, limit)
 	if err != nil {
@@ -192,6 +198,8 @@ func (r Repository) UpsertExplanation(ctx context.Context, params models.UpsertE
 			status = excluded.status,
 			error_message = excluded.error_message,
 			updated_at = now()
+		where excluded.status = 'generated'
+			or prediction_explanations.status <> 'generated'
 		returning id::text
 	`, params.MatchID, params.MatchPredictionID, params.GoalPredictionID, params.HomeTeamID, params.AwayTeamID,
 		params.MatchDate, params.Summary, string(reasons), params.RiskAlert, params.BetStyle, params.UserTip,
@@ -216,6 +224,9 @@ func (r Repository) MarkFailed(ctx context.Context, candidate models.Explanation
 		Status:            "failed",
 		ErrorMessage:      &message,
 	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
 	return err
 }
 
@@ -236,6 +247,9 @@ func (r Repository) MarkSkipped(ctx context.Context, candidate models.Explanatio
 		Status:            "skipped",
 		ErrorMessage:      &reason,
 	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
 	return err
 }
 

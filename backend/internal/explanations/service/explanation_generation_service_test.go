@@ -39,10 +39,21 @@ func (r *fakeRepository) MarkSkipped(ctx context.Context, candidate models.Expla
 }
 
 type fakeAIClient struct {
-	err error
+	err   error
+	errs  []error
+	calls int
 }
 
-func (c fakeAIClient) GeneratePredictionExplanation(ctx context.Context, input ai.ExplanationPromptInput) (*ai.ExplanationAIResponse, error) {
+func (c *fakeAIClient) GeneratePredictionExplanation(ctx context.Context, input ai.ExplanationPromptInput) (*ai.ExplanationAIResponse, error) {
+	if c.calls < len(c.errs) {
+		err := c.errs[c.calls]
+		c.calls++
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		c.calls++
+	}
 	if c.err != nil {
 		return nil, c.err
 	}
@@ -61,7 +72,7 @@ func TestServiceMarksSkippedWhenMissingMatchPrediction(t *testing.T) {
 	repo := &fakeRepository{candidates: []models.ExplanationCandidate{validCandidate(func(c *models.ExplanationCandidate) {
 		c.MatchPredictionID = nil
 	})}}
-	service := NewExplanationGenerationService(repo, fakeAIClient{}, "gpt-test", slog.Default())
+	service := NewExplanationGenerationService(repo, &fakeAIClient{}, "gpt-test", slog.Default())
 	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
@@ -75,7 +86,7 @@ func TestServiceMarksSkippedWhenMissingGoalPrediction(t *testing.T) {
 	repo := &fakeRepository{candidates: []models.ExplanationCandidate{validCandidate(func(c *models.ExplanationCandidate) {
 		c.GoalPredictionID = nil
 	})}}
-	service := NewExplanationGenerationService(repo, fakeAIClient{}, "gpt-test", slog.Default())
+	service := NewExplanationGenerationService(repo, &fakeAIClient{}, "gpt-test", slog.Default())
 	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
@@ -87,7 +98,7 @@ func TestServiceMarksSkippedWhenMissingGoalPrediction(t *testing.T) {
 
 func TestServiceDoesNotRegenerateWhenRepositoryReturnsNoPending(t *testing.T) {
 	repo := &fakeRepository{}
-	service := NewExplanationGenerationService(repo, fakeAIClient{}, "gpt-test", slog.Default())
+	service := NewExplanationGenerationService(repo, &fakeAIClient{}, "gpt-test", slog.Default())
 	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
@@ -99,13 +110,61 @@ func TestServiceDoesNotRegenerateWhenRepositoryReturnsNoPending(t *testing.T) {
 
 func TestServiceSavesFailedWhenAIReturnsInvalidTwice(t *testing.T) {
 	repo := &fakeRepository{candidates: []models.ExplanationCandidate{validCandidate(nil)}}
-	service := NewExplanationGenerationService(repo, fakeAIClient{err: errors.New("invalid response after retry")}, "gpt-test", slog.Default())
+	service := NewExplanationGenerationService(repo, &fakeAIClient{err: errors.New("invalid response after retry")}, "gpt-test", slog.Default())
 	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
 	}
 	if summary.Failed != 1 || repo.failed != 1 {
 		t.Fatalf("Failed = %d repo=%d", summary.Failed, repo.failed)
+	}
+}
+
+func TestServiceStopsWithoutMarkingFailedWhenRateLimited(t *testing.T) {
+	repo := &fakeRepository{candidates: []models.ExplanationCandidate{
+		validCandidate(nil),
+		validCandidate(nil),
+	}}
+	client := &fakeAIClient{err: ai.RateLimitError{RetryAfter: time.Minute, Message: "quota exceeded"}}
+	service := NewExplanationGenerationService(repo, client, "gemini-test", slog.Default())
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+	if !summary.RateLimited {
+		t.Fatalf("expected RateLimited summary")
+	}
+	if summary.Processed != 1 {
+		t.Fatalf("Processed = %d", summary.Processed)
+	}
+	if summary.Failed != 0 || repo.failed != 0 {
+		t.Fatalf("Failed = %d repo=%d", summary.Failed, repo.failed)
+	}
+	if repo.generated != 0 {
+		t.Fatalf("generated = %d", repo.generated)
+	}
+}
+
+func TestServiceWaitsAndRetriesSameCandidateWhenRateLimited(t *testing.T) {
+	repo := &fakeRepository{candidates: []models.ExplanationCandidate{validCandidate(nil)}}
+	client := &fakeAIClient{errs: []error{
+		ai.RateLimitError{RetryAfter: time.Millisecond, Message: "quota exceeded"},
+		nil,
+	}}
+	service := NewExplanationGenerationService(repo, client, "gemini-test", slog.Default()).
+		WithRateLimitCooldown(time.Millisecond, 1)
+	summary, err := service.Generate(context.Background(), time.Now(), time.Now(), 10)
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+	if !summary.RateLimited || summary.RateLimitWaits != 1 {
+		t.Fatalf("summary = %+v", summary)
+	}
+	if summary.Generated != 1 || repo.generated != 1 {
+		t.Fatalf("Generated = %d repo=%d", summary.Generated, repo.generated)
+	}
+	if client.calls != 2 {
+		t.Fatalf("calls = %d", client.calls)
 	}
 }
 

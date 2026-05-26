@@ -34,12 +34,16 @@ O app nunca chama IA diretamente. O app lê explicações previamente salvas em 
 ```bash
 GEMINI_API_KEY=...
 GEMINI_MODEL=gemini-2.5-flash
+GEMINI_RATE_LIMIT_COOLDOWN_SECONDS=1800
+GEMINI_RATE_LIMIT_MAX_WAITS=1
 GEMINI_REQUEST_DELAY_SECONDS=15
 GEMINI_TIMEOUT_SECONDS=30
 ```
 
 `GEMINI_MODEL` pode ser trocado sem alterar código.
 `GEMINI_REQUEST_DELAY_SECONDS` controla o intervalo entre chamadas do worker para respeitar limites de RPM.
+`GEMINI_RATE_LIMIT_COOLDOWN_SECONDS` controla a pausa longa antes de retentar o mesmo jogo quando a quota estoura.
+`GEMINI_RATE_LIMIT_MAX_WAITS` limita quantas pausas longas podem acontecer em uma execução.
 
 ## Como rodar
 
@@ -60,6 +64,8 @@ Processed: 50
 Generated: 43
 Skipped: 5
 Failed: 2
+Rate limited: false
+Rate limit waits: 0
 Prompt version: prediction-explanation-v1
 ```
 
@@ -101,6 +107,8 @@ Formato obrigatório:
 
 - Não logar `GEMINI_API_KEY`.
 - Preservar explicações `generated` quando uma nova tentativa falhar ou for limitada pela API.
+- Ao atingir rate limit persistente da Gemini, esperar o cooldown configurado e retentar o mesmo jogo.
+- Parar o batch se o limite persistir depois das pausas configuradas.
 - Não gerar explicação quando faltarem previsões essenciais.
 - Sobrescrever explicação `generated` somente quando a nova geração também terminar como `generated`.
 - Permitir reprocessar registros `failed` ou `skipped`.
