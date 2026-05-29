@@ -1,3 +1,5 @@
+import { appPath } from '../assets';
+
 export default function Footer() {
   return (
     <footer className="site-footer">
@@ -7,8 +9,8 @@ export default function Footer() {
           <p>App de bolão com IA para futebol. Beta Android, iPhone em breve.</p>
         </div>
         <nav className="footer-links" aria-label="Links legais">
-          <a href="/privacy">Política de Privacidade</a>
-          <a href="/terms">Termos de Uso</a>
+          <a href={appPath('privacy')}>Política de Privacidade</a>
+          <a href={appPath('terms')}>Termos de Uso</a>
         </nav>
       </div>
     </footer>

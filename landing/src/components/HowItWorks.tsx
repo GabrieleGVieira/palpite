@@ -1,3 +1,5 @@
+import { assetPath } from '../assets';
+
 const steps = [
   {
     title: 'Crie grupos',
@@ -38,7 +40,7 @@ export default function HowItWorks() {
             <article className="info-card" key={step.title}>
               <div className="phone-preview" aria-hidden="true">
                 <span className="phone-speaker" />
-                <img src={step.image} alt="" width="600" height="900" />
+                <img src={assetPath(step.image)} alt="" width="600" height="900" />
               </div>
               <h3>{step.title}</h3>
               <p>{step.text}</p>

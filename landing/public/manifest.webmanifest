@@ -2,13 +2,13 @@
   "name": "PalpitAI",
   "short_name": "PalpitAI",
   "description": "App de bolao com IA para futebol.",
-  "start_url": "/",
+  "start_url": ".",
   "display": "browser",
   "background_color": "#f5f8ef",
   "theme_color": "#f5f8ef",
   "icons": [
     {
-      "src": "/splash-palpitai.png",
+      "src": "splash-palpitai.png",
       "sizes": "700x700",
       "type": "image/png",
       "purpose": "any"

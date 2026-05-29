@@ -1,3 +1,5 @@
+import { appPath } from '../assets';
+
 type LegalSection = {
   title: string;
   paragraphs?: string[];
@@ -197,7 +199,7 @@ export default function LegalPage({ type }: { type: keyof typeof pageContent }) 
   return (
     <main className="legal-page">
       <article className="section-shell legal-article">
-        <a className="legal-back-link" href="/">
+        <a className="legal-back-link" href={appPath()}>
           Voltar para o PalpitAI
         </a>
         <header className="legal-header">

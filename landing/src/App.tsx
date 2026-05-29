@@ -7,9 +7,10 @@ import HowItWorks from './components/HowItWorks';
 import LegalNotice from './components/LegalNotice';
 import LegalPage from './components/LegalPage';
 import TesterForm from './components/TesterForm';
+import { currentAppPath } from './assets';
 
 export default function App() {
-  const path = window.location.pathname.replace(/\/$/, '');
+  const path = currentAppPath();
 
   if (path === '/privacy') {
     return (

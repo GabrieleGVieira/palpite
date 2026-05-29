@@ -1,4 +1,5 @@
 import LegalNotice from './LegalNotice';
+import { assetPath } from '../assets';
 
 export default function Hero() {
   return (
@@ -25,8 +26,20 @@ export default function Hero() {
           <p className="iphone-note">Estamos preparando a melhor experiência para iPhone.</p>
         </div>
         <div className="hero-visual" aria-label="Visual do PalpitAI">
-          <img className="hero-illustration" src="/landing-hero.png" alt="" width="1200" height="630" />
-          <img className="hero-logo-badge" src="/splash-palpitai.png" alt="" width="700" height="700" />
+          <img
+            className="hero-illustration"
+            src={assetPath('/landing-hero.png')}
+            alt=""
+            width="1200"
+            height="630"
+          />
+          <img
+            className="hero-logo-badge"
+            src={assetPath('/splash-palpitai.png')}
+            alt=""
+            width="700"
+            height="700"
+          />
         </div>
       </div>
     </section>
