@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     minHeight: 52,
+    padding: 5
   },
   primaryButtonDisabled: {
     backgroundColor: '#8a9490',

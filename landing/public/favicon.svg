@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="PalpitAI">
+  <rect width="64" height="64" rx="14" fill="#f5f8ef"/>
+  <circle cx="32" cy="32" r="20" fill="#10b981"/>
+  <path d="M32 14l7 10-7 6-7-6 7-10zM18 29l11 3 1 10-10 4-2-17zM46 29l-11 3-1 10 10 4 2-17zM25 49l7-6 7 6-7 5-7-5z" fill="#f8fafc"/>
+  <path d="M32 30l8 6-3 10H27l-3-10 8-6z" fill="#123d2a"/>
+  <path d="M12 52h40" stroke="#cfe0c9" stroke-width="4" stroke-linecap="round"/>
+</svg>

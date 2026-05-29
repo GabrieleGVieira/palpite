@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.palpitai.app",
-      "versionCode": 6,
+      "versionCode": 8,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

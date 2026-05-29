@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://palpitai.com.br/sitemap.xml
