@@ -20,6 +20,8 @@ func TestInsertGroupWithOwnerUsesPayloadFieldsInOrder(t *testing.T) {
 		SelectedTeams:    []string{"Brasil", "Argentina"},
 		ParticipantLimit: &limit,
 		IsPrivate:        true,
+		IsPaid:           true,
+		PaymentAmount:    25.5,
 	}
 
 	_, err := InsertGroupWithOwner(
@@ -42,6 +44,9 @@ func TestInsertGroupWithOwnerUsesPayloadFieldsInOrder(t *testing.T) {
 		[]string{"Brasil", "Argentina"},
 		&limit,
 		true,
+		true,
+		25.5,
+		false,
 		"ABCD1234",
 		"Gabriele Vieira",
 	}

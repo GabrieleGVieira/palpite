@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "PalpitAI",
-    "slug": "palpitai",
+    "name": "Cravou!",
+    "slug": "cravou",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-palpitai.png",
+      "image": "./assets/splash-cravou.png",
       "resizeMode": "contain",
       "backgroundColor": "#f5f8ef"
     },
@@ -16,7 +16,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.palpitai.app",
+      "package": "com.cravou.app",
       "versionCode": 8,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

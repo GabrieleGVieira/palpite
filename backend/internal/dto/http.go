@@ -27,14 +27,20 @@ type CreateGroupRequest struct {
 	ParticipantLimit         *int     `json:"participant_limit"`
 	HasUnlimitedParticipants bool     `json:"has_unlimited_participants"`
 	IsPrivate                bool     `json:"is_private"`
+	IsPaid                   bool     `json:"is_paid"`
+	PaymentAmount            float64  `json:"payment_amount"`
+	BlockPendingPredictions  bool     `json:"block_pending_predictions"`
 }
 
 type UpdateGroupRequest struct {
-	Name                     string `json:"name"`
-	Description              string `json:"description"`
-	ParticipantLimit         *int   `json:"participant_limit"`
-	HasUnlimitedParticipants bool   `json:"has_unlimited_participants"`
-	IsPrivate                bool   `json:"is_private"`
+	Name                     string  `json:"name"`
+	Description              string  `json:"description"`
+	ParticipantLimit         *int    `json:"participant_limit"`
+	HasUnlimitedParticipants bool    `json:"has_unlimited_participants"`
+	IsPrivate                bool    `json:"is_private"`
+	IsPaid                   bool    `json:"is_paid"`
+	PaymentAmount            float64 `json:"payment_amount"`
+	BlockPendingPredictions  bool    `json:"block_pending_predictions"`
 }
 
 type JoinGroupRequest struct {
@@ -42,16 +48,19 @@ type JoinGroupRequest struct {
 }
 
 type GroupResponse struct {
-	ID               string    `json:"id"`
-	OwnerID          string    `json:"owner_id"`
-	Name             string    `json:"name"`
-	Description      string    `json:"description"`
-	MatchScope       string    `json:"match_scope"`
-	SelectedTeams    []string  `json:"selected_teams"`
-	ParticipantLimit *int      `json:"participant_limit"`
-	IsPrivate        bool      `json:"is_private"`
-	InviteCode       string    `json:"invite_code"`
-	CreatedAt        time.Time `json:"created_at"`
+	ID                      string    `json:"id"`
+	OwnerID                 string    `json:"owner_id"`
+	Name                    string    `json:"name"`
+	Description             string    `json:"description"`
+	MatchScope              string    `json:"match_scope"`
+	SelectedTeams           []string  `json:"selected_teams"`
+	ParticipantLimit        *int      `json:"participant_limit"`
+	IsPrivate               bool      `json:"is_private"`
+	IsPaid                  bool      `json:"is_paid"`
+	PaymentAmount           float64   `json:"payment_amount"`
+	BlockPendingPredictions bool      `json:"block_pending_predictions"`
+	InviteCode              string    `json:"invite_code"`
+	CreatedAt               time.Time `json:"created_at"`
 }
 
 type GroupListItemResponse struct {
@@ -78,6 +87,51 @@ type GroupMemberResponse struct {
 	JoinedAt    time.Time `json:"joined_at"`
 	Role        string    `json:"role"`
 	UserID      string    `json:"user_id"`
+}
+
+type PaymentStatus string
+
+const (
+	PaymentStatusPending  PaymentStatus = "pending"
+	PaymentStatusPaid     PaymentStatus = "paid"
+	PaymentStatusExempt   PaymentStatus = "exempt"
+	PaymentStatusRefunded PaymentStatus = "refunded"
+)
+
+type GroupPaymentResponse struct {
+	ID              string     `json:"id"`
+	GroupID         string     `json:"group_id"`
+	UserID          string     `json:"user_id"`
+	DisplayName     string     `json:"display_name"`
+	Email           *string    `json:"email"`
+	AvatarURL       *string    `json:"avatar_url"`
+	Status          string     `json:"status"`
+	AmountExpected  float64    `json:"amount_expected"`
+	AmountPaid      float64    `json:"amount_paid"`
+	PaymentMethod   string     `json:"payment_method"`
+	PaidAt          *time.Time `json:"paid_at"`
+	MarkedByAdminID *string    `json:"marked_by_admin_id"`
+	Notes           string     `json:"notes"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
+}
+
+type UpdateGroupPaymentRequest struct {
+	Status        string  `json:"status"`
+	AmountPaid    float64 `json:"amount_paid"`
+	PaymentMethod string  `json:"payment_method"`
+	Notes         string  `json:"notes"`
+}
+
+type GroupPaymentsSummaryResponse struct {
+	TotalParticipants int     `json:"total_participants"`
+	PaidCount         int     `json:"paid_count"`
+	PendingCount      int     `json:"pending_count"`
+	ExemptCount       int     `json:"exempt_count"`
+	RefundedCount     int     `json:"refunded_count"`
+	TotalExpected     float64 `json:"total_expected"`
+	TotalPaid         float64 `json:"total_paid"`
+	TotalPending      float64 `json:"total_pending"`
 }
 
 type PredictionRequest struct {

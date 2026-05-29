@@ -41,7 +41,7 @@ export function LoginScreen({ onCreateAccount }: LoginScreenProps) {
           <View style={styles.pitchCircle} />
 
           <Header
-            title="Bem-vindo ao PalpitAI"
+            title="Bem-vindo ao Cravou!"
             subtitle="Entre no seu bolão inteligente e acompanhe palpites, rankings e insights com IA."
             topSpacing={32}
           />

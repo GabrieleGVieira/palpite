@@ -133,7 +133,7 @@ export function MatchPredictionCard({
 function CardHeader({ isOpen, showChevron = true }: { isOpen: boolean; showChevron?: boolean }) {
   return (
     <View style={styles.header}>
-      <Text style={styles.title}>PalpitAI para este jogo</Text>
+      <Text style={styles.title}>Cravou! para este jogo</Text>
       {showChevron && <Text style={styles.chevron}>{isOpen ? '▲' : '▼'}</Text>}
     </View>
   );

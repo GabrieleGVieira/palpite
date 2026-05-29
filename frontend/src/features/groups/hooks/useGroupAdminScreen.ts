@@ -3,18 +3,24 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   approveJoinRequest,
+  getGroupPaymentsSummary,
   listGroupMembers,
+  listGroupPayments,
   listJoinRequests,
   removeGroupMember,
   transferGroupOwnership,
   updateGroup,
+  updateGroupPayment,
   type Group,
   type GroupMember,
+  type GroupPayment,
   type JoinRequest,
+  type PaymentStatus,
 } from '../services/groups';
 
 const emptyJoinRequests: JoinRequest[] = [];
 const emptyMembers: GroupMember[] = [];
+const emptyPayments: GroupPayment[] = [];
 
 export function useGroupAdminScreen(
   group: Group,
@@ -24,6 +30,13 @@ export function useGroupAdminScreen(
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description);
   const [isPrivate, setIsPrivate] = useState(group.is_private);
+  const [isPaid, setIsPaid] = useState(group.is_paid);
+  const [paymentAmount, setPaymentAmount] = useState(
+    group.payment_amount > 0 ? String(group.payment_amount) : '',
+  );
+  const [blockPendingPredictions, setBlockPendingPredictions] = useState(
+    group.block_pending_predictions,
+  );
   const [hasUnlimitedParticipants, setHasUnlimitedParticipants] = useState(
     group.participant_limit === null,
   );
@@ -33,6 +46,7 @@ export function useGroupAdminScreen(
   const [approvingUserID, setApprovingUserID] = useState<string | null>(null);
   const [removingUserID, setRemovingUserID] = useState<string | null>(null);
   const [transferringOwnerUserID, setTransferringOwnerUserID] = useState<string | null>(null);
+  const [updatingPaymentUserID, setUpdatingPaymentUserID] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -44,8 +58,19 @@ export function useGroupAdminScreen(
     queryFn: () => listGroupMembers(group.id),
     queryKey: ['groups', group.id, 'members'],
   });
+  const paymentsQuery = useQuery({
+    enabled: group.is_paid,
+    queryFn: () => listGroupPayments(group.id),
+    queryKey: ['groups', group.id, 'payments'],
+  });
+  const paymentsSummaryQuery = useQuery({
+    enabled: group.is_paid,
+    queryFn: () => getGroupPaymentsSummary(group.id),
+    queryKey: ['groups', group.id, 'payments', 'summary'],
+  });
   const refetchRequests = requestsQuery.refetch;
   const refetchMembers = membersQuery.refetch;
+  const refetchPayments = paymentsQuery.refetch;
   const updateMutation = useMutation({
     mutationFn: (payload: Parameters<typeof updateGroup>[1]) => updateGroup(group.id, payload),
     onSuccess: async () => {
@@ -74,6 +99,31 @@ export function useGroupAdminScreen(
       await queryClient.invalidateQueries({ queryKey: ['groups', group.id, 'members'] });
     },
   });
+  const updatePaymentMutation = useMutation({
+    mutationFn: ({
+      amountPaid,
+      notes,
+      paymentMethod,
+      status,
+      userID,
+    }: {
+      amountPaid: number;
+      notes: string;
+      paymentMethod: string;
+      status: PaymentStatus;
+      userID: string;
+    }) =>
+      updateGroupPayment(group.id, userID, {
+        amount_paid: amountPaid,
+        notes,
+        payment_method: paymentMethod,
+        status,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['groups', group.id, 'payments'] });
+      await queryClient.invalidateQueries({ queryKey: ['groups', group.id, 'payments', 'summary'] });
+    },
+  });
 
   const loadRequests = useCallback(async () => {
     setError(null);
@@ -93,6 +143,15 @@ export function useGroupAdminScreen(
     }
   }, [refetchMembers]);
 
+  const loadPayments = useCallback(async () => {
+    setError(null);
+    const result = await refetchPayments();
+    const nextError = queryErrorMessage(result.error, 'Não foi possível carregar pagamentos.');
+    if (nextError) {
+      setError(nextError);
+    }
+  }, [refetchPayments]);
+
   async function handleSaveGroup() {
     setError(null);
     setSuccessMessage(null);
@@ -107,13 +166,22 @@ export function useGroupAdminScreen(
       return;
     }
 
+    const parsedPaymentAmount = Number(paymentAmount.replace(',', '.'));
+    if (isPaid && (!Number.isFinite(parsedPaymentAmount) || parsedPaymentAmount < 0)) {
+      setError('Informe um valor de participação válido.');
+      return;
+    }
+
     try {
       const updatedGroup = await updateMutation.mutateAsync({
+        block_pending_predictions: blockPendingPredictions,
         description,
         has_unlimited_participants: hasUnlimitedParticipants,
+        is_paid: isPaid,
         is_private: isPrivate,
         name,
         participant_limit: hasUnlimitedParticipants ? null : Number(participantLimit),
+        payment_amount: isPaid ? parsedPaymentAmount : 0,
       });
 
       onGroupUpdated({ ...group, ...updatedGroup });
@@ -185,8 +253,36 @@ export function useGroupAdminScreen(
     }
   }
 
+  async function handleUpdatePayment(
+    payment: GroupPayment,
+    status: PaymentStatus,
+    amountPaid: number,
+    paymentMethod: string,
+    notes: string,
+  ) {
+    setError(null);
+    setSuccessMessage(null);
+    setUpdatingPaymentUserID(payment.user_id);
+
+    try {
+      await updatePaymentMutation.mutateAsync({
+        amountPaid,
+        notes,
+        paymentMethod,
+        status,
+        userID: payment.user_id,
+      });
+      setSuccessMessage('Pagamento atualizado.');
+    } catch (paymentError) {
+      setError(queryErrorMessage(paymentError, 'Não foi possível atualizar o pagamento.'));
+    } finally {
+      setUpdatingPaymentUserID(null);
+    }
+  }
+
   return {
     approvingUserID,
+    blockPendingPredictions,
     description,
     error:
       error !== null
@@ -198,27 +294,38 @@ export function useGroupAdminScreen(
     hasUnlimitedParticipants,
     isLoadingRequests: requestsQuery.isLoading,
     isLoadingMembers: membersQuery.isLoading,
+    isLoadingPayments: paymentsQuery.isLoading || paymentsSummaryQuery.isLoading,
+    isPaid,
     isPrivate,
     isSaving: updateMutation.isPending,
     loadRequests,
     loadMembers,
+    loadPayments,
     members: Array.isArray(membersQuery.data) ? membersQuery.data : emptyMembers,
     name,
     participantLimit,
+    paymentAmount,
+    payments: Array.isArray(paymentsQuery.data) ? paymentsQuery.data : emptyPayments,
+    paymentsSummary: paymentsSummaryQuery.data ?? null,
     removingUserID,
     requests: Array.isArray(requestsQuery.data) ? requestsQuery.data : emptyJoinRequests,
+    setBlockPendingPredictions,
     setDescription,
     setHasUnlimitedParticipants,
+    setIsPaid,
     setIsPrivate,
     setName,
     setParticipantLimit,
+    setPaymentAmount,
     setSuccessMessage,
     successMessage,
     transferringOwnerUserID,
+    updatingPaymentUserID,
     handleApprove,
     handleRemoveMember,
     handleSaveGroup,
     handleTransferOwnership,
+    handleUpdatePayment,
   };
 }
 

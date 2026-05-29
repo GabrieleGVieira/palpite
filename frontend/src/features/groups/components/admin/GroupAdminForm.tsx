@@ -4,35 +4,48 @@ import { SwitchBox } from '../../../../shared/components/SwitchBox';
 import { ParticipantsCard } from '../../../../shared/components/ParticipantsCard';
 import { GroupBasicFormFields } from '../../../../shared/components/GroupBasicFormFields';
 import { FinishButton } from '../../../../shared/components/FinishButton';
+import { PaymentSettingsCard } from '../../../../shared/components/PaymentSettingsCard';
 
 type GroupAdminFormProps = {
+  blockPendingPredictions: boolean;
   description: string;
   hasUnlimitedParticipants: boolean;
+  isPaid: boolean;
   isPrivate: boolean;
   isSaving: boolean;
   name: string;
   participantLimit: string;
+  paymentAmount: string;
   onSave: () => void;
+  setBlockPendingPredictions: (value: boolean) => void;
   setDescription: (value: string) => void;
   setHasUnlimitedParticipants: (value: boolean) => void;
+  setIsPaid: (value: boolean) => void;
   setIsPrivate: (value: boolean) => void;
   setName: (value: string) => void;
   setParticipantLimit: (value: string) => void;
+  setPaymentAmount: (value: string) => void;
 };
 
 export function GroupAdminForm({
+  blockPendingPredictions,
   description,
   hasUnlimitedParticipants,
+  isPaid,
   isPrivate,
   isSaving,
   name,
   participantLimit,
+  paymentAmount,
   onSave,
+  setBlockPendingPredictions,
   setDescription,
   setHasUnlimitedParticipants,
+  setIsPaid,
   setIsPrivate,
   setName,
   setParticipantLimit,
+  setPaymentAmount,
 }: GroupAdminFormProps) {
   return (
     <View style={styles.card}>
@@ -50,6 +63,15 @@ export function GroupAdminForm({
         participantLimit={participantLimit}
         setHasUnlimitedParticipants={setHasUnlimitedParticipants}
         setParticipantLimit={setParticipantLimit}
+      />
+
+      <PaymentSettingsCard
+        blockPendingPredictions={blockPendingPredictions}
+        isPaid={isPaid}
+        paymentAmount={paymentAmount}
+        setBlockPendingPredictions={setBlockPendingPredictions}
+        setIsPaid={setIsPaid}
+        setPaymentAmount={setPaymentAmount}
       />
 
       <SwitchBox

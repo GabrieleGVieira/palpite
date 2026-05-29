@@ -12,6 +12,8 @@ import (
 type GroupInviteSummary struct {
 	ID               string
 	IsPrivate        bool
+	IsPaid           bool
+	PaymentAmount    float64
 	ParticipantLimit *int
 	MemberCount      int
 }
@@ -32,6 +34,9 @@ func ListActiveUserGroups(ctx context.Context, db Querier, userID string) ([]dto
 			g.selected_teams,
 			g.participant_limit,
 			g.is_private,
+			g.is_paid,
+			g.payment_amount::float8,
+			g.block_pending_predictions,
 			g.invite_code,
 			g.created_at,
 			gm.role,
@@ -53,6 +58,9 @@ func ListActiveUserGroups(ctx context.Context, db Querier, userID string) ([]dto
 			g.selected_teams,
 			g.participant_limit,
 			g.is_private,
+			g.is_paid,
+			g.payment_amount,
+			g.block_pending_predictions,
 			g.invite_code,
 			g.created_at,
 			gm.role,
@@ -77,6 +85,9 @@ func ListActiveUserGroups(ctx context.Context, db Querier, userID string) ([]dto
 			&group.SelectedTeams,
 			&group.ParticipantLimit,
 			&group.IsPrivate,
+			&group.IsPaid,
+			&group.PaymentAmount,
+			&group.BlockPendingPredictions,
 			&group.InviteCode,
 			&group.CreatedAt,
 			&group.Role,
@@ -99,13 +110,15 @@ func GroupInviteSummaryByCode(ctx context.Context, db Querier, inviteCode string
 		select
 			g.id,
 			g.is_private,
+			g.is_paid,
+			g.payment_amount::float8,
 			g.participant_limit,
 			count(gm.user_id)::int as member_count
 		from groups g
 		left join group_members gm on gm.group_id = g.id and gm.status = 'active'
 		where g.invite_code = $1
-		group by g.id, g.is_private, g.participant_limit
-	`, inviteCode).Scan(&group.ID, &group.IsPrivate, &group.ParticipantLimit, &group.MemberCount)
+		group by g.id, g.is_private, g.is_paid, g.payment_amount, g.participant_limit
+	`, inviteCode).Scan(&group.ID, &group.IsPrivate, &group.IsPaid, &group.PaymentAmount, &group.ParticipantLimit, &group.MemberCount)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return GroupInviteSummary{}, ErrNotFound
 	}
@@ -125,6 +138,9 @@ func GroupListItemByID(ctx context.Context, db Querier, groupID string) (dto.Gro
 			g.selected_teams,
 			g.participant_limit,
 			g.is_private,
+			g.is_paid,
+			g.payment_amount::float8,
+			g.block_pending_predictions,
 			g.invite_code,
 			g.created_at,
 			count(distinct all_members.user_id)::int as member_count,
@@ -144,6 +160,9 @@ func GroupListItemByID(ctx context.Context, db Querier, groupID string) (dto.Gro
 			g.selected_teams,
 			g.participant_limit,
 			g.is_private,
+			g.is_paid,
+			g.payment_amount,
+			g.block_pending_predictions,
 			g.invite_code,
 			g.created_at,
 			owner_member.status
@@ -156,6 +175,9 @@ func GroupListItemByID(ctx context.Context, db Querier, groupID string) (dto.Gro
 		&group.SelectedTeams,
 		&group.ParticipantLimit,
 		&group.IsPrivate,
+		&group.IsPaid,
+		&group.PaymentAmount,
+		&group.BlockPendingPredictions,
 		&group.InviteCode,
 		&group.CreatedAt,
 		&group.MemberCount,
@@ -203,9 +225,12 @@ func InsertGroupWithOwner(ctx context.Context, db Querier, userID string, displa
 				selected_teams,
 				participant_limit,
 				is_private,
+				is_paid,
+				payment_amount,
+				block_pending_predictions,
 				invite_code
 			)
-			values ($1, $2, $3, $4, $5, $6, $7, $8)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 			returning
 				id,
 				owner_id,
@@ -215,12 +240,15 @@ func InsertGroupWithOwner(ctx context.Context, db Querier, userID string, displa
 				selected_teams,
 				participant_limit,
 				is_private,
+				is_paid,
+				payment_amount::float8,
+				block_pending_predictions,
 				invite_code,
 				created_at
 		),
 		inserted_member as (
 			insert into group_members (group_id, user_id, role, display_name)
-			select id, owner_id, 'owner', $9 from inserted_group
+			select id, owner_id, 'owner', $12 from inserted_group
 		)
 		select
 			id,
@@ -231,6 +259,9 @@ func InsertGroupWithOwner(ctx context.Context, db Querier, userID string, displa
 			selected_teams,
 			participant_limit,
 			is_private,
+			is_paid,
+			payment_amount,
+			block_pending_predictions,
 			invite_code,
 			created_at
 		from inserted_group
@@ -242,6 +273,9 @@ func InsertGroupWithOwner(ctx context.Context, db Querier, userID string, displa
 		request.SelectedTeams,
 		request.ParticipantLimit,
 		request.IsPrivate,
+		request.IsPaid,
+		request.PaymentAmount,
+		request.BlockPendingPredictions,
 		inviteCode,
 		displayName,
 	).Scan(
@@ -253,6 +287,9 @@ func InsertGroupWithOwner(ctx context.Context, db Querier, userID string, displa
 		&group.SelectedTeams,
 		&group.ParticipantLimit,
 		&group.IsPrivate,
+		&group.IsPaid,
+		&group.PaymentAmount,
+		&group.BlockPendingPredictions,
 		&group.InviteCode,
 		&group.CreatedAt,
 	)
@@ -272,6 +309,9 @@ func UpdateOwnedGroup(ctx context.Context, db Querier, ownerID string, groupID s
 			description = $4,
 			participant_limit = $5,
 			is_private = $6,
+			is_paid = $7,
+			payment_amount = $8,
+			block_pending_predictions = $9,
 			updated_at = now()
 		where id = $1 and owner_id = $2
 		returning
@@ -283,9 +323,12 @@ func UpdateOwnedGroup(ctx context.Context, db Querier, ownerID string, groupID s
 			selected_teams,
 			participant_limit,
 			is_private,
+			is_paid,
+			payment_amount::float8,
+			block_pending_predictions,
 			invite_code,
 			created_at
-	`, groupID, ownerID, request.Name, request.Description, request.ParticipantLimit, request.IsPrivate).Scan(
+	`, groupID, ownerID, request.Name, request.Description, request.ParticipantLimit, request.IsPrivate, request.IsPaid, request.PaymentAmount, request.BlockPendingPredictions).Scan(
 		&group.ID,
 		&group.OwnerID,
 		&group.Name,
@@ -294,6 +337,9 @@ func UpdateOwnedGroup(ctx context.Context, db Querier, ownerID string, groupID s
 		&group.SelectedTeams,
 		&group.ParticipantLimit,
 		&group.IsPrivate,
+		&group.IsPaid,
+		&group.PaymentAmount,
+		&group.BlockPendingPredictions,
 		&group.InviteCode,
 		&group.CreatedAt,
 	)

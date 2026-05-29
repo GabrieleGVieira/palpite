@@ -56,15 +56,18 @@ const worldCupTeams = [
 ];
 
 type UseCreateGroupScreenResult = {
+  blockPendingPredictions: boolean;
   createGroupLabel: string;
   description: string;
   formError: string | null;
   hasUnlimitedParticipants: boolean;
+  isPaid: boolean;
   isPrivate: boolean;
   isSubmitting: boolean;
   matchScope: (typeof matchScopes)[number];
   matchScopes: readonly (typeof matchScopes)[number][];
   participantLimit: string;
+  paymentAmount: string;
   selectedTeams: string[];
   teamSearch: string;
   toggleTeamDropdown: () => void;
@@ -79,7 +82,10 @@ type UseCreateGroupScreenResult = {
   onCreateGroup: () => Promise<void>;
   toggleTeam: (team: string) => void;
   setHasUnlimitedParticipants: (value: boolean) => void;
+  setBlockPendingPredictions: (value: boolean) => void;
+  setIsPaid: (value: boolean) => void;
   setIsPrivate: (value: boolean) => void;
+  setPaymentAmount: (value: string) => void;
 };
 
 export function useCreateGroupScreen(
@@ -95,6 +101,9 @@ export function useCreateGroupScreen(
   const [participantLimit, setParticipantLimit] = useState('20');
   const [hasUnlimitedParticipants, setHasUnlimitedParticipants] = useState(false);
   const [isPrivate, setIsPrivate] = useState(true);
+  const [isPaid, setIsPaid] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [blockPendingPredictions, setBlockPendingPredictions] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const createGroupMutation = useMutation({
@@ -132,13 +141,22 @@ export function useCreateGroupScreen(
       }
     }
 
+    const parsedPaymentAmount = Number(paymentAmount.replace(',', '.'));
+    if (isPaid && (!Number.isFinite(parsedPaymentAmount) || parsedPaymentAmount < 0)) {
+      setFormError('Informe um valor de participação válido.');
+      return;
+    }
+
     const payload: CreateGroupPayload = {
+      block_pending_predictions: blockPendingPredictions,
       description,
       has_unlimited_participants: hasUnlimitedParticipants,
+      is_paid: isPaid,
       is_private: isPrivate,
       match_scope: matchScope === 'Todos os jogos' ? 'all' : 'selected',
       name: groupName,
       participant_limit: hasUnlimitedParticipants ? null : Number(participantLimit),
+      payment_amount: isPaid ? parsedPaymentAmount : 0,
       selected_teams: matchScope === 'Selecionar seleções' ? selectedTeams : [],
     };
 
@@ -163,15 +181,18 @@ export function useCreateGroupScreen(
   }
 
   return {
+    blockPendingPredictions,
     createGroupLabel: 'Criar grupo',
     description,
     formError,
     hasUnlimitedParticipants,
+    isPaid,
     isPrivate,
     isSubmitting: createGroupMutation.isPending,
     matchScope,
     matchScopes,
     participantLimit,
+    paymentAmount,
     selectedTeams,
     teamSearch,
     toggleTeamDropdown,
@@ -186,7 +207,10 @@ export function useCreateGroupScreen(
     onCreateGroup,
     toggleTeam,
     setHasUnlimitedParticipants,
+    setBlockPendingPredictions,
+    setIsPaid,
     setIsPrivate,
+    setPaymentAmount,
   };
 }
 

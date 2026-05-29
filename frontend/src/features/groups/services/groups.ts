@@ -6,14 +6,18 @@ import {
 import type {
   CreateGroupPayload,
   Group,
+  GroupPayment,
+  GroupPaymentsSummary,
   GroupRankingResponse,
   JoinGroupResponse,
   ListGroupMatchesResponse,
   ListGroupMembersResponse,
+  ListGroupPaymentsResponse,
   ListGroupsResponse,
   ListJoinRequestsResponse,
   Prediction,
   UpdateGroupPayload,
+  UpdateGroupPaymentPayload,
   UserScore,
 } from '../types';
 import { apiClient } from '../../../shared/services/apiClient';
@@ -23,11 +27,15 @@ export type {
   Group,
   GroupMatch,
   GroupMember,
+  GroupPayment,
+  GroupPaymentsSummary,
   JoinGroupResponse,
   JoinRequest,
+  PaymentStatus,
   Prediction,
   RankingEntry,
   UpdateGroupPayload,
+  UpdateGroupPaymentPayload,
   UserScore,
 } from '../types';
 
@@ -78,6 +86,32 @@ export async function listGroupMembers(groupID: string) {
   });
 
   return data.members;
+}
+
+export async function listGroupPayments(groupID: string) {
+  const data = await apiClient<ListGroupPaymentsResponse>(`/api/v1/groups/${groupID}/payments`, {
+    fallbackError: 'Não foi possivel carregar os pagamentos.',
+  });
+
+  return data.payments;
+}
+
+export async function getGroupPaymentsSummary(groupID: string) {
+  return apiClient<GroupPaymentsSummary>(`/api/v1/groups/${groupID}/payments/summary`, {
+    fallbackError: 'Não foi possivel carregar o resumo de pagamentos.',
+  });
+}
+
+export async function updateGroupPayment(
+  groupID: string,
+  userID: string,
+  payload: UpdateGroupPaymentPayload,
+) {
+  return apiClient<GroupPayment>(`/api/v1/groups/${groupID}/payments/${userID}`, {
+    body: JSON.stringify(payload),
+    fallbackError: 'Não foi possivel atualizar o pagamento.',
+    method: 'PATCH',
+  });
 }
 
 export async function approveJoinRequest(groupID: string, userID: string) {

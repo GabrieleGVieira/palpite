@@ -17,6 +17,7 @@ var (
 	ErrGroupFull          = apperrors.NewConflict("group is full")
 	ErrGroupNotFound      = apperrors.NewNotFound("group not found")
 	ErrGroupOwnerRequired = apperrors.NewForbidden("group owner required")
+	ErrPaymentNotFound    = apperrors.NewNotFound("payment not found")
 )
 
 type GroupUsecase struct {
@@ -67,6 +68,18 @@ func (uc GroupUsecase) TransferOwnership(ctx context.Context, ownerID string, gr
 	return TransferOwnership(ctx, uc.db, ownerID, groupID, nextOwnerID)
 }
 
+func (uc GroupUsecase) ListPayments(ctx context.Context, adminID string, groupID string) ([]dto.GroupPaymentResponse, error) {
+	return ListPayments(ctx, uc.db, adminID, groupID)
+}
+
+func (uc GroupUsecase) UpdatePayment(ctx context.Context, adminID string, groupID string, userID string, request dto.UpdateGroupPaymentRequest) (dto.GroupPaymentResponse, error) {
+	return UpdatePayment(ctx, uc.db, adminID, groupID, userID, request)
+}
+
+func (uc GroupUsecase) PaymentsSummary(ctx context.Context, adminID string, groupID string) (dto.GroupPaymentsSummaryResponse, error) {
+	return PaymentsSummary(ctx, uc.db, adminID, groupID)
+}
+
 func ListGroups(ctx context.Context, db Datastore, userID string) ([]dto.GroupListItemResponse, error) {
 	return repositories.ListActiveUserGroups(ctx, db, userID)
 }
@@ -102,7 +115,18 @@ func JoinGroup(ctx context.Context, db Datastore, userID string, displayName str
 		nextStatus = "pending"
 	}
 
-	if err := repositories.InsertGroupMember(ctx, db, groupSummary.ID, userID, nextStatus, displayName); err != nil {
+	err = withTx(ctx, db, func(tx repositories.Querier) error {
+		if err := repositories.InsertGroupMember(ctx, tx, groupSummary.ID, userID, nextStatus, displayName); err != nil {
+			return err
+		}
+
+		if groupSummary.IsPaid && nextStatus == "active" {
+			return repositories.InsertPaymentForMemberIfPaidGroup(ctx, tx, groupSummary.ID, userID, string(dto.PaymentStatusPending))
+		}
+
+		return nil
+	})
+	if err != nil {
 		return dto.JoinGroupResponse{}, err
 	}
 
@@ -140,8 +164,11 @@ func ApproveJoinRequest(ctx context.Context, db Datastore, ownerID string, group
 		if errors.Is(err, repositories.ErrNotFound) {
 			return ErrGroupNotFound
 		}
+		if err != nil {
+			return err
+		}
 
-		return err
+		return repositories.InsertPaymentForMemberIfPaidGroup(ctx, tx, groupID, requesterID, string(dto.PaymentStatusPending))
 	})
 }
 
@@ -216,6 +243,10 @@ func NormalizeCreateGroupRequest(request dto.CreateGroupRequest) (dto.CreateGrou
 		return request, apperrors.NewValidation("O limite precisa ser maior que 1.")
 	}
 
+	if err := normalizePaymentFields(&request.IsPaid, &request.PaymentAmount); err != nil {
+		return request, err
+	}
+
 	return request, nil
 }
 
@@ -231,6 +262,10 @@ func NormalizeUpdateGroupRequest(request dto.UpdateGroupRequest) (dto.UpdateGrou
 		request.ParticipantLimit = nil
 	} else if request.ParticipantLimit == nil || *request.ParticipantLimit < 2 {
 		return request, apperrors.NewValidation("O limite precisa ser maior que 1.")
+	}
+
+	if err := normalizePaymentFields(&request.IsPaid, &request.PaymentAmount); err != nil {
+		return request, err
 	}
 
 	return request, nil
@@ -256,6 +291,9 @@ func CreateGroup(ctx context.Context, db Datastore, userID string, displayName s
 
 			group, err = repositories.InsertGroupWithOwner(ctx, tx, userID, displayName, request, inviteCode)
 			if err == nil {
+				if group.IsPaid {
+					return repositories.InsertPaymentForMemberIfPaidGroup(ctx, tx, group.ID, userID, string(dto.PaymentStatusExempt))
+				}
 				return nil
 			}
 
@@ -276,15 +314,97 @@ func CreateGroup(ctx context.Context, db Datastore, userID string, displayName s
 }
 
 func UpdateGroup(ctx context.Context, db Datastore, ownerID string, groupID string, request dto.UpdateGroupRequest) (dto.GroupResponse, error) {
-	group, err := repositories.UpdateOwnedGroup(ctx, db, ownerID, groupID, request)
-	if errors.Is(err, repositories.ErrNotFound) {
-		return dto.GroupResponse{}, ErrGroupNotFound
-	}
+	var group dto.GroupResponse
+	err := withTx(ctx, db, func(tx repositories.Querier) error {
+		var updateErr error
+		group, updateErr = repositories.UpdateOwnedGroup(ctx, tx, ownerID, groupID, request)
+		if errors.Is(updateErr, repositories.ErrNotFound) {
+			return ErrGroupNotFound
+		}
+		if updateErr != nil {
+			return updateErr
+		}
+
+		if group.IsPaid {
+			return repositories.InsertMissingPaymentsForPaidGroup(ctx, tx, groupID)
+		}
+
+		return nil
+	})
 	if err != nil {
 		return dto.GroupResponse{}, err
 	}
 
 	return group, nil
+}
+
+func ListPayments(ctx context.Context, db Datastore, adminID string, groupID string) ([]dto.GroupPaymentResponse, error) {
+	if err := ensureGroupOwner(ctx, db, adminID, groupID); err != nil {
+		return nil, err
+	}
+	if err := repositories.InsertMissingPaymentsForPaidGroup(ctx, db, groupID); err != nil {
+		return nil, err
+	}
+
+	return repositories.ListGroupPayments(ctx, db, groupID)
+}
+
+func UpdatePayment(ctx context.Context, db Datastore, adminID string, groupID string, userID string, request dto.UpdateGroupPaymentRequest) (dto.GroupPaymentResponse, error) {
+	request.Status = strings.TrimSpace(request.Status)
+	request.PaymentMethod = strings.TrimSpace(request.PaymentMethod)
+	request.Notes = strings.TrimSpace(request.Notes)
+
+	if !isValidPaymentStatus(request.Status) {
+		return dto.GroupPaymentResponse{}, apperrors.NewValidation("Informe um status de pagamento valido.")
+	}
+	if request.AmountPaid < 0 {
+		return dto.GroupPaymentResponse{}, apperrors.NewValidation("O valor pago não pode ser negativo.")
+	}
+
+	var payment dto.GroupPaymentResponse
+	err := withTx(ctx, db, func(tx repositories.Querier) error {
+		if err := ensureGroupOwner(ctx, tx, adminID, groupID); err != nil {
+			return err
+		}
+		if err := repositories.EnsureActiveGroupMember(ctx, tx, groupID, userID); err != nil {
+			if errors.Is(err, repositories.ErrNotFound) {
+				return ErrPaymentNotFound
+			}
+			return err
+		}
+		if err := repositories.InsertMissingPaymentsForPaidGroup(ctx, tx, groupID); err != nil {
+			return err
+		}
+
+		var updateErr error
+		payment, updateErr = repositories.UpdateGroupPayment(ctx, tx, groupID, userID, adminID, request)
+		if errors.Is(updateErr, repositories.ErrNotFound) {
+			return ErrPaymentNotFound
+		}
+
+		return updateErr
+	})
+	if err != nil {
+		return dto.GroupPaymentResponse{}, err
+	}
+
+	return payment, nil
+}
+
+func PaymentsSummary(ctx context.Context, db Datastore, adminID string, groupID string) (dto.GroupPaymentsSummaryResponse, error) {
+	if err := ensureGroupOwner(ctx, db, adminID, groupID); err != nil {
+		return dto.GroupPaymentsSummaryResponse{}, err
+	}
+	if err := repositories.InsertMissingPaymentsForPaidGroup(ctx, db, groupID); err != nil {
+		return dto.GroupPaymentsSummaryResponse{}, err
+	}
+
+	payments, err := repositories.ListGroupPayments(ctx, db, groupID)
+	if err != nil {
+		return dto.GroupPaymentsSummaryResponse{}, err
+	}
+
+	return CalculatePaymentsSummary(payments), nil
 }
 
 func groupByID(ctx context.Context, db Datastore, groupID string, userID string, role string, status string) (dto.GroupListItemResponse, error) {
@@ -321,6 +441,63 @@ func normalizeTeams(teams []string) []string {
 	}
 
 	return normalizedTeams
+}
+
+func normalizePaymentFields(isPaid *bool, amount *float64) error {
+	if !*isPaid {
+		*amount = 0
+		return nil
+	}
+	if *amount < 0 {
+		return apperrors.NewValidation("O valor de participacao não pode ser negativo.")
+	}
+
+	return nil
+}
+
+func ensureGroupOwner(ctx context.Context, db repositories.Querier, adminID string, groupID string) error {
+	err := repositories.EnsureGroupOwner(ctx, db, adminID, groupID)
+	if errors.Is(err, repositories.ErrNotFound) {
+		return ErrGroupNotFound
+	}
+
+	return err
+}
+
+func isValidPaymentStatus(status string) bool {
+	switch dto.PaymentStatus(status) {
+	case dto.PaymentStatusPending, dto.PaymentStatusPaid, dto.PaymentStatusExempt, dto.PaymentStatusRefunded:
+		return true
+	default:
+		return false
+	}
+}
+
+func CalculatePaymentsSummary(payments []dto.GroupPaymentResponse) dto.GroupPaymentsSummaryResponse {
+	var summary dto.GroupPaymentsSummaryResponse
+	summary.TotalParticipants = len(payments)
+
+	for _, payment := range payments {
+		summary.TotalExpected += payment.AmountExpected
+		summary.TotalPaid += payment.AmountPaid
+
+		switch dto.PaymentStatus(payment.Status) {
+		case dto.PaymentStatusPaid:
+			summary.PaidCount++
+		case dto.PaymentStatusPending:
+			summary.PendingCount++
+			pending := payment.AmountExpected - payment.AmountPaid
+			if pending > 0 {
+				summary.TotalPending += pending
+			}
+		case dto.PaymentStatusExempt:
+			summary.ExemptCount++
+		case dto.PaymentStatusRefunded:
+			summary.RefundedCount++
+		}
+	}
+
+	return summary
 }
 
 func generateInviteCode() (string, error) {

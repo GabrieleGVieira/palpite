@@ -43,16 +43,19 @@ describe('group mappers', () => {
 
 function group(override: Partial<Group>): Group {
   return {
+    block_pending_predictions: false,
     created_at: '',
     description: '',
     id: '',
     invite_code: '',
+    is_paid: false,
     is_private: true,
     match_scope: 'all',
     member_count: 1,
     name: '',
     owner_id: '',
     participant_limit: null,
+    payment_amount: 0,
     pending_requests_count: 0,
     role: 'member',
     selected_teams: [],

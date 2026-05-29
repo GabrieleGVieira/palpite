@@ -17,6 +17,7 @@ import { CreateGroupMatchScope } from '../components/create-group/CreateGroupMat
 import { ParticipantsCard } from '../../../shared/components/ParticipantsCard';
 import { SwitchBox } from '../../../shared/components/SwitchBox';
 import { Header } from '../../../shared/components/Header';
+import { PaymentSettingsCard } from '../../../shared/components/PaymentSettingsCard';
 
 type CreateGroupScreenProps = {
   onBack: () => void;
@@ -25,14 +26,17 @@ type CreateGroupScreenProps = {
 
 export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenProps) {
   const {
+    blockPendingPredictions,
     description,
     formError,
     hasUnlimitedParticipants,
+    isPaid,
     isPrivate,
     isSubmitting,
     matchScope,
     matchScopes,
     participantLimit,
+    paymentAmount,
     selectedTeams,
     teamSearch,
     toggleTeamDropdown,
@@ -46,8 +50,11 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
     onChangeTeamSearch,
     onCreateGroup,
     toggleTeam,
+    setBlockPendingPredictions,
     setHasUnlimitedParticipants,
+    setIsPaid,
     setIsPrivate,
+    setPaymentAmount,
   } = useCreateGroupScreen(onGroupCreated, onBack);
 
   return (
@@ -97,6 +104,15 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
               participantLimit={participantLimit}
               setHasUnlimitedParticipants={setHasUnlimitedParticipants}
               setParticipantLimit={onChangeParticipantLimit}
+            />
+
+            <PaymentSettingsCard
+              blockPendingPredictions={blockPendingPredictions}
+              isPaid={isPaid}
+              paymentAmount={paymentAmount}
+              setBlockPendingPredictions={setBlockPendingPredictions}
+              setIsPaid={setIsPaid}
+              setPaymentAmount={setPaymentAmount}
             />
 
             <SwitchBox

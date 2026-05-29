@@ -6,6 +6,7 @@ import { BackButton } from '../../../shared/components/BackButton';
 import { GroupAdminForm } from '../components/admin/GroupAdminForm';
 import { GroupAdminHeader } from '../components/admin/GroupAdminHeader';
 import { GroupAdminMembers } from '../components/admin/GroupAdminMembers';
+import { GroupAdminPayments } from '../components/admin/GroupAdminPayments';
 import { GroupAdminRequests } from '../components/admin/GroupAdminRequests';
 import { useGroupAdminScreen } from '../hooks/useGroupAdminScreen';
 import type { Group } from '../services/groups';
@@ -19,31 +20,43 @@ type GroupAdminScreenProps = {
 export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminScreenProps) {
   const {
     approvingUserID,
+    blockPendingPredictions,
     description,
     error,
     hasUnlimitedParticipants,
     isLoadingMembers,
+    isLoadingPayments,
     isLoadingRequests,
+    isPaid,
     isPrivate,
     isSaving,
     loadMembers,
+    loadPayments,
     loadRequests,
     members,
     name,
     participantLimit,
+    paymentAmount,
+    payments,
+    paymentsSummary,
     removingUserID,
     requests,
+    setBlockPendingPredictions,
     setDescription,
     setHasUnlimitedParticipants,
+    setIsPaid,
     setIsPrivate,
     setName,
     setParticipantLimit,
+    setPaymentAmount,
     successMessage,
     transferringOwnerUserID,
+    updatingPaymentUserID,
     handleApprove,
     handleRemoveMember,
     handleSaveGroup,
     handleTransferOwnership,
+    handleUpdatePayment,
   } = useGroupAdminScreen(group, onGroupUpdated, onBack);
 
   function confirmRemoveMember(member: (typeof members)[number]) {
@@ -84,19 +97,36 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
         <GroupAdminHeader groupName={group.name} error={error} successMessage={successMessage} />
 
         <GroupAdminForm
+          blockPendingPredictions={blockPendingPredictions}
           description={description}
           hasUnlimitedParticipants={hasUnlimitedParticipants}
+          isPaid={isPaid}
           isPrivate={isPrivate}
           isSaving={isSaving}
           name={name}
           participantLimit={participantLimit}
+          paymentAmount={paymentAmount}
           onSave={handleSaveGroup}
+          setBlockPendingPredictions={setBlockPendingPredictions}
           setDescription={setDescription}
           setHasUnlimitedParticipants={setHasUnlimitedParticipants}
+          setIsPaid={setIsPaid}
           setIsPrivate={setIsPrivate}
           setName={setName}
           setParticipantLimit={setParticipantLimit}
+          setPaymentAmount={setPaymentAmount}
         />
+
+        {group.role === 'owner' && group.is_paid ? (
+          <GroupAdminPayments
+            isLoadingPayments={isLoadingPayments}
+            loadPayments={loadPayments}
+            onUpdatePayment={handleUpdatePayment}
+            payments={payments}
+            summary={paymentsSummary}
+            updatingPaymentUserID={updatingPaymentUserID}
+          />
+        ) : null}
 
         <GroupAdminRequests
           approvingUserID={approvingUserID}

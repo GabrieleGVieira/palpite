@@ -172,6 +172,87 @@ func ListGroupMembersHandler(cfg config.Config, groups usecase.GroupUsecase) htt
 	}
 }
 
+func ListGroupPaymentsHandler(cfg config.Config, groups usecase.GroupUsecase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		payments, err := groups.ListPayments(r.Context(), userID, r.PathValue("groupID"))
+		if err != nil {
+			if apperrors.IsNotFound(err) {
+				writeError(w, http.StatusForbidden, "Apenas o admin do grupo pode listar pagamentos.")
+				return
+			}
+
+			writeError(w, http.StatusInternalServerError, "Não foi possivel listar os pagamentos.")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string][]dto.GroupPaymentResponse{
+			"payments": payments,
+		})
+	}
+}
+
+func UpdateGroupPaymentHandler(cfg config.Config, groups usecase.GroupUsecase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		var request dto.UpdateGroupPaymentRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			writeError(w, http.StatusBadRequest, "JSON invalido.")
+			return
+		}
+
+		payment, err := groups.UpdatePayment(r.Context(), userID, r.PathValue("groupID"), r.PathValue("userID"), request)
+		if err != nil {
+			switch {
+			case apperrors.IsValidation(err):
+				writeError(w, http.StatusBadRequest, err.Error())
+			case err == usecase.ErrPaymentNotFound:
+				writeError(w, http.StatusNotFound, "Pagamento não encontrado.")
+			case apperrors.IsNotFound(err):
+				writeError(w, http.StatusForbidden, "Apenas o admin do grupo pode alterar pagamentos.")
+			default:
+				writeError(w, http.StatusInternalServerError, "Não foi possivel atualizar o pagamento.")
+			}
+			return
+		}
+
+		writeJSON(w, http.StatusOK, payment)
+	}
+}
+
+func GroupPaymentsSummaryHandler(cfg config.Config, groups usecase.GroupUsecase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		summary, err := groups.PaymentsSummary(r.Context(), userID, r.PathValue("groupID"))
+		if err != nil {
+			if apperrors.IsNotFound(err) {
+				writeError(w, http.StatusForbidden, "Apenas o admin do grupo pode ver o resumo de pagamentos.")
+				return
+			}
+
+			writeError(w, http.StatusInternalServerError, "Não foi possivel carregar o resumo de pagamentos.")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, summary)
+	}
+}
+
 func ApproveJoinRequestHandler(cfg config.Config, groups usecase.GroupUsecase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ownerID, err := userIDFromRequest(r, cfg)

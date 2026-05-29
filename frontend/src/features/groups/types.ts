@@ -1,32 +1,41 @@
 export type CreateGroupPayload = {
+  block_pending_predictions: boolean;
   description: string;
   has_unlimited_participants: boolean;
+  is_paid: boolean;
   is_private: boolean;
   match_scope: 'all' | 'selected';
   name: string;
   participant_limit: number | null;
+  payment_amount: number;
   selected_teams: string[];
 };
 
 export type UpdateGroupPayload = {
+  block_pending_predictions: boolean;
   description: string;
   has_unlimited_participants: boolean;
+  is_paid: boolean;
   is_private: boolean;
   name: string;
   participant_limit: number | null;
+  payment_amount: number;
 };
 
 export type Group = {
+  block_pending_predictions: boolean;
   created_at: string;
   description: string;
   id: string;
   invite_code: string;
+  is_paid: boolean;
   is_private: boolean;
   match_scope: string;
   member_count: number;
   name: string;
   owner_id: string;
   participant_limit: number | null;
+  payment_amount: number;
   pending_requests_count: number;
   role: string;
   selected_teams: string[];
@@ -109,4 +118,46 @@ export type ListGroupMembersResponse = {
 
 export type GroupRankingResponse = {
   ranking: RankingEntry[];
+};
+
+export type PaymentStatus = 'pending' | 'paid' | 'exempt' | 'refunded';
+
+export type GroupPayment = {
+  amount_expected: number;
+  amount_paid: number;
+  avatar_url: string | null;
+  created_at: string;
+  display_name: string;
+  email: string | null;
+  group_id: string;
+  id: string;
+  marked_by_admin_id: string | null;
+  notes: string;
+  paid_at: string | null;
+  payment_method: string;
+  status: PaymentStatus;
+  updated_at: string;
+  user_id: string;
+};
+
+export type GroupPaymentsSummary = {
+  exempt_count: number;
+  paid_count: number;
+  pending_count: number;
+  refunded_count: number;
+  total_expected: number;
+  total_paid: number;
+  total_participants: number;
+  total_pending: number;
+};
+
+export type ListGroupPaymentsResponse = {
+  payments: GroupPayment[];
+};
+
+export type UpdateGroupPaymentPayload = {
+  amount_paid: number;
+  notes: string;
+  payment_method: string;
+  status: PaymentStatus;
 };
