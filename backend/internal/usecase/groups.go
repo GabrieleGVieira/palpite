@@ -81,7 +81,7 @@ func (uc GroupUsecase) PaymentsSummary(ctx context.Context, adminID string, grou
 }
 
 func ListGroups(ctx context.Context, db Datastore, userID string) ([]dto.GroupListItemResponse, error) {
-	return repositories.ListActiveUserGroups(ctx, db, userID)
+	return repositories.ListUserGroups(ctx, db, userID)
 }
 
 func JoinGroup(ctx context.Context, db Datastore, userID string, displayName string, inviteCode string) (dto.JoinGroupResponse, error) {

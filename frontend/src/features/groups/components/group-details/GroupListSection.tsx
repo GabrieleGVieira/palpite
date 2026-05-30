@@ -54,26 +54,40 @@ export function GroupListSection({
         </View>
       ) : null}
 
-      {groups.map((group) => (
-        <Pressable key={group.id} onPress={() => onOpenGroup(group)} style={styles.groupCard}>
+      {groups.map((group) => {
+        const isPendingMembership = group.status === 'pending';
+
+        return (
+        <Pressable
+          key={group.id}
+          disabled={isPendingMembership}
+          onPress={() => onOpenGroup(group)}
+          style={[styles.groupCard, isPendingMembership && styles.groupCardPending]}>
           <View style={styles.groupCardHeader}>
             <View style={styles.groupTitleBlock}>
               <Text style={styles.groupName}>{group.name}</Text>
               <Text style={styles.groupMeta}>
-                {group.role === 'owner' ? 'Dono' : 'Membro'} · {group.member_count} participante
-                {group.member_count === 1 ? '' : 's'}
+                {isPendingMembership
+                  ? 'Aguardando aprovação do dono'
+                  : `${group.role === 'owner' ? 'Dono' : 'Membro'} · ${group.member_count} participante${group.member_count === 1 ? '' : 's'}`}
               </Text>
             </View>
-            <Pressable
-              onLongPress={() => {
-                void copyInviteCode(group);
-              }}
-              style={styles.inviteBadge}>
-              <Text style={styles.inviteBadgeLabel}>Convite</Text>
-              <Text style={styles.inviteBadgeCode}>
-                {copiedGroupID === group.id ? 'Copiado' : group.invite_code}
-              </Text>
-            </Pressable>
+            {isPendingMembership ? (
+              <View style={styles.pendingBadge}>
+                <Text style={styles.pendingBadgeText}>Pendente</Text>
+              </View>
+            ) : (
+              <Pressable
+                onLongPress={() => {
+                  void copyInviteCode(group);
+                }}
+                style={styles.inviteBadge}>
+                <Text style={styles.inviteBadgeLabel}>Convite</Text>
+                <Text style={styles.inviteBadgeCode}>
+                  {copiedGroupID === group.id ? 'Copiado' : group.invite_code}
+                </Text>
+              </Pressable>
+            )}
           </View>
 
           {group.description ? (
@@ -98,7 +112,8 @@ export function GroupListSection({
             </View>
           ) : null}
         </Pressable>
-      ))}
+      );
+      })}
     </View>
   );
 }
@@ -178,6 +193,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
   },
+  groupCardPending: {
+    borderColor: '#e5c76a',
+    opacity: 0.92,
+  },
   groupCardHeader: {
     alignItems: 'flex-start',
     flexDirection: 'row',
@@ -215,6 +234,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     marginTop: 2,
+  },
+  pendingBadge: {
+    alignItems: 'center',
+    backgroundColor: '#fff7dd',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  pendingBadgeText: {
+    color: '#8a5d00',
+    fontSize: 12,
+    fontWeight: '800',
   },
   groupDescription: {
     color: '#486654',

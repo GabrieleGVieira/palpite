@@ -23,7 +23,7 @@ type GroupCapacity struct {
 	MemberCount      int
 }
 
-func ListActiveUserGroups(ctx context.Context, db Querier, userID string) ([]dto.GroupListItemResponse, error) {
+func ListUserGroups(ctx context.Context, db Querier, userID string) ([]dto.GroupListItemResponse, error) {
 	rows, err := db.Query(ctx, `
 		select
 			g.id,
@@ -44,7 +44,7 @@ func ListActiveUserGroups(ctx context.Context, db Querier, userID string) ([]dto
 			count(distinct all_members.user_id)::int as member_count,
 			count(distinct pending_members.user_id)::int as pending_requests_count
 		from groups g
-		join group_members gm on gm.group_id = g.id and gm.user_id = $1 and gm.status = 'active'
+		join group_members gm on gm.group_id = g.id and gm.user_id = $1
 		left join group_members owner_member on owner_member.group_id = g.id
 			and owner_member.user_id = g.owner_id
 		left join group_members all_members on all_members.group_id = g.id and all_members.status = 'active'
@@ -66,7 +66,9 @@ func ListActiveUserGroups(ctx context.Context, db Querier, userID string) ([]dto
 			gm.role,
 			gm.status,
 			owner_member.status
-		order by g.created_at desc
+		order by
+			case when gm.status = 'pending' then 0 else 1 end,
+			g.created_at desc
 	`, userID)
 	if err != nil {
 		return nil, err

@@ -2,6 +2,13 @@ import type { Group, GroupMatch, RankingEntry } from './types';
 
 export function sortGroupsByPendingRequests(groups: Group[]) {
   return [...groups].sort((left, right) => {
+    const leftPendingMembership = left.status === 'pending' ? 1 : 0;
+    const rightPendingMembership = right.status === 'pending' ? 1 : 0;
+
+    if (leftPendingMembership !== rightPendingMembership) {
+      return rightPendingMembership - leftPendingMembership;
+    }
+
     if (left.pending_requests_count !== right.pending_requests_count) {
       return right.pending_requests_count - left.pending_requests_count;
     }
