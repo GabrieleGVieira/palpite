@@ -156,6 +156,7 @@ export type ListGroupPaymentsResponse = {
 };
 
 export type UpdateGroupPaymentPayload = {
+  amount_expected: number;
   amount_paid: number;
   notes: string;
   payment_method: string;

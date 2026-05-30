@@ -55,9 +55,10 @@ func TestAdminCanMarkPaymentAsPaid(t *testing.T) {
 	}
 
 	payment, err := UpdatePayment(context.Background(), db, "owner-id", "group-id", "member-id", dto.UpdateGroupPaymentRequest{
-		AmountPaid:    20,
-		PaymentMethod: "Pix",
-		Status:        "paid",
+		AmountExpected: 20,
+		AmountPaid:     20,
+		PaymentMethod:  "Pix",
+		Status:         "paid",
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

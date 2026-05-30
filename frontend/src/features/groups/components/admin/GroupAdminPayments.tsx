@@ -12,6 +12,7 @@ type GroupAdminPaymentsProps = {
     payment: GroupPayment,
     status: PaymentStatus,
     amountPaid: number,
+    amountExpected: number,
     paymentMethod: string,
     notes: string,
   ) => void;
@@ -35,12 +36,13 @@ export function GroupAdminPayments({
   summary,
   updatingPaymentUserID,
 }: GroupAdminPaymentsProps) {
+  const pendingPayments = payments.filter((payment) => payment.status === 'pending');
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.cardTitle}>Pagamentos</Text>
-          <Text style={styles.cardSubtitle}>Controle manual dos participantes</Text>
+          <Text style={styles.cardTitle}>Pagamentos pendentes</Text>
         </View>
         <Pressable onPress={loadPayments} style={styles.refreshButton}>
           <Text style={styles.refreshButtonText}>Atualizar</Text>
@@ -56,11 +58,14 @@ export function GroupAdminPayments({
 
       {isLoadingPayments ? <LoadingIndicator text="Carregando pagamentos..." /> : null}
 
-      {!isLoadingPayments && payments.length === 0 ? (
-        <EmptyBox title="Nenhum pagamento." text="Os participantes pagos aparecerão aqui." />
+      {!isLoadingPayments && pendingPayments.length === 0 ? (
+        <EmptyBox
+          title="Nenhum pagamento pendente."
+          text="Pagamentos confirmados aparecem na lista de membros."
+        />
       ) : null}
 
-      {payments.map((payment) => (
+      {pendingPayments.map((payment) => (
         <PaymentItem
           key={payment.user_id}
           payment={payment}
@@ -90,6 +95,7 @@ function PaymentItem({
   onUpdatePayment: GroupAdminPaymentsProps['onUpdatePayment'];
   payment: GroupPayment;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [amountPaid, setAmountPaid] = useState(
     payment.amount_paid > 0 ? String(payment.amount_paid) : '',
   );
@@ -99,68 +105,107 @@ function PaymentItem({
   function submit(status: PaymentStatus) {
     const parsedAmount = Number(amountPaid.replace(',', '.'));
     const nextAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
-    onUpdatePayment(payment, status, nextAmount, paymentMethod, notes);
+    onUpdatePayment(
+      payment,
+      status,
+      nextAmount,
+      status === 'exempt' ? 0 : payment.amount_expected,
+      paymentMethod,
+      notes,
+    );
   }
 
   return (
     <View style={styles.paymentRow}>
-      <View style={styles.paymentHeader}>
+      <Pressable onPress={() => setIsOpen((current) => !current)} style={styles.paymentSummary}>
         <View style={styles.memberInfo}>
-          <Text style={styles.memberName}>
-            {payment.display_name || `Usuário ${payment.user_id.slice(0, 8)}`}
-          </Text>
-          <Text style={styles.memberMeta}>
-            Esperado {formatMoney(payment.amount_expected)} • Pago {formatMoney(payment.amount_paid)}
-          </Text>
+          <View style={styles.summaryTitleRow}>
+            <Text style={styles.memberName}>
+              {payment.display_name || `Usuário ${payment.user_id.slice(0, 8)}`}
+            </Text>
+            <Text style={styles.chevron}>{isOpen ? '▲' : '▼'}</Text>
+          </View>
+
+          <View style={styles.paymentFacts}>
+            <PaymentFact label="Esperado" value={formatMoney(payment.amount_expected)} />
+            <PaymentFact label="Pago" value={formatMoney(payment.amount_paid)} />
+          </View>
         </View>
+
         <View style={[styles.statusBadge, styles[`status_${payment.status}`]]}>
           <Text style={[styles.statusText, styles[`statusText_${payment.status}`]]}>
             {statusLabels[payment.status]}
           </Text>
         </View>
-      </View>
+      </Pressable>
 
-      <View style={styles.fieldGrid}>
-        <View style={styles.field}>
-          <Text style={styles.label}>Valor pago</Text>
-          <TextInput
-            keyboardType="decimal-pad"
-            onChangeText={setAmountPaid}
-            placeholder="0,00"
-            placeholderTextColor="#8a9a90"
-            style={styles.input}
-            value={amountPaid}
-          />
+      {isOpen ? (
+        <View style={styles.dropdownContent}>
+          <View style={styles.expectedBox}>
+            <Text style={styles.label}>Valor esperado</Text>
+            <Text style={styles.expectedValue}>{formatMoney(payment.amount_expected)}</Text>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Valor pago</Text>
+            <TextInput
+              keyboardType="decimal-pad"
+              onChangeText={setAmountPaid}
+              placeholder="0,00"
+              placeholderTextColor="#8a9a90"
+              style={styles.input}
+              value={amountPaid}
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Método</Text>
+            <TextInput
+              onChangeText={setPaymentMethod}
+              placeholder="Pix, dinheiro..."
+              placeholderTextColor="#8a9a90"
+              style={styles.input}
+              value={paymentMethod}
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Observações</Text>
+            <TextInput
+              multiline
+              onChangeText={setNotes}
+              placeholder="Opcional"
+              placeholderTextColor="#8a9a90"
+              style={[styles.input, styles.notesInput]}
+              value={notes}
+            />
+          </View>
+
+          <View style={styles.actions}>
+            <ActionButton
+              disabled={isUpdating}
+              label="Pago"
+              onPress={() => submit('paid')}
+              variant="primary"
+            />
+            <ActionButton
+              disabled={isUpdating}
+              label="Isentar"
+              onPress={() => submit('exempt')}
+              variant="secondary"
+            />
+          </View>
         </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>Método</Text>
-          <TextInput
-            onChangeText={setPaymentMethod}
-            placeholder="Pix, dinheiro..."
-            placeholderTextColor="#8a9a90"
-            style={styles.input}
-            value={paymentMethod}
-          />
-        </View>
-      </View>
+      ) : null}
+    </View>
+  );
+}
 
-      <View style={styles.field}>
-        <Text style={styles.label}>Observações</Text>
-        <TextInput
-          multiline
-          onChangeText={setNotes}
-          placeholder="Opcional"
-          placeholderTextColor="#8a9a90"
-          style={[styles.input, styles.notesInput]}
-          value={notes}
-        />
-      </View>
-
-      <View style={styles.actions}>
-        <ActionButton disabled={isUpdating} label="Marcar como pago" onPress={() => submit('paid')} />
-        <ActionButton disabled={isUpdating} label="Marcar pendente" onPress={() => submit('pending')} />
-        <ActionButton disabled={isUpdating} label="Isentar" onPress={() => submit('exempt')} />
-      </View>
+function PaymentFact({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.paymentFact}>
+      <Text style={styles.paymentFactLabel}>{label}</Text>
+      <Text style={styles.paymentFactValue}>{value}</Text>
     </View>
   );
 }
@@ -169,14 +214,31 @@ function ActionButton({
   disabled,
   label,
   onPress,
+  variant,
 }: {
   disabled: boolean;
   label: string;
   onPress: () => void;
+  variant: 'primary' | 'secondary';
 }) {
   return (
-    <Pressable disabled={disabled} onPress={onPress} style={[styles.actionButton, disabled && styles.disabled]}>
-      <Text style={styles.actionButtonText}>{disabled ? 'Salvando...' : label}</Text>
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      style={[
+        styles.actionButton,
+        variant === 'primary' ? styles.actionButtonPrimary : styles.actionButtonSecondary,
+        disabled && styles.disabled,
+      ]}>
+      <Text
+        style={[
+          styles.actionButtonText,
+          variant === 'primary'
+            ? styles.actionButtonPrimaryText
+            : styles.actionButtonSecondaryText,
+        ]}>
+        {disabled ? 'Salvando...' : label}
+      </Text>
     </Pressable>
   );
 }
@@ -252,14 +314,46 @@ const styles = StyleSheet.create({
   paymentRow: {
     borderTopColor: '#edf3e8',
     borderTopWidth: 1,
-    gap: 12,
     paddingTop: 14,
   },
-  paymentHeader: {
+  paymentSummary: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: 10,
     justifyContent: 'space-between',
+  },
+  summaryTitleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  chevron: {
+    color: '#1f7a4a',
+    fontSize: 20,
+    fontWeight: '800',
+    lineHeight: 22,
+  },
+  paymentFacts: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  paymentFact: {
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  paymentFactLabel: {
+    color: '#486654',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  paymentFactValue: {
+    color: '#183f2d',
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: 2,
   },
   memberInfo: {
     flex: 1,
@@ -307,9 +401,22 @@ const styles = StyleSheet.create({
   statusText_refunded: {
     color: '#b23b32',
   },
-  fieldGrid: {
-    flexDirection: 'row',
-    gap: 10,
+  dropdownContent: {
+    gap: 12,
+    paddingTop: 14,
+  },
+  expectedBox: {
+    backgroundColor: '#f5f8ef',
+    borderColor: '#cfe0c9',
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 4,
+    padding: 12,
+  },
+  expectedValue: {
+    color: '#123d2a',
+    fontSize: 16,
+    fontWeight: '800',
   },
   field: {
     flex: 1,
@@ -340,17 +447,30 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButton: {
-    backgroundColor: '#1f7a4a',
     borderRadius: 8,
+    borderWidth: 1,
     flexGrow: 1,
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
+  actionButtonPrimary: {
+    backgroundColor: '#1f7a4a',
+    borderColor: '#1f7a4a',
+  },
+  actionButtonSecondary: {
+    backgroundColor: '#f5f8ef',
+    borderColor: '#cfe0c9',
+  },
   actionButtonText: {
-    color: '#ffffff',
     fontSize: 12,
     fontWeight: '800',
     textAlign: 'center',
+  },
+  actionButtonPrimaryText: {
+    color: '#ffffff',
+  },
+  actionButtonSecondaryText: {
+    color: '#1f7a4a',
   },
   disabled: {
     opacity: 0.7,

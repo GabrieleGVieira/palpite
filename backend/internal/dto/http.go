@@ -117,10 +117,11 @@ type GroupPaymentResponse struct {
 }
 
 type UpdateGroupPaymentRequest struct {
-	Status        string  `json:"status"`
-	AmountPaid    float64 `json:"amount_paid"`
-	PaymentMethod string  `json:"payment_method"`
-	Notes         string  `json:"notes"`
+	Status         string  `json:"status"`
+	AmountExpected float64 `json:"amount_expected"`
+	AmountPaid     float64 `json:"amount_paid"`
+	PaymentMethod  string  `json:"payment_method"`
+	Notes          string  `json:"notes"`
 }
 
 type GroupPaymentsSummaryResponse struct {

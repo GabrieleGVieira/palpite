@@ -1,8 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from '../../../shared/components/BackButton';
+import { EmptyBox } from '../../../shared/components/EmptyBox';
 import { GroupAdminForm } from '../components/admin/GroupAdminForm';
 import { GroupAdminHeader } from '../components/admin/GroupAdminHeader';
 import { GroupAdminMembers } from '../components/admin/GroupAdminMembers';
@@ -17,7 +19,10 @@ type GroupAdminScreenProps = {
   onGroupUpdated: (group: Group) => void;
 };
 
+type GroupAdminTab = 'edit' | 'participants' | 'requests';
+
 export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminScreenProps) {
+  const [activeTab, setActiveTab] = useState<GroupAdminTab>('edit');
   const {
     approvingUserID,
     blockPendingPredictions,
@@ -28,6 +33,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
     isLoadingPayments,
     isLoadingRequests,
     isPaid,
+    isPaymentControlSaved,
     isPrivate,
     isSaving,
     loadMembers,
@@ -58,6 +64,11 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
     handleTransferOwnership,
     handleUpdatePayment,
   } = useGroupAdminScreen(group, onGroupUpdated, onBack);
+  const paymentsByUserID = useMemo(
+    () =>
+      Object.fromEntries(payments.map((payment) => [payment.user_id, payment])),
+    [payments],
+  );
 
   function confirmRemoveMember(member: (typeof members)[number]) {
     const name = member.display_name || `Usuário ${member.user_id.slice(0, 8)}`;
@@ -96,57 +107,116 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
 
         <GroupAdminHeader groupName={group.name} error={error} successMessage={successMessage} />
 
-        <GroupAdminForm
-          blockPendingPredictions={blockPendingPredictions}
-          description={description}
-          hasUnlimitedParticipants={hasUnlimitedParticipants}
-          isPaid={isPaid}
-          isPrivate={isPrivate}
-          isSaving={isSaving}
-          name={name}
-          participantLimit={participantLimit}
-          paymentAmount={paymentAmount}
-          onSave={handleSaveGroup}
-          setBlockPendingPredictions={setBlockPendingPredictions}
-          setDescription={setDescription}
-          setHasUnlimitedParticipants={setHasUnlimitedParticipants}
-          setIsPaid={setIsPaid}
-          setIsPrivate={setIsPrivate}
-          setName={setName}
-          setParticipantLimit={setParticipantLimit}
-          setPaymentAmount={setPaymentAmount}
-        />
+        <View style={styles.tabs}>
+          <AdminTabButton
+            activeTab={activeTab}
+            label="Editar"
+            tab="edit"
+            onChangeTab={setActiveTab}
+          />
+          <AdminTabButton
+            activeTab={activeTab}
+            label="Participantes"
+            tab="participants"
+            onChangeTab={setActiveTab}
+          />
+          <AdminTabButton
+            activeTab={activeTab}
+            label="Solicitações"
+            tab="requests"
+            onChangeTab={setActiveTab}
+          />
+        </View>
 
-        {group.role === 'owner' && group.is_paid ? (
-          <GroupAdminPayments
-            isLoadingPayments={isLoadingPayments}
-            loadPayments={loadPayments}
-            onUpdatePayment={handleUpdatePayment}
-            payments={payments}
-            summary={paymentsSummary}
-            updatingPaymentUserID={updatingPaymentUserID}
+        {activeTab === 'edit' ? (
+          <GroupAdminForm
+            blockPendingPredictions={blockPendingPredictions}
+            description={description}
+            hasUnlimitedParticipants={hasUnlimitedParticipants}
+            isPaid={isPaid}
+            isPrivate={isPrivate}
+            isSaving={isSaving}
+            name={name}
+            participantLimit={participantLimit}
+            paymentAmount={paymentAmount}
+            onSave={handleSaveGroup}
+            setBlockPendingPredictions={setBlockPendingPredictions}
+            setDescription={setDescription}
+            setHasUnlimitedParticipants={setHasUnlimitedParticipants}
+            setIsPaid={setIsPaid}
+            setIsPrivate={setIsPrivate}
+            setName={setName}
+            setParticipantLimit={setParticipantLimit}
+            setPaymentAmount={setPaymentAmount}
           />
         ) : null}
 
-        <GroupAdminRequests
-          approvingUserID={approvingUserID}
-          isLoadingRequests={isLoadingRequests}
-          loadRequests={loadRequests}
-          onApprove={handleApprove}
-          requests={requests}
-        />
+        {activeTab === 'participants' ? (
+          <>
+            {group.role === 'owner' && isPaid && isPaymentControlSaved ? (
+              <GroupAdminPayments
+                isLoadingPayments={isLoadingPayments}
+                loadPayments={loadPayments}
+                onUpdatePayment={handleUpdatePayment}
+                payments={payments}
+                summary={paymentsSummary}
+                updatingPaymentUserID={updatingPaymentUserID}
+              />
+            ) : null}
 
-        <GroupAdminMembers
-          isLoadingMembers={isLoadingMembers}
-          loadMembers={loadMembers}
-          members={members}
-          onRemove={confirmRemoveMember}
-          onTransferOwnership={confirmTransferOwnership}
-          removingUserID={removingUserID}
-          transferringOwnerUserID={transferringOwnerUserID}
-        />
+            {group.role === 'owner' && isPaid && !isPaymentControlSaved ? (
+              <EmptyBox
+                title="Salve a participação paga."
+                text="Depois de salvar o grupo, os controles de pagamento dos participantes aparecem aqui."
+              />
+            ) : null}
+
+            <GroupAdminMembers
+              isLoadingMembers={isLoadingMembers}
+              loadMembers={loadMembers}
+              members={members}
+              onRemove={confirmRemoveMember}
+              onTransferOwnership={confirmTransferOwnership}
+              paymentsByUserID={paymentsByUserID}
+              removingUserID={removingUserID}
+              transferringOwnerUserID={transferringOwnerUserID}
+            />
+          </>
+        ) : null}
+
+        {activeTab === 'requests' ? (
+          <GroupAdminRequests
+            approvingUserID={approvingUserID}
+            isLoadingRequests={isLoadingRequests}
+            loadRequests={loadRequests}
+            onApprove={handleApprove}
+            requests={requests}
+          />
+        ) : null}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function AdminTabButton({
+  activeTab,
+  label,
+  onChangeTab,
+  tab,
+}: {
+  activeTab: GroupAdminTab;
+  label: string;
+  onChangeTab: (tab: GroupAdminTab) => void;
+  tab: GroupAdminTab;
+}) {
+  const isActive = activeTab === tab;
+
+  return (
+    <Pressable
+      onPress={() => onChangeTab(tab)}
+      style={[styles.tabButton, isActive && styles.tabButtonActive]}>
+      <Text style={[styles.tabButtonText, isActive && styles.tabButtonTextActive]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -181,5 +251,35 @@ const styles = StyleSheet.create({
     right: -128,
     top: 104,
     width: 280,
+  },
+  tabs: {
+    backgroundColor: '#edf3e8',
+    borderRadius: 8,
+    flexDirection: 'row',
+    gap: 6,
+    padding: 6,
+  },
+  tabButton: {
+    alignItems: 'center',
+    borderRadius: 7,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  tabButtonActive: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#1e5c39',
+    shadowOffset: { height: 4, width: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  tabButtonText: {
+    color: '#486654',
+    fontSize: 13,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  tabButtonTextActive: {
+    color: '#1f7a4a',
   },
 });

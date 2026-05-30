@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -50,6 +50,27 @@ export function useGroupAdminScreen(
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setName(group.name);
+    setDescription(group.description);
+    setIsPrivate(group.is_private);
+    setIsPaid(group.is_paid);
+    setPaymentAmount(group.payment_amount > 0 ? String(group.payment_amount) : '');
+    setBlockPendingPredictions(group.block_pending_predictions);
+    setHasUnlimitedParticipants(group.participant_limit === null);
+    setParticipantLimit(group.participant_limit ? String(group.participant_limit) : '20');
+  }, [
+    group.block_pending_predictions,
+    group.description,
+    group.id,
+    group.is_paid,
+    group.is_private,
+    group.name,
+    group.participant_limit,
+    group.payment_amount,
+  ]);
+
   const requestsQuery = useQuery({
     queryFn: () => listJoinRequests(group.id),
     queryKey: ['groups', group.id, 'join-requests'],
@@ -73,7 +94,16 @@ export function useGroupAdminScreen(
   const refetchPayments = paymentsQuery.refetch;
   const updateMutation = useMutation({
     mutationFn: (payload: Parameters<typeof updateGroup>[1]) => updateGroup(group.id, payload),
-    onSuccess: async () => {
+    onSuccess: async (updatedGroup) => {
+      queryClient.setQueryData<Group[]>(['groups'], (currentGroups) => {
+        if (!Array.isArray(currentGroups)) {
+          return currentGroups;
+        }
+
+        return currentGroups.map((currentGroup) =>
+          currentGroup.id === updatedGroup.id ? { ...currentGroup, ...updatedGroup } : currentGroup,
+        );
+      });
       await queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
   });
@@ -102,18 +132,21 @@ export function useGroupAdminScreen(
   const updatePaymentMutation = useMutation({
     mutationFn: ({
       amountPaid,
+      amountExpected,
       notes,
       paymentMethod,
       status,
       userID,
     }: {
       amountPaid: number;
+      amountExpected: number;
       notes: string;
       paymentMethod: string;
       status: PaymentStatus;
       userID: string;
     }) =>
       updateGroupPayment(group.id, userID, {
+        amount_expected: amountExpected,
         amount_paid: amountPaid,
         notes,
         payment_method: paymentMethod,
@@ -184,9 +217,22 @@ export function useGroupAdminScreen(
         payment_amount: isPaid ? parsedPaymentAmount : 0,
       });
 
+      if (
+        updatedGroup.is_paid !== isPaid ||
+        Math.abs(updatedGroup.payment_amount - (isPaid ? parsedPaymentAmount : 0)) > 0.001
+      ) {
+        setError('A API respondeu sucesso, mas não persistiu a configuração de pagamento.');
+        return;
+      }
+
       onGroupUpdated({ ...group, ...updatedGroup });
+      if (updatedGroup.is_paid) {
+        void queryClient.invalidateQueries({ queryKey: ['groups', group.id, 'payments'] });
+        void queryClient.invalidateQueries({
+          queryKey: ['groups', group.id, 'payments', 'summary'],
+        });
+      }
       setSuccessMessage('Grupo atualizado.');
-      onBack();
     } catch (saveError) {
       setError(queryErrorMessage(saveError, 'Não foi possível atualizar o grupo.'));
     }
@@ -257,6 +303,7 @@ export function useGroupAdminScreen(
     payment: GroupPayment,
     status: PaymentStatus,
     amountPaid: number,
+    amountExpected: number,
     paymentMethod: string,
     notes: string,
   ) {
@@ -267,6 +314,7 @@ export function useGroupAdminScreen(
     try {
       await updatePaymentMutation.mutateAsync({
         amountPaid,
+        amountExpected,
         notes,
         paymentMethod,
         status,
@@ -296,6 +344,7 @@ export function useGroupAdminScreen(
     isLoadingMembers: membersQuery.isLoading,
     isLoadingPayments: paymentsQuery.isLoading || paymentsSummaryQuery.isLoading,
     isPaid,
+    isPaymentControlSaved: group.is_paid,
     isPrivate,
     isSaving: updateMutation.isPending,
     loadRequests,

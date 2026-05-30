@@ -172,9 +172,10 @@ func UpdateGroupPayment(ctx context.Context, db Querier, groupID string, userID 
 		update group_payments gp
 		set
 			status = $4,
-			amount_paid = $5,
-			payment_method = $6,
-			notes = $7,
+			amount_expected = $5,
+			amount_paid = $6,
+			payment_method = $7,
+			notes = $8,
 			paid_at = case
 				when $4 = 'paid' then coalesce(gp.paid_at, now())
 				else gp.paid_at
@@ -201,7 +202,7 @@ func UpdateGroupPayment(ctx context.Context, db Querier, groupID string, userID 
 			gp.notes,
 			gp.created_at,
 			gp.updated_at
-	`, groupID, userID, adminID, request.Status, request.AmountPaid, request.PaymentMethod, request.Notes).Scan(
+	`, groupID, userID, adminID, request.Status, request.AmountExpected, request.AmountPaid, request.PaymentMethod, request.Notes).Scan(
 		&payment.ID,
 		&payment.GroupID,
 		&payment.UserID,

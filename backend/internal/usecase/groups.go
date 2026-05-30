@@ -314,23 +314,10 @@ func CreateGroup(ctx context.Context, db Datastore, userID string, displayName s
 }
 
 func UpdateGroup(ctx context.Context, db Datastore, ownerID string, groupID string, request dto.UpdateGroupRequest) (dto.GroupResponse, error) {
-	var group dto.GroupResponse
-	err := withTx(ctx, db, func(tx repositories.Querier) error {
-		var updateErr error
-		group, updateErr = repositories.UpdateOwnedGroup(ctx, tx, ownerID, groupID, request)
-		if errors.Is(updateErr, repositories.ErrNotFound) {
-			return ErrGroupNotFound
-		}
-		if updateErr != nil {
-			return updateErr
-		}
-
-		if group.IsPaid {
-			return repositories.InsertMissingPaymentsForPaidGroup(ctx, tx, groupID)
-		}
-
-		return nil
-	})
+	group, err := repositories.UpdateOwnedGroup(ctx, db, ownerID, groupID, request)
+	if errors.Is(err, repositories.ErrNotFound) {
+		return dto.GroupResponse{}, ErrGroupNotFound
+	}
 	if err != nil {
 		return dto.GroupResponse{}, err
 	}
@@ -359,6 +346,9 @@ func UpdatePayment(ctx context.Context, db Datastore, adminID string, groupID st
 	}
 	if request.AmountPaid < 0 {
 		return dto.GroupPaymentResponse{}, apperrors.NewValidation("O valor pago não pode ser negativo.")
+	}
+	if request.AmountExpected < 0 {
+		return dto.GroupPaymentResponse{}, apperrors.NewValidation("O valor esperado não pode ser negativo.")
 	}
 
 	var payment dto.GroupPaymentResponse
