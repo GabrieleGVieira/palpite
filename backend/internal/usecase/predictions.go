@@ -15,6 +15,7 @@ import (
 var (
 	ErrMatchAlreadyStarted = apperrors.NewConflict("match already started")
 	ErrMembershipRequired  = apperrors.NewForbidden("active membership required")
+	ErrPaymentRequired     = apperrors.NewForbidden("confirmed payment required")
 )
 
 type PredictionUsecase struct {
@@ -84,6 +85,17 @@ func GroupsAffectedByMatch(ctx context.Context, db Datastore, matchID string) ([
 func SavePrediction(ctx context.Context, db Datastore, userID string, groupID string, matchID string, request dto.PredictionRequest) (dto.PredictionResponse, error) {
 	if err := EnsureActiveGroupMember(ctx, db, userID, groupID); err != nil {
 		return dto.PredictionResponse{}, err
+	}
+
+	canPredict, err := repositories.CanUserPredictInGroup(ctx, db, userID, groupID)
+	if errors.Is(err, repositories.ErrNotFound) {
+		return dto.PredictionResponse{}, ErrMembershipRequired
+	}
+	if err != nil {
+		return dto.PredictionResponse{}, err
+	}
+	if !canPredict {
+		return dto.PredictionResponse{}, ErrPaymentRequired
 	}
 
 	kickoffAt, err := repositories.MatchKickoffForGroup(ctx, db, groupID, matchID)

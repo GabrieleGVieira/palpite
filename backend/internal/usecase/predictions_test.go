@@ -79,6 +79,7 @@ func TestSavePredictionRejectsMatchAlreadyStarted(t *testing.T) {
 	db := &predictionFakeDB{
 		rows: []predictionFakeRow{
 			{values: []any{true}},
+			{values: []any{true}},
 			{values: []any{time.Now().Add(-time.Minute)}},
 		},
 	}
@@ -86,5 +87,19 @@ func TestSavePredictionRejectsMatchAlreadyStarted(t *testing.T) {
 	_, err := SavePrediction(context.Background(), db, "user-id", "group-id", "match-id", dto.PredictionRequest{})
 	if !apperrors.IsConflict(err) {
 		t.Fatalf("expected conflict error, got %v", err)
+	}
+}
+
+func TestSavePredictionRequiresConfirmedPaymentWhenGroupBlocksPendingPayments(t *testing.T) {
+	db := &predictionFakeDB{
+		rows: []predictionFakeRow{
+			{values: []any{true}},
+			{values: []any{false}},
+		},
+	}
+
+	_, err := SavePrediction(context.Background(), db, "user-id", "group-id", "match-id", dto.PredictionRequest{})
+	if !errors.Is(err, ErrPaymentRequired) {
+		t.Fatalf("expected payment required error, got %v", err)
 	}
 }

@@ -73,7 +73,7 @@ func TestCommonUserCannotUpdatePayment(t *testing.T) {
 		rows: []paymentFakeRow{{values: []any{false}}},
 	}
 
-	_, err := UpdatePayment(context.Background(), db, "member-id", "group-id", "member-id", dto.UpdateGroupPaymentRequest{Status: "paid"})
+	_, err := UpdatePayment(context.Background(), db, "member-id", "group-id", "member-id", dto.UpdateGroupPaymentRequest{AmountPaid: 20, Status: "paid"})
 	if !apperrors.IsNotFound(err) {
 		t.Fatalf("expected not found/forbidden-style error, got %v", err)
 	}
@@ -87,9 +87,19 @@ func TestCannotUpdatePaymentForUserOutsideGroup(t *testing.T) {
 		},
 	}
 
-	_, err := UpdatePayment(context.Background(), db, "owner-id", "group-id", "outsider-id", dto.UpdateGroupPaymentRequest{Status: "paid"})
+	_, err := UpdatePayment(context.Background(), db, "owner-id", "group-id", "outsider-id", dto.UpdateGroupPaymentRequest{AmountPaid: 20, Status: "paid"})
 	if !errors.Is(err, ErrPaymentNotFound) {
 		t.Fatalf("expected payment not found, got %v", err)
+	}
+}
+
+func TestCannotMarkPaymentAsPaidWithoutPaidAmount(t *testing.T) {
+	_, err := UpdatePayment(context.Background(), &paymentFakeDB{}, "owner-id", "group-id", "member-id", dto.UpdateGroupPaymentRequest{
+		AmountExpected: 20,
+		Status:         "paid",
+	})
+	if !apperrors.IsValidation(err) {
+		t.Fatalf("expected validation error, got %v", err)
 	}
 }
 

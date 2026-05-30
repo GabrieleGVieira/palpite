@@ -89,6 +89,25 @@ func UpsertPrediction(ctx context.Context, db Querier, userID string, groupID st
 	return prediction, nil
 }
 
+func CanUserPredictInGroup(ctx context.Context, db Querier, userID string, groupID string) (bool, error) {
+	var canPredict bool
+	err := db.QueryRow(ctx, `
+		select
+			case
+				when g.is_paid = false then true
+				when g.block_pending_predictions = false then true
+				when gp.status in ('paid', 'exempt') then true
+				else false
+			end as can_predict
+		from groups g
+		left join group_payments gp on gp.group_id = g.id
+			and gp.user_id = $2
+		where g.id = $1
+	`, groupID, userID).Scan(&canPredict)
+
+	return canPredict, err
+}
+
 func ScoreMatchPredictions(ctx context.Context, db Querier, matchID string, request dto.MatchResultRequest) (int, error) {
 	commandTag, err := db.Exec(ctx, `
 		update predictions

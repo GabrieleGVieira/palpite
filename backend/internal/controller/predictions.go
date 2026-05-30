@@ -222,6 +222,8 @@ func SavePredictionHandler(cfg config.Config, predictions usecase.PredictionUsec
 		)
 		if err != nil {
 			switch {
+			case err == usecase.ErrPaymentRequired:
+				writeError(w, http.StatusForbidden, "Pagamento pendente. Fale com o admin do bolão para liberar seus palpites.")
 			case apperrors.IsForbidden(err):
 				writeError(w, http.StatusForbidden, "Você precisa participar deste grupo.")
 			case apperrors.IsConflict(err):

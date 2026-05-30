@@ -101,9 +101,22 @@ function PaymentItem({
   );
   const [paymentMethod, setPaymentMethod] = useState(payment.payment_method);
   const [notes, setNotes] = useState(payment.notes);
+  const [fieldError, setFieldError] = useState<string | null>(null);
 
   function submit(status: PaymentStatus) {
+    setFieldError(null);
+
+    if (status === 'paid' && amountPaid.trim() === '') {
+      setFieldError('Informe o valor pago.');
+      return;
+    }
+
     const parsedAmount = Number(amountPaid.replace(',', '.'));
+    if (status === 'paid' && (!Number.isFinite(parsedAmount) || parsedAmount <= 0)) {
+      setFieldError('Informe um valor pago maior que zero.');
+      return;
+    }
+
     const nextAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
     onUpdatePayment(
       payment,
@@ -150,12 +163,18 @@ function PaymentItem({
             <Text style={styles.label}>Valor pago</Text>
             <TextInput
               keyboardType="decimal-pad"
-              onChangeText={setAmountPaid}
+              onChangeText={(value) => {
+                setAmountPaid(value);
+                if (fieldError) {
+                  setFieldError(null);
+                }
+              }}
               placeholder="0,00"
               placeholderTextColor="#8a9a90"
-              style={styles.input}
+              style={[styles.input, fieldError && styles.inputError]}
               value={amountPaid}
             />
+            {fieldError ? <Text style={styles.fieldError}>{fieldError}</Text> : null}
           </View>
 
           <View style={styles.field}>
@@ -436,6 +455,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     minHeight: 46,
     paddingHorizontal: 12,
+  },
+  inputError: {
+    borderColor: '#c23f34',
+  },
+  fieldError: {
+    color: '#c23f34',
+    fontSize: 12,
+    fontWeight: '700',
   },
   notesInput: {
     minHeight: 68,

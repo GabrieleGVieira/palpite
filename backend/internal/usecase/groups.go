@@ -347,6 +347,9 @@ func UpdatePayment(ctx context.Context, db Datastore, adminID string, groupID st
 	if request.AmountPaid < 0 {
 		return dto.GroupPaymentResponse{}, apperrors.NewValidation("O valor pago não pode ser negativo.")
 	}
+	if dto.PaymentStatus(request.Status) == dto.PaymentStatusPaid && request.AmountPaid <= 0 {
+		return dto.GroupPaymentResponse{}, apperrors.NewValidation("Informe o valor pago.")
+	}
 	if request.AmountExpected < 0 {
 		return dto.GroupPaymentResponse{}, apperrors.NewValidation("O valor esperado não pode ser negativo.")
 	}
