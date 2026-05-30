@@ -27,7 +27,6 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
     approvingUserID,
     blockPendingPredictions,
     description,
-    error,
     hasUnlimitedParticipants,
     isLoadingMembers,
     isLoadingPayments,
@@ -55,7 +54,6 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
     setName,
     setParticipantLimit,
     setPaymentAmount,
-    successMessage,
     transferringOwnerUserID,
     updatingPaymentUserID,
     handleApprove,
@@ -105,7 +103,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
 
         <BackButton onPress={onBack} />
 
-        <GroupAdminHeader groupName={group.name} error={error} successMessage={successMessage} />
+        <GroupAdminHeader groupName={group.name} />
 
         <View style={styles.tabs}>
           <AdminTabButton

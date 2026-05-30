@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
@@ -47,8 +48,6 @@ export function useGroupAdminScreen(
   const [removingUserID, setRemovingUserID] = useState<string | null>(null);
   const [transferringOwnerUserID, setTransferringOwnerUserID] = useState<string | null>(null);
   const [updatingPaymentUserID, setUpdatingPaymentUserID] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -159,49 +158,43 @@ export function useGroupAdminScreen(
   });
 
   const loadRequests = useCallback(async () => {
-    setError(null);
     const result = await refetchRequests();
     const nextError = queryErrorMessage(result.error, 'Não foi possível carregar solicitações.');
     if (nextError) {
-      setError(nextError);
+      showError(nextError);
     }
   }, [refetchRequests]);
 
   const loadMembers = useCallback(async () => {
-    setError(null);
     const result = await refetchMembers();
     const nextError = queryErrorMessage(result.error, 'Não foi possível carregar participantes.');
     if (nextError) {
-      setError(nextError);
+      showError(nextError);
     }
   }, [refetchMembers]);
 
   const loadPayments = useCallback(async () => {
-    setError(null);
     const result = await refetchPayments();
     const nextError = queryErrorMessage(result.error, 'Não foi possível carregar pagamentos.');
     if (nextError) {
-      setError(nextError);
+      showError(nextError);
     }
   }, [refetchPayments]);
 
   async function handleSaveGroup() {
-    setError(null);
-    setSuccessMessage(null);
-
     if (!name.trim()) {
-      setError('Informe o nome do grupo.');
+      showError('Informe o nome do grupo.');
       return;
     }
 
     if (!hasUnlimitedParticipants && Number(participantLimit) < 2) {
-      setError('O limite precisa ser maior que 1.');
+      showError('O limite precisa ser maior que 1.');
       return;
     }
 
     const parsedPaymentAmount = Number(paymentAmount.replace(',', '.'));
     if (isPaid && (!Number.isFinite(parsedPaymentAmount) || parsedPaymentAmount < 0)) {
-      setError('Informe um valor de participação válido.');
+      showError('Informe um valor de participação válido.');
       return;
     }
 
@@ -221,7 +214,7 @@ export function useGroupAdminScreen(
         updatedGroup.is_paid !== isPaid ||
         Math.abs(updatedGroup.payment_amount - (isPaid ? parsedPaymentAmount : 0)) > 0.001
       ) {
-        setError('A API respondeu sucesso, mas não persistiu a configuração de pagamento.');
+        showError('A API respondeu sucesso, mas não persistiu a configuração de pagamento.');
         return;
       }
 
@@ -232,15 +225,13 @@ export function useGroupAdminScreen(
           queryKey: ['groups', group.id, 'payments', 'summary'],
         });
       }
-      setSuccessMessage('Grupo atualizado.');
+      showSuccess('Grupo atualizado.');
     } catch (saveError) {
-      setError(queryErrorMessage(saveError, 'Não foi possível atualizar o grupo.'));
+      showError(queryErrorMessage(saveError, 'Não foi possível atualizar o grupo.') ?? 'Não foi possível atualizar o grupo.');
     }
   }
 
   async function handleApprove(request: JoinRequest) {
-    setError(null);
-    setSuccessMessage(null);
     setApprovingUserID(request.user_id);
 
     try {
@@ -251,17 +242,15 @@ export function useGroupAdminScreen(
         pending_requests_count: Math.max(group.pending_requests_count - 1, 0),
       });
       await queryClient.invalidateQueries({ queryKey: ['groups', group.id, 'members'] });
-      setSuccessMessage('Solicitação aprovada.');
+      showSuccess('Solicitação aprovada.');
     } catch (approveError) {
-      setError(queryErrorMessage(approveError, 'Não foi possível aprovar a solicitação.'));
+      showError(queryErrorMessage(approveError, 'Não foi possível aprovar a solicitação.') ?? 'Não foi possível aprovar a solicitação.');
     } finally {
       setApprovingUserID(null);
     }
   }
 
   async function handleRemoveMember(member: GroupMember) {
-    setError(null);
-    setSuccessMessage(null);
     setRemovingUserID(member.user_id);
 
     try {
@@ -270,17 +259,15 @@ export function useGroupAdminScreen(
         ...group,
         member_count: Math.max(group.member_count - 1, 1),
       });
-      setSuccessMessage('Participante removido.');
+      showSuccess('Participante removido.');
     } catch (removeError) {
-      setError(queryErrorMessage(removeError, 'Não foi possível remover o participante.'));
+      showError(queryErrorMessage(removeError, 'Não foi possível remover o participante.') ?? 'Não foi possível remover o participante.');
     } finally {
       setRemovingUserID(null);
     }
   }
 
   async function handleTransferOwnership(member: GroupMember) {
-    setError(null);
-    setSuccessMessage(null);
     setTransferringOwnerUserID(member.user_id);
 
     try {
@@ -290,10 +277,10 @@ export function useGroupAdminScreen(
         owner_id: member.user_id,
         role: 'member',
       });
-      setSuccessMessage('Propriedade do grupo transferida.');
+      showSuccess('Propriedade do grupo transferida.');
       onBack();
     } catch (transferError) {
-      setError(queryErrorMessage(transferError, 'Não foi possível transferir a propriedade.'));
+      showError(queryErrorMessage(transferError, 'Não foi possível transferir a propriedade.') ?? 'Não foi possível transferir a propriedade.');
     } finally {
       setTransferringOwnerUserID(null);
     }
@@ -307,8 +294,6 @@ export function useGroupAdminScreen(
     paymentMethod: string,
     notes: string,
   ) {
-    setError(null);
-    setSuccessMessage(null);
     setUpdatingPaymentUserID(payment.user_id);
 
     try {
@@ -320,9 +305,9 @@ export function useGroupAdminScreen(
         status,
         userID: payment.user_id,
       });
-      setSuccessMessage('Pagamento atualizado.');
+      showSuccess('Pagamento atualizado.');
     } catch (paymentError) {
-      setError(queryErrorMessage(paymentError, 'Não foi possível atualizar o pagamento.'));
+      showError(queryErrorMessage(paymentError, 'Não foi possível atualizar o pagamento.') ?? 'Não foi possível atualizar o pagamento.');
     } finally {
       setUpdatingPaymentUserID(null);
     }
@@ -332,13 +317,6 @@ export function useGroupAdminScreen(
     approvingUserID,
     blockPendingPredictions,
     description,
-    error:
-      error !== null
-        ? error
-        : queryErrorMessage(
-            requestsQuery.isError ? requestsQuery.error : null,
-            'Não foi possível carregar solicitações.',
-          ),
     hasUnlimitedParticipants,
     isLoadingRequests: requestsQuery.isLoading,
     isLoadingMembers: membersQuery.isLoading,
@@ -366,8 +344,6 @@ export function useGroupAdminScreen(
     setName,
     setParticipantLimit,
     setPaymentAmount,
-    setSuccessMessage,
-    successMessage,
     transferringOwnerUserID,
     updatingPaymentUserID,
     handleApprove,
@@ -376,6 +352,14 @@ export function useGroupAdminScreen(
     handleTransferOwnership,
     handleUpdatePayment,
   };
+}
+
+function showSuccess(message: string) {
+  Alert.alert('Sucesso', message);
+}
+
+function showError(message: string) {
+  Alert.alert('Erro', message);
 }
 
 function queryErrorMessage(error: unknown, fallback: string) {

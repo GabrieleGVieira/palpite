@@ -38,8 +38,6 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
     scoreError,
     inviteCode,
     setInviteCode,
-    joinError,
-    joinSuccess,
     isJoiningGroup,
     notificationMessage,
     refreshHome,
@@ -92,8 +90,6 @@ export function HomeScreen({ onCreateGroup, onOpenGroup }: HomeScreenProps) {
           setInviteCode={setInviteCode}
           onJoinGroup={handleJoinGroup}
           isJoiningGroup={isJoiningGroup}
-          joinError={joinError}
-          joinSuccess={joinSuccess}
         />
 
         <GroupListSection

@@ -5,8 +5,6 @@ type JoinGroupCardProps = {
   setInviteCode: (value: string) => void;
   onJoinGroup: () => void;
   isJoiningGroup: boolean;
-  joinError: string | null;
-  joinSuccess: string | null;
 };
 
 export function JoinGroupCard({
@@ -14,8 +12,6 @@ export function JoinGroupCard({
   setInviteCode,
   onJoinGroup,
   isJoiningGroup,
-  joinError,
-  joinSuccess,
 }: JoinGroupCardProps) {
   return (
     <View style={styles.card}>
@@ -40,9 +36,6 @@ export function JoinGroupCard({
           <Text style={styles.buttonText}>{isJoiningGroup ? 'Entrando...' : 'Entrar'}</Text>
         </Pressable>
       </View>
-
-      {joinError ? <Text style={styles.errorText}>{joinError}</Text> : null}
-      {joinSuccess ? <Text style={styles.successText}>{joinSuccess}</Text> : null}
     </View>
   );
 }
@@ -97,15 +90,5 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.72,
-  },
-  errorText: {
-    color: '#a03222',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  successText: {
-    color: '#1f7a4a',
-    fontSize: 13,
-    lineHeight: 18,
   },
 });

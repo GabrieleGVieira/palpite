@@ -1,12 +1,11 @@
 import { useCallback, useState } from 'react';
+import { Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { joinGroup } from '../services/groups';
 
 export function useJoinGroupForm(onJoined: () => Promise<void>) {
   const [inviteCode, setInviteCode] = useState('');
-  const [joinError, setJoinError] = useState<string | null>(null);
-  const [joinSuccess, setJoinSuccess] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const joinMutation = useMutation({
     mutationFn: joinGroup,
@@ -17,25 +16,22 @@ export function useJoinGroupForm(onJoined: () => Promise<void>) {
   });
 
   const handleJoinGroup = useCallback(async () => {
-    setJoinError(null);
-    setJoinSuccess(null);
-
     if (!inviteCode.trim()) {
-      setJoinError('Informe o codigo do grupo.');
+      showError('Informe o código do grupo.');
       return;
     }
 
     try {
       const response = await joinMutation.mutateAsync(inviteCode);
       setInviteCode('');
-      setJoinSuccess(
+      showSuccess(
         response.membership_status === 'pending'
           ? 'Solicitação enviada. Aguarde a aprovação do dono do grupo.'
           : 'Você entrou no grupo.',
       );
       await onJoined();
     } catch (error) {
-      setJoinError(errorMessage(error, 'Não foi possível entrar no grupo.'));
+      showError(errorMessage(error, 'Não foi possível entrar no grupo.'));
     }
   }, [inviteCode, joinMutation, onJoined]);
 
@@ -43,10 +39,16 @@ export function useJoinGroupForm(onJoined: () => Promise<void>) {
     handleJoinGroup,
     inviteCode,
     isJoiningGroup: joinMutation.isPending,
-    joinError,
-    joinSuccess,
     setInviteCode,
   };
+}
+
+function showSuccess(message: string) {
+  Alert.alert('Sucesso', message);
+}
+
+function showError(message: string) {
+  Alert.alert('Erro', message);
 }
 
 function errorMessage(error: unknown, fallback: string) {

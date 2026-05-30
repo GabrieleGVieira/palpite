@@ -7,7 +7,6 @@ import { BackButton } from '../../../../shared/components/BackButton';
 
 type Props = {
   activeTab: GroupDetailTab;
-  error: string | null;
   group: Group;
   isLeavingGroup: boolean;
   notificationMessage: string | null;
@@ -15,12 +14,10 @@ type Props = {
   onChangeTab: (tab: GroupDetailTab) => void;
   onLeaveGroup: () => void;
   onOpenAdmin: () => void;
-  successMessage: string | null;
 };
 
 export function GroupDetailHeader({
   activeTab,
-  error,
   group,
   isLeavingGroup,
   notificationMessage,
@@ -28,7 +25,6 @@ export function GroupDetailHeader({
   onChangeTab,
   onLeaveGroup,
   onOpenAdmin,
-  successMessage,
 }: Props) {
   return (
     <View style={styles.headerBlock}>
@@ -60,8 +56,6 @@ export function GroupDetailHeader({
         </Text>
       </View>
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
       <NotificationBanner message={notificationMessage} />
 
       <View style={styles.tabs}>
@@ -184,17 +178,5 @@ const styles = StyleSheet.create({
   },
   tabButtonTextActive: {
     color: '#1f7a4a',
-  },
-  errorText: {
-    color: '#a03222',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 10,
-  },
-  successText: {
-    color: '#1f7a4a',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 10,
   },
 });

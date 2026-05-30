@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { leaveGroup, savePrediction, type Group, type GroupMatch } from '../services/groups';
@@ -13,7 +14,6 @@ import { useTemporaryNotification } from '../../../shared/hooks/useTemporaryNoti
 export function useGroupDetailScreen(group: Group, onGroupLeft: () => void) {
   const [activeTab, setActiveTab] = useState<GroupDetailTab>('matches');
   const [savingMatchID, setSavingMatchID] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { notificationMessage, showNotification } = useTemporaryNotification();
   const {
@@ -82,11 +82,9 @@ export function useGroupDetailScreen(group: Group, onGroupLeft: () => void) {
 
   async function handleSavePrediction(match: GroupMatch) {
     const draft = drafts[match.id];
-    setError(null);
-    setSuccessMessage(null);
 
     if (!draft?.homeScore || !draft.awayScore) {
-      setError('Informe os dois placares para salvar o palpite.');
+      showError('Informe os dois placares para salvar o palpite.');
       return;
     }
 
@@ -103,23 +101,21 @@ export function useGroupDetailScreen(group: Group, onGroupLeft: () => void) {
 
       updateMatchPrediction(match.id, prediction);
       await loadRanking();
-      setSuccessMessage('Palpite salvo.');
+      showSuccess('Palpite salvo.');
     } catch (saveError) {
-      setError(errorMessage(saveError, 'Não foi possível salvar o palpite.'));
+      showError(errorMessage(saveError, 'Não foi possível salvar o palpite.'));
     } finally {
       setSavingMatchID(null);
     }
   }
 
   async function handleLeaveGroup() {
-    setError(null);
-    setSuccessMessage(null);
-
     try {
       await leaveGroupMutation.mutateAsync();
+      showSuccess('Você saiu do grupo.');
       onGroupLeft();
     } catch (leaveError) {
-      setError(errorMessage(leaveError, 'Não foi possível sair do grupo.'));
+      showError(errorMessage(leaveError, 'Não foi possível sair do grupo.'));
     }
   }
 
@@ -140,9 +136,16 @@ export function useGroupDetailScreen(group: Group, onGroupLeft: () => void) {
     savePrediction: handleSavePrediction,
     setActiveTab,
     savingMatchID,
-    successMessage,
     updateDraft,
   };
+}
+
+function showSuccess(message: string) {
+  Alert.alert('Sucesso', message);
+}
+
+function showError(message: string) {
+  Alert.alert('Erro', message);
 }
 
 function errorMessage(error: unknown, fallback: string) {

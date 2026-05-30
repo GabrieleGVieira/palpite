@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createGroup, type CreateGroupPayload } from '../services/groups';
@@ -59,7 +60,6 @@ type UseCreateGroupScreenResult = {
   blockPendingPredictions: boolean;
   createGroupLabel: string;
   description: string;
-  formError: string | null;
   hasUnlimitedParticipants: boolean;
   isPaid: boolean;
   isPrivate: boolean;
@@ -104,7 +104,6 @@ export function useCreateGroupScreen(
   const [isPaid, setIsPaid] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [blockPendingPredictions, setBlockPendingPredictions] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const createGroupMutation = useMutation({
     mutationFn: createGroup,
@@ -120,15 +119,13 @@ export function useCreateGroupScreen(
   );
 
   async function onCreateGroup() {
-    setFormError(null);
-
     if (!groupName.trim()) {
-      setFormError('Informe o nome do grupo.');
+      showError('Informe o nome do grupo.');
       return;
     }
 
     if (matchScope === 'Selecionar seleções' && selectedTeams.length === 0) {
-      setFormError('Selecione pelo menos uma seleção para o bolão.');
+      showError('Selecione pelo menos uma seleção para o bolão.');
       return;
     }
 
@@ -136,14 +133,14 @@ export function useCreateGroupScreen(
       const parsedLimit = Number(participantLimit);
 
       if (!Number.isInteger(parsedLimit) || parsedLimit < 2) {
-        setFormError('O limite precisa ser um número maior que 1.');
+        showError('O limite precisa ser um número maior que 1.');
         return;
       }
     }
 
     const parsedPaymentAmount = Number(paymentAmount.replace(',', '.'));
     if (isPaid && (!Number.isFinite(parsedPaymentAmount) || parsedPaymentAmount < 0)) {
-      setFormError('Informe um valor de participação válido.');
+      showError('Informe um valor de participação válido.');
       return;
     }
 
@@ -162,9 +159,10 @@ export function useCreateGroupScreen(
 
     try {
       await createGroupMutation.mutateAsync(payload);
+      showSuccess('Grupo criado.');
       onGroupCreated();
     } catch (error) {
-      setFormError(errorMessage(error, 'Não foi possível criar o grupo.'));
+      showError(errorMessage(error, 'Não foi possível criar o grupo.'));
     }
   }
 
@@ -184,7 +182,6 @@ export function useCreateGroupScreen(
     blockPendingPredictions,
     createGroupLabel: 'Criar grupo',
     description,
-    formError,
     hasUnlimitedParticipants,
     isPaid,
     isPrivate,
@@ -212,6 +209,14 @@ export function useCreateGroupScreen(
     setIsPrivate,
     setPaymentAmount,
   };
+}
+
+function showSuccess(message: string) {
+  Alert.alert('Sucesso', message);
+}
+
+function showError(message: string) {
+  Alert.alert('Erro', message);
 }
 
 function errorMessage(error: unknown, fallback: string) {

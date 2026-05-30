@@ -28,7 +28,6 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
   const {
     blockPendingPredictions,
     description,
-    formError,
     hasUnlimitedParticipants,
     isPaid,
     isPrivate,
@@ -131,8 +130,6 @@ export function CreateGroupScreen({ onBack, onGroupCreated }: CreateGroupScreenP
               <Text style={styles.rulesText}>• Palpites fecham no início de cada jogo</Text>
             </View>
 
-            {formError ? <Text style={styles.errorText}>{formError}</Text> : null}
-
             <Pressable
               disabled={isSubmitting}
               onPress={onCreateGroup}
@@ -203,11 +200,6 @@ const styles = StyleSheet.create({
     color: '#486654',
     fontSize: 13,
     lineHeight: 20,
-  },
-  errorText: {
-    color: '#c23f34',
-    fontSize: 14,
-    fontWeight: '700',
   },
   primaryButton: {
     alignItems: 'center',

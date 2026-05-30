@@ -26,7 +26,6 @@ export function GroupDetailScreen({
   const {
     activeTab,
     drafts,
-    error,
     isLoading,
     isLoadingRanking,
     isLeavingGroup,
@@ -38,7 +37,6 @@ export function GroupDetailScreen({
     savePrediction,
     setActiveTab,
     savingMatchID,
-    successMessage,
     updateDraft,
   } = useGroupDetailScreen(group, onGroupLeft);
 
@@ -62,7 +60,6 @@ export function GroupDetailScreen({
 
         <GroupDetailHeader
           activeTab={activeTab}
-          error={error}
           group={group}
           isLeavingGroup={isLeavingGroup}
           notificationMessage={notificationMessage}
@@ -70,7 +67,6 @@ export function GroupDetailScreen({
           onChangeTab={setActiveTab}
           onLeaveGroup={confirmLeaveGroup}
           onOpenAdmin={onOpenAdmin}
-          successMessage={successMessage}
         />
 
         {activeTab === 'matches' && isLoading ? (
