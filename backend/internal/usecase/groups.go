@@ -52,6 +52,14 @@ func (uc GroupUsecase) ListMembers(ctx context.Context, ownerID string, groupID 
 	return ListMembers(ctx, uc.db, ownerID, groupID)
 }
 
+func (uc GroupUsecase) ListMemberSummaries(ctx context.Context, userID string, groupID string) ([]dto.GroupMemberSummaryResponse, error) {
+	return ListMemberSummaries(ctx, uc.db, userID, groupID)
+}
+
+func (uc GroupUsecase) MemberDetail(ctx context.Context, userID string, groupID string, targetUserID string) (dto.GroupMemberDetailResponse, error) {
+	return MemberDetail(ctx, uc.db, userID, groupID, targetUserID)
+}
+
 func (uc GroupUsecase) ApproveJoinRequest(ctx context.Context, ownerID string, groupID string, requesterID string) error {
 	return ApproveJoinRequest(ctx, uc.db, ownerID, groupID, requesterID)
 }
@@ -144,6 +152,53 @@ func ListJoinRequests(ctx context.Context, db Datastore, ownerID string, groupID
 
 func ListMembers(ctx context.Context, db Datastore, ownerID string, groupID string) ([]dto.GroupMemberResponse, error) {
 	return repositories.ListActiveGroupMembers(ctx, db, ownerID, groupID)
+}
+
+func ListMemberSummaries(ctx context.Context, db Datastore, userID string, groupID string) ([]dto.GroupMemberSummaryResponse, error) {
+	if err := ensureGroupMemberCanView(ctx, db, userID, groupID); err != nil {
+		return nil, err
+	}
+
+	members, err := repositories.ListGroupMemberSummaries(ctx, db, groupID)
+	if err != nil {
+		return nil, err
+	}
+	repositories.SortGroupMemberSummaries(members)
+
+	return members, nil
+}
+
+func MemberDetail(ctx context.Context, db Datastore, userID string, groupID string, targetUserID string) (dto.GroupMemberDetailResponse, error) {
+	if err := ensureGroupMemberCanView(ctx, db, userID, groupID); err != nil {
+		return dto.GroupMemberDetailResponse{}, err
+	}
+
+	member, err := repositories.GroupMemberDetail(ctx, db, groupID, targetUserID)
+	if errors.Is(err, repositories.ErrNotFound) {
+		return dto.GroupMemberDetailResponse{}, ErrGroupNotFound
+	}
+
+	return member, err
+}
+
+func ensureGroupMemberCanView(ctx context.Context, db Datastore, userID string, groupID string) error {
+	exists, err := repositories.GroupExists(ctx, db, groupID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrGroupNotFound
+	}
+
+	isMember, err := repositories.ActiveGroupMemberExists(ctx, db, userID, groupID)
+	if err != nil {
+		return err
+	}
+	if !isMember {
+		return ErrGroupOwnerRequired
+	}
+
+	return nil
 }
 
 func ApproveJoinRequest(ctx context.Context, db Datastore, ownerID string, groupID string, requesterID string) error {

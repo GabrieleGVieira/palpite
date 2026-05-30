@@ -135,6 +135,7 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 			user_id uuid not null,
 			role text not null check (role in ('owner', 'member')),
 			display_name text not null default '',
+			avatar_url text,
 			status text not null default 'active',
 			joined_at timestamptz not null default now(),
 			primary key (group_id, user_id)
@@ -142,6 +143,9 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 
 		alter table group_members
 			add column if not exists display_name text not null default '';
+
+		alter table group_members
+			add column if not exists avatar_url text;
 
 		alter table group_members
 			add column if not exists status text not null default 'active';

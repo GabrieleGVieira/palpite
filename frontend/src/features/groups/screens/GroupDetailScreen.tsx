@@ -15,6 +15,7 @@ type GroupDetailScreenProps = {
   onBack: () => void;
   onGroupLeft: () => void;
   onOpenAdmin: () => void;
+  onOpenMembers: () => void;
 };
 
 export function GroupDetailScreen({
@@ -22,6 +23,7 @@ export function GroupDetailScreen({
   onBack,
   onGroupLeft,
   onOpenAdmin,
+  onOpenMembers,
 }: GroupDetailScreenProps) {
   const {
     activeTab,
@@ -67,6 +69,7 @@ export function GroupDetailScreen({
           onChangeTab={setActiveTab}
           onLeaveGroup={confirmLeaveGroup}
           onOpenAdmin={onOpenAdmin}
+          onOpenMembers={onOpenMembers}
         />
 
         {activeTab === 'matches' && isLoading ? (

@@ -22,7 +22,6 @@ export function useGroupDetailScreen(group: Group, onGroupLeft: () => void) {
     isLoading,
     loadMatches,
     matches,
-    setError,
     updateDraft,
     updateMatchFromRealtime,
     updateMatchPrediction,

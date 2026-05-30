@@ -160,6 +160,58 @@ func ListGroupMembersHandler(cfg config.Config, groups usecase.GroupUsecase) htt
 			return
 		}
 
+		members, err := groups.ListMemberSummaries(r.Context(), userID, r.PathValue("groupID"))
+		if err != nil {
+			switch {
+			case apperrors.IsNotFound(err):
+				writeError(w, http.StatusNotFound, "Grupo não encontrado.")
+			case apperrors.IsForbidden(err):
+				writeError(w, http.StatusForbidden, "Apenas participantes do grupo podem ver os membros.")
+			default:
+				writeError(w, http.StatusInternalServerError, "Não foi possivel listar os participantes.")
+			}
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string][]dto.GroupMemberSummaryResponse{
+			"members": members,
+		})
+	}
+}
+
+func GroupMemberDetailHandler(cfg config.Config, groups usecase.GroupUsecase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		member, err := groups.MemberDetail(r.Context(), userID, r.PathValue("groupID"), r.PathValue("userID"))
+		if err != nil {
+			switch {
+			case apperrors.IsNotFound(err):
+				writeError(w, http.StatusNotFound, "Participante não encontrado.")
+			case apperrors.IsForbidden(err):
+				writeError(w, http.StatusForbidden, "Apenas participantes do grupo podem ver os membros.")
+			default:
+				writeError(w, http.StatusInternalServerError, "Não foi possivel carregar o participante.")
+			}
+			return
+		}
+
+		writeJSON(w, http.StatusOK, member)
+	}
+}
+
+func ListGroupMembersAdminHandler(cfg config.Config, groups usecase.GroupUsecase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
 		members, err := groups.ListMembers(r.Context(), userID, r.PathValue("groupID"))
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "Não foi possivel listar os participantes.")

@@ -5,10 +5,17 @@ type HomeHeaderProps = {
   userName?: string;
   onCreateGroup: () => void;
   onLogout: () => void;
+  onOpenProfile: () => void;
   isSubmitting: boolean;
 };
 
-export function HomeHeader({ userName, onCreateGroup, onLogout, isSubmitting }: HomeHeaderProps) {
+export function HomeHeader({
+  userName,
+  onCreateGroup,
+  onLogout,
+  onOpenProfile,
+  isSubmitting,
+}: HomeHeaderProps) {
   return (
     <View>
       <Header
@@ -19,6 +26,9 @@ export function HomeHeader({ userName, onCreateGroup, onLogout, isSubmitting }: 
       <View style={styles.actionTabs}>
         <Pressable onPress={onCreateGroup} style={[styles.tabButton, styles.tabPrimary]}>
           <Text style={styles.tabButtonText}>Criar grupo</Text>
+        </Pressable>
+        <Pressable onPress={onOpenProfile} style={[styles.tabButton, styles.tabSecondary]}>
+          <Text style={styles.tabSecondaryText}>Perfil</Text>
         </Pressable>
         <Pressable
           disabled={isSubmitting}

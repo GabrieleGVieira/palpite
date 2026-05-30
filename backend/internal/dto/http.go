@@ -89,6 +89,39 @@ type GroupMemberResponse struct {
 	UserID      string    `json:"user_id"`
 }
 
+type ProfileResponse struct {
+	AvatarURL   *string `json:"avatar_url,omitempty"`
+	DisplayName string  `json:"display_name"`
+}
+
+type UpdateProfileRequest struct {
+	AvatarURL   *string `json:"avatar_url"`
+	DisplayName string  `json:"display_name"`
+}
+
+type GroupMemberSummaryResponse struct {
+	AvatarURL   *string   `json:"avatar_url,omitempty"`
+	DisplayName string    `json:"display_name"`
+	JoinedAt    time.Time `json:"joined_at"`
+	Points      *int      `json:"points,omitempty"`
+	Ranking     *int      `json:"ranking,omitempty"`
+	Role        string    `json:"role"`
+	UserID      string    `json:"user_id"`
+}
+
+type GroupMemberDetailResponse struct {
+	AccuracyPercentage *float64  `json:"accuracy_percentage,omitempty"`
+	AvatarURL          *string   `json:"avatar_url,omitempty"`
+	CorrectPredictions *int      `json:"correct_predictions,omitempty"`
+	DisplayName        string    `json:"display_name"`
+	JoinedAt           time.Time `json:"joined_at"`
+	Points             *int      `json:"points,omitempty"`
+	PredictionsCount   *int      `json:"predictions_count,omitempty"`
+	Ranking            *int      `json:"ranking,omitempty"`
+	Role               string    `json:"role"`
+	UserID             string    `json:"user_id"`
+}
+
 type PaymentStatus string
 
 const (

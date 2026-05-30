@@ -4,11 +4,14 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
 import { SignupScreen } from '../features/auth/screens/SignupScreen';
+import { ProfileScreen } from '../features/account/screens/ProfileScreen';
 import { CreateGroupScreen } from '../features/groups/screens/CreateGroupScreen';
 import { GroupAdminScreen } from '../features/groups/screens/GroupAdminScreen';
 import { GroupDetailScreen } from '../features/groups/screens/GroupDetailScreen';
+import { GroupMemberDetailScreen } from '../features/groups/screens/GroupMemberDetailScreen';
+import { GroupMembersScreen } from '../features/groups/screens/GroupMembersScreen';
 import { HomeScreen } from '../features/groups/screens/HomeScreen';
-import type { Group } from '../features/groups/services/groups';
+import type { Group, GroupMember } from '../features/groups/services/groups';
 import { OnboardingScreen } from '../features/onboarding/screens/OnboardingScreen';
 import { colors } from '../shared/theme';
 import type { AppScreenName, AuthScreenName } from './types';
@@ -19,6 +22,7 @@ export function AppNavigator() {
   const [authScreen, setAuthScreen] = useState<AuthScreenName>('login');
   const [appScreen, setAppScreen] = useState<AppScreenName>('home');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
 
   if (isLoading) {
     return (
@@ -39,8 +43,11 @@ export function AppNavigator() {
 
   return renderAppFlow({
     appScreen,
+    fallbackName: session.user.user_metadata.full_name as string | undefined,
+    selectedMember,
     selectedGroup,
     setAppScreen,
+    setSelectedMember,
     setSelectedGroup,
   });
 }
@@ -71,17 +78,27 @@ function renderAuthFlow({
 
 type AppFlowParams = {
   appScreen: AppScreenName;
+  fallbackName?: string;
+  selectedMember: GroupMember | null;
   selectedGroup: Group | null;
   setAppScreen: (screen: AppScreenName) => void;
+  setSelectedMember: (member: GroupMember | null) => void;
   setSelectedGroup: (group: Group | null) => void;
 };
 
 function renderAppFlow({
   appScreen,
+  fallbackName,
+  selectedMember,
   selectedGroup,
   setAppScreen,
+  setSelectedMember,
   setSelectedGroup,
 }: AppFlowParams) {
+  if (appScreen === 'profile') {
+    return <ProfileScreen fallbackName={fallbackName} onBack={() => setAppScreen('home')} />;
+  }
+
   if (appScreen === 'create-group') {
     return (
       <CreateGroupScreen
@@ -101,6 +118,30 @@ function renderAppFlow({
           setAppScreen('home');
         }}
         onOpenAdmin={() => setAppScreen('group-admin')}
+        onOpenMembers={() => setAppScreen('group-members')}
+      />
+    );
+  }
+
+  if (appScreen === 'group-members' && selectedGroup) {
+    return (
+      <GroupMembersScreen
+        group={selectedGroup}
+        onBack={() => setAppScreen('group-detail')}
+        onOpenMember={(member) => {
+          setSelectedMember(member);
+          setAppScreen('group-member-detail');
+        }}
+      />
+    );
+  }
+
+  if (appScreen === 'group-member-detail' && selectedGroup && selectedMember) {
+    return (
+      <GroupMemberDetailScreen
+        group={selectedGroup}
+        member={selectedMember}
+        onBack={() => setAppScreen('group-members')}
       />
     );
   }
@@ -122,6 +163,7 @@ function renderAppFlow({
         setSelectedGroup(group);
         setAppScreen('group-detail');
       }}
+      onOpenProfile={() => setAppScreen('profile')}
     />
   );
 }

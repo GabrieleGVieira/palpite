@@ -14,6 +14,7 @@ type Props = {
   onChangeTab: (tab: GroupDetailTab) => void;
   onLeaveGroup: () => void;
   onOpenAdmin: () => void;
+  onOpenMembers: () => void;
 };
 
 export function GroupDetailHeader({
@@ -25,6 +26,7 @@ export function GroupDetailHeader({
   onChangeTab,
   onLeaveGroup,
   onOpenAdmin,
+  onOpenMembers,
 }: Props) {
   return (
     <View style={styles.headerBlock}>
@@ -40,9 +42,7 @@ export function GroupDetailHeader({
             disabled={isLeavingGroup}
             onPress={onLeaveGroup}
             style={[styles.leaveButton, isLeavingGroup && styles.buttonDisabled]}>
-            <Text style={styles.leaveButtonText}>
-              {isLeavingGroup ? 'Saindo...' : 'Sair'}
-            </Text>
+            <Text style={styles.leaveButtonText}>{isLeavingGroup ? 'Saindo...' : 'Sair'}</Text>
           </Pressable>
         )}
       </View>
@@ -57,6 +57,10 @@ export function GroupDetailHeader({
       </View>
 
       <NotificationBanner message={notificationMessage} />
+
+      <Pressable onPress={onOpenMembers} style={styles.membersButton}>
+        <Text style={styles.membersButtonText}>Participantes</Text>
+      </Pressable>
 
       <View style={styles.tabs}>
         <Pressable
@@ -156,6 +160,21 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 20,
     padding: 6,
+  },
+  membersButton: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderColor: '#d9e7d4',
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    marginTop: 16,
+    minHeight: 44,
+  },
+  membersButtonText: {
+    color: '#1f7a4a',
+    fontSize: 14,
+    fontWeight: '800',
   },
   tabButton: {
     alignItems: 'center',

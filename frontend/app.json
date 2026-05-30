@@ -13,7 +13,10 @@
       "backgroundColor": "#f5f8ef"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Permita acesso as suas fotos para escolher uma imagem de perfil."
+      }
     },
     "android": {
       "package": "com.cravou.app",

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -11,10 +12,70 @@ import (
 
 	"github.com/gabrielevieira/palpitai/backend/internal/apperrors"
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
+	"github.com/gabrielevieira/palpitai/backend/internal/dto"
 )
 
 type AccountDeletionUsecase interface {
 	DeleteAccount(ctx context.Context, userID string) error
+}
+
+type AccountProfileUsecase interface {
+	Profile(ctx context.Context, userID string) (dto.ProfileResponse, error)
+	UpdateProfile(ctx context.Context, userID string, request dto.UpdateProfileRequest) (dto.ProfileResponse, error)
+}
+
+func GetProfileHandler(cfg config.Config, accounts AccountProfileUsecase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		profile, err := accounts.Profile(r.Context(), userID)
+		if err != nil {
+			if apperrors.IsNotFound(err) {
+				writeError(w, http.StatusNotFound, "Perfil não encontrado.")
+				return
+			}
+
+			writeError(w, http.StatusInternalServerError, "Não foi possível carregar o perfil.")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, profile)
+	}
+}
+
+func UpdateProfileHandler(cfg config.Config, accounts AccountProfileUsecase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
+			return
+		}
+
+		var request dto.UpdateProfileRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			writeError(w, http.StatusBadRequest, "JSON invalido.")
+			return
+		}
+
+		profile, err := accounts.UpdateProfile(r.Context(), userID, request)
+		if err != nil {
+			switch {
+			case apperrors.IsValidation(err):
+				writeError(w, http.StatusBadRequest, err.Error())
+			case apperrors.IsNotFound(err):
+				writeError(w, http.StatusNotFound, "Perfil não encontrado.")
+			default:
+				writeError(w, http.StatusInternalServerError, "Não foi possível atualizar o perfil.")
+			}
+			return
+		}
+
+		writeJSON(w, http.StatusOK, profile)
+	}
 }
 
 func DeleteAccountHandler(cfg config.Config, accounts AccountDeletionUsecase) http.HandlerFunc {

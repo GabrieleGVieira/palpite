@@ -49,10 +49,19 @@ export type JoinRequest = {
 };
 
 export type GroupMember = {
+  avatar_url: string | null;
   display_name: string;
   joined_at: string;
+  points: number | null;
+  ranking: number | null;
   role: string;
   user_id: string;
+};
+
+export type GroupMemberDetail = GroupMember & {
+  accuracy_percentage: number | null;
+  correct_predictions: number | null;
+  predictions_count: number | null;
 };
 
 export type Prediction = {
@@ -93,7 +102,7 @@ export type ScoreDraft = {
   homeScore: string;
 };
 
-export type GroupDetailTab = 'matches' | 'ranking';
+export type GroupDetailTab = 'matches' | 'ranking' | 'members';
 
 export type JoinGroupResponse = {
   group: Group;

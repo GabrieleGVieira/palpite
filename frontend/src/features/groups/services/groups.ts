@@ -9,6 +9,7 @@ import type {
   GroupPayment,
   GroupPaymentsSummary,
   GroupRankingResponse,
+  GroupMemberDetail,
   JoinGroupResponse,
   ListGroupMatchesResponse,
   ListGroupMembersResponse,
@@ -27,6 +28,7 @@ export type {
   Group,
   GroupMatch,
   GroupMember,
+  GroupMemberDetail,
   GroupPayment,
   GroupPaymentsSummary,
   JoinGroupResponse,
@@ -86,6 +88,12 @@ export async function listGroupMembers(groupID: string) {
   });
 
   return data.members;
+}
+
+export async function getGroupMemberDetail(groupID: string, userID: string) {
+  return apiClient<GroupMemberDetail>(`/api/v1/groups/${groupID}/members/${userID}`, {
+    fallbackError: 'Não foi possivel carregar o participante.',
+  });
 }
 
 export async function listGroupPayments(groupID: string) {
