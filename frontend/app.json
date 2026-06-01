@@ -20,7 +20,7 @@
     },
     "android": {
       "package": "com.palpite.app",
-      "versionCode": 9,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1f7a4a"

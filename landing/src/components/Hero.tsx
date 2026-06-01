@@ -1,5 +1,7 @@
 import LegalNotice from './LegalNotice';
-import { assetPath } from '../assets';
+import { appPath, assetPath } from '../assets';
+
+const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.palpitai.app';
 
 export default function Hero() {
   return (
@@ -14,16 +16,15 @@ export default function Hero() {
             cada jogo mais divertido.
           </p>
           <div className="hero-actions" aria-label="Ações da landing">
-            <a className="button button-primary" href="#teste-android">
-              Entrar no Beta Android
+            <a className="button button-primary" href={playStoreUrl} rel="noreferrer" target="_blank">
+              Baixar no Android
             </a>
-            <button className="button button-disabled" type="button" disabled>
-              iPhone em breve
-            </button>
+            <a className="button button-secondary" href={appPath('/app')}>
+              Usar no iPhone
+            </a>
           </div>
           <LegalNotice />
-          <p className="button-note">Versão para iPhone será liberada em breve.</p>
-          <p className="iphone-note">Estamos preparando a melhor experiência para iPhone.</p>
+          <p className="button-note">No iPhone, abra no Safari, toque em Compartilhar e depois em Adicionar à Tela de Início.</p>
         </div>
         <div className="hero-visual" aria-label="Visual do Palpite!">
           <img

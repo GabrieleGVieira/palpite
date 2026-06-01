@@ -42,7 +42,7 @@ jobs:
 
       - name: Build
         env:
-          VITE_BASE_PATH: /palpite/
+          VITE_BASE_PATH: /palpitAI/
         run: npm run build
 
       - name: Upload Pages artifact
