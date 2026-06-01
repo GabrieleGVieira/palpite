@@ -10,7 +10,7 @@
 ## Ecossistema
 
 - **PalpitAI**: assistente de IA para análises, sugestões, explicações e insights complementares.
-- **Palpicoins**: moeda virtual preparada para futuras funcionalidades.
+- **Palpicoins**: moeda virtual sem valor monetário, usada em carteira, ranking e desafios entre amigos.
 - **Palpiteiros**: participantes do app, grupos e rankings.
 - **Palpitômetro**: módulo futuro de estatísticas e tendências.
 - **palpite/palpites**: termo padrao para previsoes enviadas pelos Palpiteiros.

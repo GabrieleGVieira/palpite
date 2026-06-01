@@ -6,6 +6,7 @@ import 'react-native-url-polyfill/auto';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseKey =
   process.env.EXPO_PUBLIC_SUPABASE_KEY ?? process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const isStaticRendering = typeof window === 'undefined';
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
 
@@ -14,20 +15,22 @@ export const supabase = createClient(
   supabaseKey ?? 'missing-supabase-key',
   {
     auth: {
-      autoRefreshToken: true,
+      autoRefreshToken: !isStaticRendering,
       detectSessionInUrl: false,
       lock: processLock,
-      persistSession: true,
-      storage: AsyncStorage,
+      persistSession: !isStaticRendering,
+      storage: isStaticRendering ? undefined : AsyncStorage,
     },
   },
 );
 
-AppState.addEventListener('change', (state) => {
-  if (state === 'active') {
-    supabase.auth.startAutoRefresh();
-    return;
-  }
+if (!isStaticRendering) {
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      supabase.auth.startAutoRefresh();
+      return;
+    }
 
-  supabase.auth.stopAutoRefresh();
-});
+    supabase.auth.stopAutoRefresh();
+  });
+}

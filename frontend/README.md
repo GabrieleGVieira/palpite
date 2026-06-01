@@ -1,10 +1,10 @@
 # Palpite! Frontend
 
-App mobile em React Native com Expo para criação de grupos de bolão, palpites da Copa do Mundo 2026, ranking em tempo real e visualização de análises da PalpitAI.
+App mobile em React Native com Expo para criação de grupos de bolão, palpites da Copa do Mundo 2026, ranking em tempo real, feed social, amigos, desafios com Palpicoins e visualização de análises da PalpitAI.
 
 ## O que é
 
-O frontend é o ponto de entrada dos Palpiteiros no Palpite! O app permite criar e entrar em grupos, registrar palpites antes do início de cada partida e acompanhar o ranking atualizado em tempo real via WebSocket. O app também exibe análises da PalpitAI geradas pelo pipeline de ML com explicações em linguagem natural.
+O frontend é o ponto de entrada dos Palpiteiros no Palpite! O app permite criar e entrar em grupos, registrar palpites antes do início de cada partida, acompanhar ranking atualizado em tempo real via WebSocket, editar perfil com avatar, interagir com feed de grupo, gerenciar pagamentos, fazer amigos, consultar perfis públicos e criar desafios usando Palpicoins. O app também exibe análises da PalpitAI geradas pelo pipeline de ML com explicações em linguagem natural.
 
 ## Tecnologias
 
@@ -13,6 +13,8 @@ O frontend é o ponto de entrada dos Palpiteiros no Palpite! O app permite criar
 - **Supabase Auth** (`@supabase/supabase-js`) — autenticação e sessão
 - **React Query** (`@tanstack/react-query`) — cache e revalidação de dados
 - **WebSocket** — atualizações em tempo real de jogos e ranking
+- **Expo Image Picker + FileSystem** — seleção e upload de avatar
+- **Supabase Storage** — armazenamento público dos avatares
 - **ESLint + Prettier** — qualidade e formatação
 - **Vitest** — testes unitários
 - **Husky + Commitlint** — hooks de commit
@@ -55,8 +57,13 @@ npm run web          # navegador
 src/
 ├── features/
 │   ├── auth/         # login, cadastro, sessão e Supabase Auth
-│   ├── groups/       # Home, criação, detalhe, admin, palpites e ranking
+│   ├── account/      # perfil, avatar, privacidade e exclusão de conta
+│   ├── challenges/   # desafios entre amigos com Palpicoins
+│   ├── friends/      # busca, amizades e perfis públicos
+│   ├── groups/       # Home, criação, detalhe, admin, membros, feed, pagamentos e ranking
 │   ├── onboarding/   # fluxo inicial do app
+│   ├── palpicoins/   # carteira, histórico e ranking global
+│   ├── predictions/  # cards da PalpitAI e sugestão de placar
 │   └── realtime/     # conexão WebSocket e notificações
 ├── navigation/       # fluxo de telas (AppNavigator)
 ├── services/
@@ -77,9 +84,26 @@ src/
 4. Telas das features usam hooks e services para buscar e mutar dados
 5. Eventos WebSocket invalidam queries e exibem notificações sem refresh manual
 
-## Exclusão de conta
+## Funcionalidades
 
-O usuário autenticado pode solicitar a exclusão em Perfil > Configurações > Excluir conta. O app exige a confirmação digitada `EXCLUIR`, chama `DELETE /api/v1/me`, encerra a sessão e volta para o fluxo de login.
+- Login, cadastro, logout e sessão persistente via Supabase Auth
+- Perfil com nome público, avatar em Supabase Storage e opção de perfil público
+- Home com grupos, pontuação total, atalhos para amigos, desafios, Palpicoins e perfil
+- Criação de grupo com privacidade, limite de participantes, escopo de partidas, bolão pago e bloqueio de palpites pendentes
+- Entrada por código de convite, com aprovação do owner em grupos privados
+- Administração de grupo com edição, aprovação de entrada, lista de membros, remoção, saída, transferência de ownership e controle de pagamentos
+- Detalhe do grupo com tabs de jogos, ranking e feed de atividades com reações
+- Palpites por partida antes do kickoff, sugestão de placar a partir da PalpitAI e atualização de cache após salvar
+- Busca de usuários, solicitações de amizade, lista de amigos e perfil público com estatísticas
+- Desafios entre amigos com stake em Palpicoins e estados `PENDING`, `ACCEPTED`, `DECLINED`, `CANCELLED` e `SETTLED`
+- Carteira de Palpicoins, histórico de transações e ranking global
+- Exclusão de conta com confirmação textual
+
+## Perfil, avatar e exclusão de conta
+
+O usuário autenticado pode atualizar nome, avatar e visibilidade pública em Perfil. O upload usa o bucket público `avatars` do Supabase Storage, com políticas em `docs/supabase-avatar-storage.sql`.
+
+A exclusão fica em Perfil > Configurações > Excluir conta. O app exige a confirmação digitada `EXCLUIR`, chama `DELETE /api/v1/me`, encerra a sessão e volta para o fluxo de login.
 
 ## Qualidade
 

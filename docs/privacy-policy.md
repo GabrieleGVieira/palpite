@@ -1,6 +1,6 @@
 # Politica de Privacidade - Palpite!
 
-Ultima atualizacao: 27 de maio de 2026
+Ultima atualizacao: 1 de junho de 2026
 
 Esta politica descreve como o Palpite! coleta, usa e protege dados dos Palpiteiros.
 
@@ -11,8 +11,11 @@ O Palpite! pode coletar:
 - nome informado no cadastro;
 - endereco de e-mail usado para autenticacao;
 - identificadores de conta gerados pelo provedor de autenticacao;
+- foto/avatar e configuracoes de perfil publico, quando informados;
 - grupos criados ou acessados pelo Palpiteiro;
 - palpites, pontuacoes e participacao em rankings;
+- amizades, solicitacoes de amizade, desafios, reacoes no feed e atividades sociais dentro dos grupos;
+- dados de carteira virtual, transacoes de Palpicoins e status de pagamentos em boloes pagos;
 - dados tecnicos necessarios para funcionamento do app, como tokens de sessao.
 
 ## Uso dos Dados
@@ -23,12 +26,16 @@ Os dados sao usados para:
 - permitir criacao, entrada e administracao de grupos;
 - registrar palpites;
 - calcular pontuacao e ranking;
+- exibir perfil, avatar, amigos, feed de atividades e desafios;
+- operar Palpicoins como moeda virtual sem valor monetario;
+- permitir controle administrativo de pagamentos em grupos pagos;
 - atualizar informacoes de partidas e resultados;
+- gerar e exibir analises complementares da PalpitAI;
 - melhorar estabilidade, seguranca e experiencia do app.
 
 ## Compartilhamento
 
-O Palpite! usa provedores externos para operar o servico, incluindo Supabase para autenticacao e banco de dados. Os dados nao sao vendidos.
+O Palpite! usa provedores externos para operar o servico, incluindo Supabase para autenticacao, banco de dados e storage de avatares, Redis para infraestrutura de tempo real/cache quando configurado, football-data.org para dados de partidas e Gemini API para gerar explicacoes da PalpitAI. Os dados nao sao vendidos.
 
 ## Armazenamento e Seguranca
 
@@ -36,7 +43,7 @@ Os dados sao armazenados em servicos de infraestrutura usados pelo Palpite! Medi
 
 ## Retencao e Exclusao
 
-Os dados podem ser mantidos enquanto a conta estiver ativa ou enquanto forem necessarios para operar o servico. Para solicitar exclusao de conta ou dados, entre em contato pelo canal oficial de suporte.
+Os dados podem ser mantidos enquanto a conta estiver ativa ou enquanto forem necessarios para operar o servico. O app oferece exclusao de conta em Perfil > Configuracoes > Excluir conta, com confirmacao digitada `EXCLUIR`. Tambem e possivel solicitar exclusao de dados pelo canal oficial de suporte.
 
 ## Criancas
 

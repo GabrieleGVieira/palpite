@@ -64,11 +64,10 @@ As probabilidades são calibradas com `CalibratedClassifierCV`, usando `sigmoid`
 
 ## Integração com Go Backend
 
-O Go Backend continua sendo a API principal do app. Nesta etapa, o Python acessa o PostgreSQL para treino e batch prediction. O backend lê `match_predictions` via `backend/internal/predictions` e pode expor endpoints futuros sem chamar o modelo em tempo real.
+O Go Backend continua sendo a API principal do app. O Python acessa o PostgreSQL para treino e batch prediction. O backend lê `match_predictions` via `backend/internal/predictions` e expõe as previsões no endpoint `GET /api/v1/matches/{matchID}/prediction`, agregando também gols esperados, top placares e explicação da PalpitAI quando disponível.
 
 Um client HTTP opcional em `backend/internal/ml` está preparado para `POST /predict`, mas o fluxo recomendado para o app é leitura das previsões já persistidas.
 
 ## Por que LLM não entra nesta etapa
 
-Esta etapa produz previsões estruturadas e probabilísticas por modelo supervisionado. Não há chamada a LLM, geração de explicações ou uso de API externa. A camada explicativa fica reservada para a Etapa 4, consumindo as previsões salvas pelo pipeline de ML.
-
+Esta etapa produz previsões estruturadas e probabilísticas por modelo supervisionado. Não há chamada a LLM, geração de explicações ou uso de API externa dentro do pipeline Python. A camada explicativa fica na Etapa 4, no backend Go, consumindo as previsões salvas pelo pipeline de ML.

@@ -6,6 +6,8 @@ Pipeline de machine learning e API de inferência da PalpitAI. Calcula métricas
 
 O ML Service é responsável pela inteligência preditiva da PalpitAI. Opera em quatro etapas sequenciais: cálculo de métricas históricas de seleções, treinamento de modelos de resultado (classificação) e de gols (regressão Poisson), calibração conjunta dos modelos, e geração de previsões futuras salvas no banco. O backend Go consome essas previsões diretamente do PostgreSQL e as expõe no app como análises complementares.
 
+As explicações em linguagem natural não são geradas pelo serviço Python. Elas são produzidas por um worker do backend Go depois que `match_predictions`, `match_goal_predictions` e `match_score_probabilities` já existem no banco.
+
 ## Tecnologias
 
 - **Python 3.11+**

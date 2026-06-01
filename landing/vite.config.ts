@@ -8,7 +8,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         accountDeletion: resolve(__dirname, 'account-deletion/index.html'),
-        app: resolve(__dirname, 'app/index.html'),
         main: resolve(__dirname, 'index.html'),
         privacy: resolve(__dirname, 'privacy/index.html'),
         terms: resolve(__dirname, 'terms/index.html'),

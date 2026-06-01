@@ -38,39 +38,59 @@ GEMINI_RATE_LIMIT_COOLDOWN_SECONDS=1800
 GEMINI_RATE_LIMIT_MAX_WAITS=1
 GEMINI_REQUEST_DELAY_SECONDS=15
 GEMINI_TIMEOUT_SECONDS=30
+AI_EXPLANATION_BATCH_SIZE=2
+AI_EXPLANATION_MIN_BATCH_SIZE=1
+AI_EXPLANATION_RETRY_MISSING=true
+AI_EXPLANATION_MAX_MISSING_RETRIES=2
+AI_EXPLANATION_SEED_DAYS=90
+AI_EXPLANATION_REFRESH_DAYS=7
+AI_EXPLANATION_MAX_AGE_HOURS=24
 ```
 
 `GEMINI_MODEL` pode ser trocado sem alterar código.
 `GEMINI_REQUEST_DELAY_SECONDS` controla o intervalo entre chamadas do worker para respeitar limites de RPM.
 `GEMINI_RATE_LIMIT_COOLDOWN_SECONDS` controla a pausa longa antes de retentar o mesmo jogo quando a quota estoura.
 `GEMINI_RATE_LIMIT_MAX_WAITS` limita quantas pausas longas podem acontecer em uma execução.
+`AI_EXPLANATION_BATCH_SIZE` controla o tamanho do lote por execução.
+`AI_EXPLANATION_SEED_DAYS` e `AI_EXPLANATION_REFRESH_DAYS` definem a janela automática quando `--from-date`/`--to-date` não são informados.
+`AI_EXPLANATION_MAX_AGE_HOURS` evita regenerar explicações recentes.
 
 ## Como rodar
 
 ```bash
 cd backend
 make migrate
-make explanations FROM_DATE=2026-06-01 TO_DATE=2026-07-31 LIMIT=50
+make explanations MODE=seed LIMIT=50
 ```
 
-`FROM_DATE` e `TO_DATE` são obrigatórios. `LIMIT` é opcional (default: 15).
+`MODE=seed` usa uma janela a partir da data atual com tamanho `AI_EXPLANATION_SEED_DAYS`.
+`MODE=refresh` usa `AI_EXPLANATION_REFRESH_DAYS`.
+`LIMIT` é opcional no Makefile (default: 15).
 
 Equivalente direto:
 
 ```bash
-go run ./internal/workers/generate_prediction_explanations \
+go run ./cmd/generate-ai-explanations \
   --from-date=2026-06-01 \
   --to-date=2026-07-31 \
   --limit=50
+```
+
+Também é possível usar a janela automática:
+
+```bash
+go run ./cmd/generate-ai-explanations --mode=refresh --limit=50
 ```
 
 Saída esperada:
 
 ```text
 AI explanation generation finished
+Mode: seed
+From: 2026-06-01
+To: 2026-08-30
 Processed: 50
 Generated: 43
-Skipped: 5
 Failed: 2
 Rate limited: false
 Rate limit waits: 0

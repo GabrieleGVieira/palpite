@@ -60,7 +60,7 @@ Essas probabilidades são calculadas sobre a matriz truncada 0x0 até 6x6. A pro
 
 ## Integração com 3A
 
-A Etapa 3A prevê resultado em classes (`HOME_WIN`, `DRAW`, `AWAY_WIN`). A Etapa 3B prevê gols e placares. Elas permanecem independentes nesta fase. Uma etapa futura pode combinar os dois outputs para ajustar coerência entre resultado, probabilidades e placar sugerido.
+A Etapa 3A prevê resultado em classes (`HOME_WIN`, `DRAW`, `AWAY_WIN`). A Etapa 3B prevê gols e placares. A calibração conjunta 3C combina os dois outputs para ajustar coerência entre resultado, probabilidades e placar sugerido.
 
 ## Calibração conjunta 3A + 3B
 

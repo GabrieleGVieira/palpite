@@ -1,10 +1,10 @@
 # Palpite! Backend
 
-API HTTP/WebSocket em Go do Palpite! A API autentica Palpiteiros via Supabase Auth, persiste dados no PostgreSQL, emite eventos em tempo real por WebSocket e sincroniza placares da Copa do Mundo via football-data.org.
+API HTTP/WebSocket em Go do Palpite! A API autentica Palpiteiros via Supabase Auth, persiste dados no PostgreSQL, emite eventos em tempo real por WebSocket, sincroniza placares da Copa do Mundo via football-data.org e sustenta os módulos sociais, Palpicoins, desafios e PalpitAI.
 
 ## O que é
 
-O backend é o núcleo do sistema: recebe palpites, calcula pontuação, serve o ranking e coordena atualizações em tempo real para todos os clientes conectados. Um worker separado faz polling na API da football-data.org e propaga mudanças de placar e status de partidas via WebSocket. O backend também integra com o pipeline da PalpitAI via banco de dados e gera explicações com a Gemini API.
+O backend é o núcleo do sistema: recebe palpites, calcula pontuação, serve rankings, administra grupos e coordena atualizações em tempo real para todos os clientes conectados. Um worker separado faz polling na API da football-data.org e propaga mudanças de placar e status de partidas via WebSocket. O backend também integra com o pipeline da PalpitAI via banco de dados, gera explicações com a Gemini API e mantém funcionalidades sociais como amizades, perfis públicos, feed de grupo, pagamentos, carteira de Palpicoins e desafios.
 
 ## Tecnologias
 
@@ -51,6 +51,13 @@ GEMINI_RATE_LIMIT_COOLDOWN_SECONDS=1800
 GEMINI_RATE_LIMIT_MAX_WAITS=1
 GEMINI_REQUEST_DELAY_SECONDS=15
 GEMINI_TIMEOUT_SECONDS=30
+AI_EXPLANATION_BATCH_SIZE=2
+AI_EXPLANATION_MIN_BATCH_SIZE=1
+AI_EXPLANATION_RETRY_MISSING=true
+AI_EXPLANATION_MAX_MISSING_RETRIES=2
+AI_EXPLANATION_SEED_DAYS=90
+AI_EXPLANATION_REFRESH_DAYS=7
+AI_EXPLANATION_MAX_AGE_HOURS=24
 ```
 
 Se a conexão direta ao Supabase falhar por IPv6/TLS, use a URL do Transaction Pooler:
@@ -70,7 +77,13 @@ make run
 **Worker de sincronização de partidas:**
 
 ```bash
-go run ./cmd/matchsync
+make matchsync
+```
+
+**Worker de explicações da PalpitAI:**
+
+```bash
+make explanations MODE=seed LIMIT=50
 ```
 
 **Migrations:**
@@ -110,6 +123,7 @@ backend/
     ├── realtime/     # hub WebSocket e broadcast por grupo
     ├── repositories/ # queries SQL por contexto
     ├── route/        # roteamento HTTP
+    ├── social/       # eventos sociais do feed
     ├── usecase/      # casos de uso e orquestração de negócio
     └── utils/        # helpers compartilhados
 ```
@@ -122,23 +136,59 @@ backend/
 - `domain` — mantém regras puras como cálculo de pontos e normalização de status
 - `matchsync` — sincroniza partidas, detecta alterações e publica eventos
 - `realtime` — gerencia conexões WebSocket e envia eventos por grupo
+- `explanations` — gera e persiste explicações estruturadas da PalpitAI
+- `goalpredictions`, `metrics`, `predictions` — leitura dos artefatos do pipeline ML
+- `repositories/*payments`, `friends`, `palpicoins`, `challenges`, `feed` — persistência dos módulos sociais e econômicos virtuais
 
 ## Rotas
 
 ```text
-GET  /health
-GET  /ws
-GET  /api/v1/status
+GET    /health
+GET    /ws
+GET    /api/v1/status
 DELETE /api/v1/me
-GET  /api/v1/me/score
-GET  /api/v1/groups
-POST /api/v1/groups
-PUT  /api/v1/groups/{groupID}
-POST /api/v1/groups/join
-GET  /api/v1/groups/{groupID}/matches
-GET  /api/v1/groups/{groupID}/ranking
-PUT  /api/v1/groups/{groupID}/matches/{matchID}/prediction
-PUT  /api/v1/matches/{matchID}/result
+GET    /api/v1/me/profile
+PATCH  /api/v1/me/profile
+GET    /api/v1/me/score
+GET    /api/v1/me/wallet
+GET    /api/v1/me/wallet/transactions
+GET    /api/v1/rankings/palpicoins
+POST   /api/v1/friends/request
+POST   /api/v1/friends/{id}/accept
+POST   /api/v1/friends/{id}/decline
+DELETE /api/v1/friends/{id}
+GET    /api/v1/friends
+GET    /api/v1/friends/requests
+GET    /api/v1/users/search
+GET    /api/v1/users/{id}/profile
+POST   /api/v1/challenges
+POST   /api/v1/challenges/{id}/accept
+POST   /api/v1/challenges/{id}/decline
+POST   /api/v1/challenges/{id}/cancel
+GET    /api/v1/challenges
+GET    /api/v1/challenges/{id}
+GET    /api/v1/matches/{matchID}/prediction
+GET    /api/v1/groups
+POST   /api/v1/groups
+PUT    /api/v1/groups/{groupID}
+POST   /api/v1/groups/join
+GET    /api/v1/groups/{groupID}/join-requests
+POST   /api/v1/groups/{groupID}/join-requests/{userID}/approve
+GET    /api/v1/groups/{groupID}/members
+GET    /api/v1/groups/{groupID}/members/{userID}
+GET    /api/v1/groups/{groupID}/feed
+POST   /api/v1/groups/{groupID}/feed/{eventID}/reaction
+DELETE /api/v1/groups/{groupID}/feed/{eventID}/reaction
+POST   /api/v1/groups/{groupID}/members/{userID}/transfer-ownership
+DELETE /api/v1/groups/{groupID}/members/{userID}
+GET    /api/v1/groups/{groupID}/payments
+GET    /api/v1/groups/{groupID}/payments/summary
+PATCH  /api/v1/groups/{groupID}/payments/{userID}
+DELETE /api/v1/groups/{groupID}/membership
+GET    /api/v1/groups/{groupID}/matches
+GET    /api/v1/groups/{groupID}/ranking
+PUT    /api/v1/groups/{groupID}/matches/{matchID}/prediction
+PUT    /api/v1/matches/{matchID}/result
 ```
 
 Todas as rotas de usuário exigem `Authorization: Bearer <access_token>` do Supabase Auth.
@@ -189,6 +239,14 @@ Arquivos de migration:
 | `202605260002_create_goal_prediction_tables` | `goal_models`, `match_goal_predictions`, `match_score_probabilities` |
 | `202605260003_add_score_result_calibration` | Colunas de calibração em `match_goal_predictions` |
 | `202605260004_create_prediction_explanations` | `prediction_explanations` |
+| `202605260005_add_prediction_explanation_refresh_fields` | Campos de refresh, validade e tentativas em `prediction_explanations` |
+| `202605290001_create_group_payments` | `group_payments` |
+| `202605290002_add_group_member_avatar_url` | Avatar em membros de grupo |
+| `202605290003_create_group_feed_events` | `group_feed_events`, `group_feed_reactions` |
+| `202606010001_allow_multiple_feed_reactions` | Reações múltiplas por evento |
+| `202606010002_create_friendships` | `friendships` |
+| `202606010003_create_user_social_settings` | `user_social_settings` |
+| `202606010004_create_palpicoins_and_challenges` | `palpicoin_wallets`, `palpicoin_transactions`, `challenges` |
 
 ## Qualidade
 

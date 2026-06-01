@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Palpite!",
-    "slug": "palpite",
+    "slug": "palpitai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +20,7 @@
     },
     "android": {
       "package": "com.palpite.app",
-      "versionCode": 10,
+      "versionCode": 11,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1f7a4a"
@@ -29,6 +29,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "output": "static",
       "favicon": "./assets/favicon.png"
     },
     "runtimeVersion": {

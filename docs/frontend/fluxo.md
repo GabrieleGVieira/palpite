@@ -1,6 +1,6 @@
 # Frontend — Fluxo do Sistema
 
-Documentação dos fluxos principais do app mobile React Native do Palpite!: inicialização, autenticação, grupos, palpites e realtime.
+Documentação dos fluxos principais do app mobile React Native do Palpite!: inicialização, autenticação, grupos, palpites, feed, amigos, Palpicoins, desafios, perfil e realtime.
 
 ---
 
@@ -24,6 +24,10 @@ graph TD
     NAV --> CREATE["CreateGroupScreen"]
     NAV --> DETAIL["GroupDetailScreen"]
     NAV --> ADMIN["GroupAdminScreen"]
+    NAV --> FRIENDS["FriendsScreen"]
+    NAV --> PROFILE["ProfileScreen"]
+    NAV --> COINS["PalpicoinsScreen"]
+    NAV --> CHALLENGES["ChallengesScreen"]
 
     HOME -- "WebSocket" --> REALTIME["useRealtimeEvents"]
     DETAIL -- "WebSocket" --> REALTIME
@@ -60,7 +64,7 @@ sequenceDiagram
         Note right of Nav: OnboardingScreen (se primeira vez)\n→ LoginScreen | SignupScreen
     else session existe
         Nav->>Nav: exibe fluxo do App
-        Note right of Nav: HomeScreen (padrão)
+        Note right of Nav: HomeScreen (padrão)\nProfile/Friends/Palpicoins/Challenges\nGroupDetail/Admin/Members
     end
 ```
 
@@ -101,12 +105,13 @@ flowchart TD
 
 ---
 
-## 3. Fluxo de grupos e palpites
+## 3. Fluxo de grupos, membros, feed e palpites
 
 ```mermaid
 flowchart TD
     HOME["HomeScreen"] --> FETCH_GROUPS["GET /api/v1/groups\nuseHomeData()"]
     HOME --> FETCH_SCORE["GET /api/v1/me/score"]
+    HOME --> SHORTCUTS["Atalhos: Perfil, Amigos,\nPalpicoins, Desafios"]
 
     HOME --> JOIN_FORM["Formulário: código de convite"]
     JOIN_FORM --> DO_JOIN["POST /api/v1/groups/join\n{ invite_code }"]
@@ -115,7 +120,7 @@ flowchart TD
     JOIN_RESULT -- "pendente" --> MSG["Exibe 'aguardando aprovação'"]
 
     HOME --> GO_CREATE["→ CreateGroupScreen"]
-    GO_CREATE --> FORM_CREATE["Preenche nome, descrição,\nprivacidade, times, limite"]
+    GO_CREATE --> FORM_CREATE["Preenche nome, descrição,\nprivacidade, times, limite,\nbolão pago e bloqueio de pendentes"]
     FORM_CREATE --> DO_CREATE["POST /api/v1/groups"]
     DO_CREATE --> INVAL_GROUPS
 
@@ -124,6 +129,7 @@ flowchart TD
     SELECT_GROUP --> TABS{"Tab ativa"}
     TABS -- "Jogos" --> MATCHES["GET /api/v1/groups/{gid}/matches"]
     TABS -- "Ranking" --> RANKING["GET /api/v1/groups/{gid}/ranking\n(lazy: só carrega ao clicar)"]
+    TABS -- "Feed" --> FEED["GET /api/v1/groups/{gid}/feed"]
 
     MATCHES --> CARD["Match card\n(placar atual + palpite do Palpiteiro)"]
     CARD --> EDIT_PRED["Edita home_score / away_score\n(somente antes do kickoff)"]
@@ -140,11 +146,51 @@ flowchart TD
     ADMIN_BTN --> EDIT_GROUP["PUT /api/v1/groups/{gid}"]
     ADMIN_BTN --> REQUESTS["GET /api/v1/groups/{gid}/join-requests"]
     REQUESTS --> APPROVE["POST .../join-requests/{uid}/approve"]
+    ADMIN_BTN --> PAYMENTS["GET /payments + /payments/summary\nPATCH /payments/{uid}"]
+    SELECT_GROUP --> MEMBERS["GET /api/v1/groups/{gid}/members"]
+    MEMBERS --> MEMBER_DETAIL["GET /api/v1/groups/{gid}/members/{uid}"]
+    MEMBERS --> TRANSFER["POST /transfer-ownership"]
+    MEMBERS --> REMOVE["DELETE /members/{uid}"]
+    FEED --> REACTION["POST/DELETE /feed/{eventID}/reaction"]
 ```
 
 ---
 
-## 4. Fluxo de requisições HTTP
+## 4. Perfil, amigos, Palpicoins e desafios
+
+```mermaid
+flowchart TD
+    HOME["HomeScreen"] --> PROFILE["ProfileScreen"]
+    PROFILE --> GET_PROFILE["GET /api/v1/me/profile"]
+    PROFILE --> UPDATE_PROFILE["PATCH /api/v1/me/profile\nnome, avatar_url, perfil público"]
+    UPDATE_PROFILE --> AVATAR["uploadAvatar()\nSupabase Storage bucket avatars"]
+    PROFILE --> DELETE_ACCOUNT["DELETE /api/v1/me\nconfirmação EXCLUIR"]
+
+    HOME --> FRIENDS["FriendsScreen"]
+    FRIENDS --> LIST_FRIENDS["GET /api/v1/friends"]
+    FRIENDS --> REQUESTS["GET /api/v1/friends/requests"]
+    FRIENDS --> SEARCH["GET /api/v1/users/search?q="]
+    SEARCH --> SEND["POST /api/v1/friends/request"]
+    REQUESTS --> ACCEPT["POST /friends/{id}/accept"]
+    REQUESTS --> DECLINE["POST /friends/{id}/decline"]
+    FRIENDS --> PUBLIC["PublicProfileScreen\nGET /users/{id}/profile"]
+
+    HOME --> COINS["PalpicoinsScreen"]
+    COINS --> WALLET["GET /api/v1/me/wallet"]
+    COINS --> TX["GET /api/v1/me/wallet/transactions?limit=30"]
+    COINS --> RANKING["GET /api/v1/rankings/palpicoins"]
+
+    HOME --> CHALLENGES["ChallengesScreen"]
+    CHALLENGES --> LIST_CH["GET /api/v1/challenges?status=&type="]
+    PUBLIC --> CREATE_CH["ChallengeFriendModal\nPOST /api/v1/challenges"]
+    LIST_CH --> ACTIONS["accept / decline / cancel"]
+```
+
+Palpicoins são exibidos no app como moeda virtual sem valor monetário. O frontend mostra o aviso retornado pela API nos fluxos de carteira, histórico, ranking e desafios.
+
+---
+
+## 5. Fluxo de requisições HTTP
 
 Todas as chamadas ao backend passam pelo `apiClient`, que injeta o token automaticamente.
 
@@ -167,7 +213,7 @@ sequenceDiagram
 
 ---
 
-## 5. Fluxo realtime (WebSocket)
+## 6. Fluxo realtime (WebSocket)
 
 ```mermaid
 sequenceDiagram
@@ -220,7 +266,7 @@ sequenceDiagram
 
 ---
 
-## 6. Gerenciamento de estado
+## 7. Gerenciamento de estado
 
 ```mermaid
 graph LR
@@ -231,6 +277,10 @@ graph LR
         R["['groups', gid, 'ranking']"]
         J["['groups', gid, 'join-requests']"]
         P["['matchPrediction', matchID]"]
+        F["['friends'] / ['friendRequests']"]
+        W["['palpicoins', ...]"]
+        C["['challenges', ...]"]
+        FEED["['groups', gid, 'feed']"]
     end
 
     subgraph "Context (global)"
@@ -258,7 +308,7 @@ graph LR
 
 ---
 
-## 7. Feature de análises da PalpitAI
+## 8. Feature de análises da PalpitAI
 
 O módulo `features/predictions` exibe a previsão gerada pelo ML e PalpitAI diretamente no card de partida, antes do kickoff.
 

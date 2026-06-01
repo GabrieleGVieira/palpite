@@ -9,7 +9,7 @@ Arquitetura MVP para sincronizar jogos da Copa via `football-data.org`, atualiza
 - Não reprocessar jogos sem mudanca.
 - Atualizar ranking somente quando pontos mudarem.
 - Emitir eventos WebSocket somente quando houver diff.
-- Manter a arquitetura pronta para Redis/pubsub sem exigir Redis no MVP.
+- Usar Redis quando configurado para cache/pubsub, mantendo PostgreSQL como fonte da verdade.
 
 ## Estrutura Go
 
@@ -17,14 +17,15 @@ Arquitetura MVP para sincronizar jogos da Copa via `football-data.org`, atualiza
 backend/internal/
 ├── config/                 # env vars
 ├── database/               # migrations e conexao Postgres
-├── httpapi/                # REST API
+├── controller/             # REST API e WebSocket handlers
 ├── matchsync/              # football-data client + scheduler + diff
 │   └── syncer.go
 ├── realtime/               # hub WebSocket
-└── ranking/                # futuro calculo/materializacao de ranking
+├── repositories/           # queries de partidas, palpites e grupos
+└── usecase/                # pontuacao, ranking e regras de negocio
 ```
 
-No MVP, `matchsync` publica eventos no `realtime.Hub`, que entrega para clientes WebSocket conectados em `/ws`.
+`matchsync` publica eventos no `realtime.Hub`, que entrega para clientes WebSocket conectados em `/ws`. Quando Redis está configurado, a camada realtime também pode ser usada para coordenação entre processos.
 
 ## Fluxo Realtime
 
@@ -191,7 +192,7 @@ MVP em memoria:
 - Mutex para impedir sync concorrente.
 - DB como fonte da verdade.
 
-Futuro com Redis:
+Redis:
 
 - `SETNX lock:match-sync live EX 25` para lock distribuido.
 - Cache da ultima resposta por filtro por 20s-60s.

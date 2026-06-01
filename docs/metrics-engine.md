@@ -72,8 +72,8 @@ Todas as métricas são calculadas até uma data de referência. Para features d
 - O CSV histórico não traz uma fase estruturada para todos os jogos; por isso `knockout_score` e `group_stage_score` podem ficar nulos.
 - Rankings FIFA dependem da cobertura do CSV local.
 - Normalização de nomes depende de `teams`, `team_aliases` e `ml-service/data/team_aliases.json`; times não mapeados são reportados e não criados automaticamente.
-- O motor ainda não gera probabilidade de resultado nem explicações.
+- O motor de métricas não gera probabilidade de resultado nem explicações; ele alimenta os modelos de resultado, gols e o worker de explicações.
 
-## Evolução para ML real
+## Integração com ML e PalpitAI
 
-A Etapa 3 pode treinar um modelo supervisionado usando `match_features` como entrada e resultados históricos como labels. O primeiro caminho recomendado é começar com regressão logística ou gradient boosting, validar por split temporal e calibrar probabilidades antes de expor previsões no app.
+A Etapa 3 já treina modelos supervisionados usando `match_features` como entrada e resultados históricos como labels. O resultado é salvo em `match_predictions`, `match_goal_predictions` e `match_score_probabilities`. A Etapa 4, no backend Go, usa essas tabelas junto de `match_features` para gerar explicações em linguagem natural sem recalcular probabilidades.

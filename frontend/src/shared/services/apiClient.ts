@@ -1,6 +1,6 @@
 import { supabase } from '../../services/supabase';
 
-export const apiURL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+export const apiURL = process.env.EXPO_PUBLIC_API_URL ?? 'https://palpitai-api.onrender.com';
 const defaultTimeoutMs = 15_000;
 
 type APIError = {

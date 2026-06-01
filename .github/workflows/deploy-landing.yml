@@ -4,7 +4,9 @@ on:
   push:
     branches: ["main"]
     paths:
+      - "frontend/**"
       - "landing/**"
+      - "scripts/prepare-expo-web-pwa.mjs"
       - ".github/workflows/deploy-landing.yml"
 
   workflow_dispatch:
@@ -35,15 +37,42 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: landing/package-lock.json
+          cache-dependency-path: |
+            landing/package-lock.json
+            frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install landing dependencies
         run: npm ci
 
-      - name: Build
+      - name: Install app dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build landing
         env:
           VITE_BASE_PATH: /palpitAI/
         run: npm run build
+
+      - name: Export Expo Web app
+        working-directory: frontend
+        env:
+          EXPO_PUBLIC_API_URL: https://palpitai-api.onrender.com
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
+        run: npm run export:web
+
+      - name: Prepare Expo Web PWA
+        working-directory: .
+        env:
+          EXPO_WEB_BASE_PATH: /palpitAI/app/
+        run: node scripts/prepare-expo-web-pwa.mjs frontend/dist
+
+      - name: Mount Expo Web app under landing
+        working-directory: .
+        run: |
+          rm -rf landing/dist/app
+          mkdir -p landing/dist/app
+          cp -R frontend/dist/. landing/dist/app/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

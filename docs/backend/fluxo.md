@@ -1,6 +1,6 @@
 # Backend — Fluxo do Sistema
 
-Documentação dos fluxos principais do backend Go do Palpite!: ciclo de vida de requisições HTTP, WebSocket, sincronização de partidas e geração de explicações da PalpitAI.
+Documentação dos fluxos principais do backend Go do Palpite!: ciclo de vida de requisições HTTP, WebSocket, grupos, palpites, módulos sociais, Palpicoins, sincronização de partidas e geração de explicações da PalpitAI.
 
 ---
 
@@ -19,11 +19,13 @@ graph TD
     MATCHSYNC["Worker MatchSync (cmd/matchsync)"]
     WORKER["Worker Explanations"]
     MLDB["Tabelas ML no banco"]
+    SOCIAL["Amigos, feed, desafios,\nPalpicoins e pagamentos"]
 
     CLIENT -- "HTTP + Bearer token" --> API
     CLIENT -- "ws://" --> WS
     API -- "valida JWT" --> SUPABASE
     API -- "lê/escreve" --> DB
+    API -- "orquestra" --> SOCIAL
     API -- "cache" --> REDIS
     MATCHSYNC -- "polling GET /matches" --> FOOTBALL
     MATCHSYNC -- "atualiza" --> DB
@@ -87,6 +89,17 @@ sequenceDiagram
 | `usecase` | Orquestra regras de negócio, chama múltiplos repositories |
 | `repository` | SQL isolado por contexto, sem lógica de negócio |
 | `domain` | Regras puras (cálculo de pontos, normalização de status) |
+
+Os módulos atuais do backend usam essa mesma separação para:
+
+- perfil do usuário, avatar e privacidade pública;
+- grupos, membros, ownership, join requests e pagamentos;
+- palpites, pontuação e ranking;
+- feed de grupo e reações;
+- amizades, busca de usuários e perfis públicos;
+- carteira, transações e ranking de Palpicoins;
+- desafios entre amigos;
+- leitura de previsões e explicações da PalpitAI.
 
 ---
 
@@ -167,7 +180,56 @@ sequenceDiagram
 
 ---
 
-## 4. Sincronização de partidas (MatchSync)
+## 4. Grupos, feed, pagamentos e membros
+
+O backend trata grupo como o principal contexto de competição. Cada grupo tem owner, membros, configuração de privacidade, limite de participantes, escopo de partidas, opções de bolão pago e política de bloqueio para palpites pendentes.
+
+```mermaid
+flowchart TD
+    CREATE["POST /api/v1/groups"] --> GROUP["Cria grupo + owner ativo"]
+    JOIN["POST /api/v1/groups/join"] --> PRIVATE{"grupo privado?"}
+    PRIVATE -- "sim" --> PENDING["membership pending\nowner aprova"]
+    PRIVATE -- "não" --> ACTIVE["membership active"]
+    APPROVE["POST /join-requests/{userID}/approve"] --> ACTIVE
+
+    ACTIVE --> MEMBERS["GET /members"]
+    MEMBERS --> DETAIL["GET /members/{userID}\nranking, pontos, acurácia"]
+    ACTIVE --> FEED["GET /feed\nmember_joined, leader_changed,\nexact_score, match_finished, top3_reached"]
+    FEED --> REACT["POST/DELETE /feed/{eventID}/reaction"]
+
+    GROUP --> PAID{"is_paid?"}
+    PAID -- "sim" --> PAYMENTS["GET /payments\nGET /payments/summary\nPATCH /payments/{userID}"]
+```
+
+Regras administrativas:
+
+- apenas owner edita grupo, aprova solicitações, remove membros, transfere ownership e atualiza pagamentos;
+- membros podem sair via `DELETE /api/v1/groups/{groupID}/membership`;
+- transferência de ownership registra evento social e altera permissões;
+- feed e pagamentos sempre respeitam membership do grupo.
+
+---
+
+## 5. Amigos, perfil público e desafios
+
+```mermaid
+flowchart TD
+    PROFILE["GET/PATCH /api/v1/me/profile"] --> SETTINGS["display_name, avatar_url,\nis_public_profile"]
+    SEARCH["GET /api/v1/users/search?q="] --> REQUEST["POST /api/v1/friends/request"]
+    REQUEST --> PENDING["Friendship PENDING"]
+    PENDING --> ACCEPT["POST /friends/{id}/accept"]
+    PENDING --> DECLINE["POST /friends/{id}/decline"]
+    ACCEPT --> FRIENDS["GET /api/v1/friends"]
+    FRIENDS --> PUBLIC["GET /api/v1/users/{id}/profile"]
+    FRIENDS --> CHALLENGE["POST /api/v1/challenges"]
+    CHALLENGE --> WALLET["Reserva/usa Palpicoins conforme regra do desafio"]
+```
+
+Perfis públicos retornam estatísticas agregadas como pontos totais, ranking global, grupos, palpites e desafios visíveis. Palpicoins são moeda virtual sem valor monetário; o backend expõe carteira do usuário, histórico de transações e ranking global.
+
+---
+
+## 6. Sincronização de partidas (MatchSync)
 
 O worker `cmd/matchsync` faz polling na football-data.org e propaga mudanças via WebSocket.
 
@@ -214,7 +276,7 @@ flowchart TD
 
 ---
 
-## 5. Leitura de previsão de partida
+## 7. Leitura de previsão de partida
 
 O endpoint `GET /api/v1/matches/{matchID}/prediction` agrega probabilidades, expected goals, top placares e explicação da PalpitAI em uma única resposta.
 
@@ -256,7 +318,7 @@ sequenceDiagram
 
 ---
 
-## 6. Geração de explicações da PalpitAI
+## 8. Geração de explicações da PalpitAI
 
 O worker `cmd/workers/generate_prediction_explanations` lê previsões do ML e gera explicações em português via Gemini API.
 

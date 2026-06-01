@@ -8,14 +8,9 @@ import LegalNotice from './components/LegalNotice';
 import LegalPage from './components/LegalPage';
 import TesterForm from './components/TesterForm';
 import { currentAppPath } from './assets';
-import PwaApp from './pwa/PwaApp';
 
 export default function App() {
   const path = currentAppPath();
-
-  if (path === '/app') {
-    return <PwaApp />;
-  }
 
   if (path === '/privacy') {
     return (
