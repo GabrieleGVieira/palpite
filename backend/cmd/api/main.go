@@ -54,7 +54,7 @@ func main() {
 	go realtime.SubscribeRedis(appCtx, redisClient, realtimeHub, logger)
 
 	server := &http.Server{
-		Addr:              ":" + cfg.Port,
+		Addr:              "0.0.0.0:" + cfg.Port,
 		Handler:           route.NewRouter(cfg, db, route.Services{Realtime: realtimeHub, Redis: redisClient}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}

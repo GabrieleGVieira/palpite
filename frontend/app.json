@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Cravou!",
-    "slug": "cravou",
+    "name": "Palpite!",
+    "slug": "palpite",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-cravou.png",
+      "image": "./assets/splash-palpite.png",
       "resizeMode": "contain",
       "backgroundColor": "#f5f8ef"
     },
@@ -19,7 +19,7 @@
       }
     },
     "android": {
-      "package": "com.cravou.app",
+      "package": "com.palpite.app",
       "versionCode": 8,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

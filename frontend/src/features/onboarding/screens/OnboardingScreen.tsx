@@ -57,7 +57,7 @@ export function OnboardingScreen({ onFinish }: OnboardingScreenProps) {
             <Image
               accessibilityIgnoresInvertColors
               resizeMode="cover"
-              source={require('../../../../assets/splash-cravou.png')}
+              source={require('../../../../assets/splash-palpite.png')}
               style={styles.logoImage}
             />
           </View>

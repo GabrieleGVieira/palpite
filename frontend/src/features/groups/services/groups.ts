@@ -8,6 +8,8 @@ import type {
   Group,
   GroupPayment,
   GroupPaymentsSummary,
+  GroupFeedResponse,
+  FeedReactionType,
   GroupRankingResponse,
   GroupMemberDetail,
   JoinGroupResponse,
@@ -31,6 +33,8 @@ export type {
   GroupMemberDetail,
   GroupPayment,
   GroupPaymentsSummary,
+  GroupFeedEvent,
+  FeedReactionType,
   JoinGroupResponse,
   JoinRequest,
   PaymentStatus,
@@ -178,6 +182,41 @@ export async function listGroupRanking(groupID: string) {
   });
 
   return sortRankingByPosition(data.ranking);
+}
+
+export async function listGroupFeed(groupID: string, page = 1, pageSize = 20) {
+  return apiClient<GroupFeedResponse>(
+    `/api/v1/groups/${groupID}/feed?page=${page}&pageSize=${pageSize}`,
+    {
+      fallbackError: 'Não foi possivel carregar as atividades.',
+    },
+  );
+}
+
+export async function reactToFeedEvent(
+  groupID: string,
+  eventID: string,
+  reactionType: FeedReactionType,
+) {
+  await apiClient<Record<string, string>>(`/api/v1/groups/${groupID}/feed/${eventID}/reaction`, {
+    body: JSON.stringify({ reactionType }),
+    fallbackError: 'Não foi possivel reagir.',
+    method: 'POST',
+  });
+}
+
+export async function deleteFeedReaction(
+  groupID: string,
+  eventID: string,
+  reactionType: FeedReactionType,
+) {
+  await apiClient<Record<string, string>>(
+    `/api/v1/groups/${groupID}/feed/${eventID}/reaction?reactionType=${reactionType}`,
+    {
+      fallbackError: 'Não foi possivel remover a reação.',
+      method: 'DELETE',
+    },
+  );
 }
 
 export async function savePrediction(

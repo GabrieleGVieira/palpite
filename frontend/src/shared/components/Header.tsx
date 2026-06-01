@@ -15,7 +15,7 @@ export function Header({ title, subtitle, topSpacing = 24, withImage = true }: H
           <Image
             accessibilityIgnoresInvertColors
             resizeMode="cover"
-            source={require('../../../assets/splash-cravou.png')}
+            source={require('../../../assets/splash-palpite.png')}
             style={styles.logoImage}
           />
         </View>

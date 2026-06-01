@@ -80,6 +80,14 @@ export function GroupDetailHeader({
             Ranking
           </Text>
         </Pressable>
+
+        <Pressable
+          onPress={() => onChangeTab('feed')}
+          style={[styles.tabButton, activeTab === 'feed' && styles.tabButtonActive]}>
+          <Text style={[styles.tabButtonText, activeTab === 'feed' && styles.tabButtonTextActive]}>
+            Feed
+          </Text>
+        </Pressable>
       </View>
     </View>
   );

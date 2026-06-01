@@ -127,6 +127,15 @@ func JoinGroup(ctx context.Context, db Datastore, userID string, displayName str
 		if err := repositories.InsertGroupMember(ctx, tx, groupSummary.ID, userID, nextStatus, displayName); err != nil {
 			return err
 		}
+		if nextStatus == "active" {
+			if _, _, err := repositories.InsertFeedEvent(ctx, tx, repositories.FeedEventInput{
+				ActorUserID: &userID,
+				EventType:   FeedEventMemberJoined,
+				GroupID:     groupSummary.ID,
+			}); err != nil {
+				return err
+			}
+		}
 
 		if groupSummary.IsPaid && nextStatus == "active" {
 			return repositories.InsertPaymentForMemberIfPaidGroup(ctx, tx, groupSummary.ID, userID, string(dto.PaymentStatusPending))
@@ -220,6 +229,13 @@ func ApproveJoinRequest(ctx context.Context, db Datastore, ownerID string, group
 			return ErrGroupNotFound
 		}
 		if err != nil {
+			return err
+		}
+		if _, _, err := repositories.InsertFeedEvent(ctx, tx, repositories.FeedEventInput{
+			ActorUserID: &requesterID,
+			EventType:   FeedEventMemberJoined,
+			GroupID:     groupID,
+		}); err != nil {
 			return err
 		}
 
@@ -346,6 +362,13 @@ func CreateGroup(ctx context.Context, db Datastore, userID string, displayName s
 
 			group, err = repositories.InsertGroupWithOwner(ctx, tx, userID, displayName, request, inviteCode)
 			if err == nil {
+				if _, _, err := repositories.InsertFeedEvent(ctx, tx, repositories.FeedEventInput{
+					ActorUserID: &userID,
+					EventType:   FeedEventMemberJoined,
+					GroupID:     group.ID,
+				}); err != nil {
+					return err
+				}
 				if group.IsPaid {
 					return repositories.InsertPaymentForMemberIfPaidGroup(ctx, tx, group.ID, userID, string(dto.PaymentStatusExempt))
 				}

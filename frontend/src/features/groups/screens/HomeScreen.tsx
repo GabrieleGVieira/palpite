@@ -2,12 +2,11 @@ import { StatusBar } from 'expo-status-bar';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
-import { AccountSettingsCard } from '../../account/components/AccountSettingsCard';
 import { DeleteAccountModal } from '../../account/components/DeleteAccountModal';
-import { deleteAccount } from '../../account/services/account';
+import { deleteAccount, getProfile } from '../../account/services/account';
 import { NotificationBanner } from '../../../shared/components/NotificationBanner';
-import { LegalLinksCard } from '../../../shared/components/LegalLinksCard';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useHomeScreen } from '../hooks/useHomeScreen';
 import { GroupListSection } from '../components/group-details/GroupListSection';
@@ -15,6 +14,8 @@ import { HomeHeader } from '../components/home/HomeHeader';
 import { JoinGroupCard } from '../components/home/JoinGroupCard';
 import { ScoreCard } from '../components/home/ScoreCard';
 import { colors } from '../../../shared/theme';
+import { LEGAL_URLS } from '../../../shared/constants/legal';
+import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 
 import type { Group } from '../services/groups';
 
@@ -30,6 +31,12 @@ export function HomeScreen({ onCreateGroup, onOpenGroup, onOpenProfile }: HomeSc
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
   const userName = user?.user_metadata.full_name as string | undefined;
+  const profileQuery = useQuery({
+    queryFn: getProfile,
+    queryKey: ['me', 'profile'],
+  });
+  const displayName = profileQuery.data?.display_name || userName;
+  const avatarURL = profileQuery.data?.avatar_url;
   const {
     groups,
     totalPoints,
@@ -74,10 +81,16 @@ export function HomeScreen({ onCreateGroup, onOpenGroup, onOpenProfile }: HomeSc
         <View style={styles.pitchCircle} />
 
         <HomeHeader
-          userName={userName}
+          avatarURL={avatarURL}
+          userName={displayName}
           onCreateGroup={onCreateGroup}
+          onDeleteAccount={() => {
+            setDeleteAccountError(null);
+            setIsDeleteModalVisible(true);
+          }}
           onLogout={logout}
           onOpenProfile={onOpenProfile}
+          onOpenPrivacy={() => openExternalUrl(LEGAL_URLS.privacy)}
           isSubmitting={isSubmitting}
         />
 
@@ -100,15 +113,6 @@ export function HomeScreen({ onCreateGroup, onOpenGroup, onOpenProfile }: HomeSc
           groupsError={groupsError}
           onRefresh={refreshHome}
           onOpenGroup={onOpenGroup}
-        />
-
-        <LegalLinksCard />
-
-        <AccountSettingsCard
-          onDeleteAccount={() => {
-            setDeleteAccountError(null);
-            setIsDeleteModalVisible(true);
-          }}
         />
       </ScrollView>
 

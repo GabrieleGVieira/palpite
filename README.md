@@ -1,10 +1,10 @@
-# PalpitAI
+# Palpite!
 
 App mobile de bolão da Copa do Mundo 2026 com grupos, palpites, ranking em tempo real e previsões geradas por machine learning.
 
 ## O que é
 
-PalpitAI é um bolão social onde usuários criam ou entram em grupos, registram palpites para cada partida da Copa do Mundo e acompanham o ranking em tempo real. O app combina uma API em Go com um pipeline de ML em Python para gerar previsões de resultado e placar com explicações em linguagem natural via LLM.
+Palpite! é um bolão social onde usuários criam ou entram em grupos, registram palpites para cada partida da Copa do Mundo e acompanham o ranking em tempo real. O app combina uma API em Go com um pipeline de ML em Python para gerar previsões de resultado e placar com explicações em linguagem natural via LLM.
 
 ## Arquitetura
 

@@ -7,6 +7,7 @@ import type { RealtimeEvent } from '../../realtime/types';
 import type { GroupDetailTab } from '../types';
 import { notificationMessageFromEvent } from '../../realtime/notifications';
 import { useGroupMatches } from './useGroupMatches';
+import { useGroupFeed } from './useGroupFeed';
 import { useGroupRanking } from './useGroupRanking';
 import { useRealtimeEvents } from '../../realtime/useRealtimeEvents';
 import { useTemporaryNotification } from '../../../shared/hooks/useTemporaryNotification';
@@ -26,6 +27,7 @@ export function useGroupDetailScreen(group: Group, onGroupLeft: () => void) {
     updateMatchFromRealtime,
     updateMatchPrediction,
   } = useGroupMatches(group.id);
+  const feed = useGroupFeed(group.id);
   const { isLoadingRanking, loadRanking, ranking, rankingError } = useGroupRanking(group.id);
   const savePredictionMutation = useMutation({
     mutationFn: ({
@@ -122,6 +124,7 @@ export function useGroupDetailScreen(group: Group, onGroupLeft: () => void) {
     activeTab,
     drafts,
     error,
+    feed,
     isLoading,
     isLoadingRanking,
     isLeavingGroup: leaveGroupMutation.isPending,

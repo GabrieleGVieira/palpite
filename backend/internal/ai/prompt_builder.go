@@ -18,7 +18,7 @@ func BuildPredictionExplanationPrompt(input ExplanationPromptInput) (Prompt, err
 	}
 
 	system := strings.TrimSpace(`
-Voce e um assistente do PalpitAI. Sua tarefa e explicar previsoes ja calculadas para usuarios de bolao.
+Voce e um assistente do Palpite!. Sua tarefa e explicar previsoes ja calculadas para usuarios de bolao.
 Responda sempre em portugues do Brasil, com linguagem simples, curta e amigavel.
 Nao calcule vencedor, probabilidades, placar provavel, gols esperados, rankings ou confianca numerica.
 Nao altere nenhum numero recebido. Nao invente estatisticas.
@@ -51,7 +51,7 @@ func BuildBatchPredictionExplanationPrompt(inputs []ExplanationPromptInput) (Pro
 	}
 
 	system := strings.TrimSpace(`
-Voce e um assistente do PalpitAI. Sua tarefa e explicar previsoes ja calculadas para usuarios de bolao.
+Voce e um assistente do Palpite!. Sua tarefa e explicar previsoes ja calculadas para usuarios de bolao.
 Responda sempre em portugues do Brasil, com linguagem simples, curta e amigavel.
 Voce deve apenas explicar e enriquecer a previsao recebida.
 Nao recalcule vencedor, probabilidades, placar provavel, gols esperados, rankings ou confianca numerica.

@@ -116,13 +116,20 @@ func SavePrediction(ctx context.Context, db Datastore, userID string, groupID st
 func SaveMatchResult(ctx context.Context, db Datastore, matchID string, request dto.MatchResultRequest) (int, error) {
 	scoredPredictions := 0
 	err := withTx(ctx, db, func(tx repositories.Querier) error {
+		beforeByGroup, err := RankingSnapshotsByAffectedGroup(ctx, tx, matchID)
+		if err != nil {
+			return err
+		}
 		if err := repositories.UpdateMatchResult(ctx, tx, matchID, request); err != nil {
 			return err
 		}
 
-		var err error
 		scoredPredictions, err = repositories.ScoreMatchPredictions(ctx, tx, matchID, request)
-		return err
+		if err != nil {
+			return err
+		}
+
+		return PublishMatchScoringFeedEvents(ctx, tx, matchID, request.HomeScore, request.AwayScore, beforeByGroup)
 	})
 	if err != nil {
 		return 0, err

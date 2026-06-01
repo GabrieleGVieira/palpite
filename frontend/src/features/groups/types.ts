@@ -102,7 +102,37 @@ export type ScoreDraft = {
   homeScore: string;
 };
 
-export type GroupDetailTab = 'matches' | 'ranking' | 'members';
+export type GroupDetailTab = 'matches' | 'ranking' | 'feed';
+
+export type FeedReactionType = 'clap' | 'fire' | 'laugh' | 'surprised' | 'target';
+
+export type FeedReactionSummary = {
+  count: number;
+  reactedByMe: boolean;
+  reactionType: FeedReactionType;
+};
+
+export type GroupFeedActor = {
+  avatarUrl?: string | null;
+  avatar_url?: string | null;
+  id: string;
+  name: string;
+};
+
+export type GroupFeedEvent = {
+  actor?: GroupFeedActor;
+  createdAt: string;
+  id: string;
+  metadata?: Record<string, unknown>;
+  reactions: FeedReactionSummary[];
+  type: 'member_joined' | 'leader_changed' | 'exact_score' | 'match_finished' | 'top3_reached';
+};
+
+export type GroupFeedResponse = {
+  events: GroupFeedEvent[];
+  hasMore: boolean;
+  page: number;
+};
 
 export type JoinGroupResponse = {
   group: Group;

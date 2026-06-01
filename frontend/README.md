@@ -1,10 +1,10 @@
-# Cravou! Frontend
+# Palpite! Frontend
 
 App mobile em React Native com Expo para criação de grupos de bolão, palpites da Copa do Mundo 2026, ranking em tempo real e visualização de previsões de ML.
 
 ## O que é
 
-O frontend é o ponto de entrada do usuário no Cravou!. Permite criar e entrar em grupos, registrar palpites antes do início de cada partida e acompanhar o ranking atualizado em tempo real via WebSocket. O app também exibe as previsões de resultado e placar geradas pelo pipeline de ML com explicações em linguagem natural.
+O frontend é o ponto de entrada do usuário no Palpite!. Permite criar e entrar em grupos, registrar palpites antes do início de cada partida e acompanhar o ranking atualizado em tempo real via WebSocket. O app também exibe as previsões de resultado e placar geradas pelo pipeline de ML com explicações em linguagem natural.
 
 ## Tecnologias
 

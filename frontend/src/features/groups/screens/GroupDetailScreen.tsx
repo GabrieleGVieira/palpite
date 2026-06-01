@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GroupDetailHeader } from '../components/group-details/GroupDetailHeader';
@@ -7,6 +7,7 @@ import { GroupDetailMatchCard } from '../components/group-details/GroupDetailMat
 import { useGroupDetailScreen } from '../hooks/useGroupDetailScreen';
 import type { Group } from '../services/groups';
 import { GroupDetailRankingCard } from '../components/group-details/GroupDetailRankingCard';
+import { GroupFeedScreen } from '../components/group-details/GroupFeedScreen';
 import { EmptyBox } from '../../../shared/components/EmptyBox';
 import { LoadingIndicator } from '../../../shared/components/LoadingIndicator';
 
@@ -28,6 +29,7 @@ export function GroupDetailScreen({
   const {
     activeTab,
     drafts,
+    feed,
     isLoading,
     isLoadingRanking,
     isLeavingGroup,
@@ -56,7 +58,14 @@ export function GroupDetailScreen({
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          activeTab === 'feed' ? (
+            <RefreshControl refreshing={feed.isRefreshing} onRefresh={feed.refresh} />
+          ) : undefined
+        }
+        showsVerticalScrollIndicator={false}>
         <View style={styles.pitchMarkTop} />
         <View style={styles.pitchCircle} />
 
@@ -119,6 +128,18 @@ export function GroupDetailScreen({
         {activeTab === 'ranking'
           ? ranking.map((entry) => <GroupDetailRankingCard entry={entry} key={entry.user_id} />)
           : null}
+
+        {activeTab === 'feed' ? (
+          <GroupFeedScreen
+            error={feed.error}
+            events={feed.events}
+            hasMore={feed.hasMore}
+            isLoading={feed.isLoading}
+            isLoadingMore={feed.isLoadingMore}
+            onLoadMore={feed.loadMore}
+            onToggleReaction={feed.toggleReaction}
+          />
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

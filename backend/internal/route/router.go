@@ -24,6 +24,7 @@ func NewRouter(cfg config.Config, db usecase.Datastore, services ...Services) ht
 	}
 	accounts := usecase.NewAccountUsecase(db)
 	groups := usecase.NewGroupUsecase(db)
+	feed := usecase.NewFeedUsecase(db)
 	predictions := usecase.NewPredictionUsecase(db)
 	predictionReader := predictionservice.NewPredictionReadService(db)
 
@@ -43,6 +44,9 @@ func NewRouter(cfg config.Config, db usecase.Datastore, services ...Services) ht
 	mux.HandleFunc("POST /api/v1/groups/{groupID}/join-requests/{userID}/approve", controller.ApproveJoinRequestHandler(cfg, groups))
 	mux.HandleFunc("GET /api/v1/groups/{groupID}/members", controller.ListGroupMembersHandler(cfg, groups))
 	mux.HandleFunc("GET /api/v1/groups/{groupID}/members/{userID}", controller.GroupMemberDetailHandler(cfg, groups))
+	mux.HandleFunc("GET /api/v1/groups/{groupID}/feed", controller.GroupFeedHandler(cfg, feed))
+	mux.HandleFunc("POST /api/v1/groups/{groupID}/feed/{eventID}/reaction", controller.ReactToFeedEventHandler(cfg, feed))
+	mux.HandleFunc("DELETE /api/v1/groups/{groupID}/feed/{eventID}/reaction", controller.DeleteFeedReactionHandler(cfg, feed))
 	mux.HandleFunc("POST /api/v1/groups/{groupID}/members/{userID}/transfer-ownership", controller.TransferGroupOwnershipHandler(cfg, groups))
 	mux.HandleFunc("DELETE /api/v1/groups/{groupID}/members/{userID}", controller.RemoveGroupMemberHandler(cfg, groups))
 	mux.HandleFunc("GET /api/v1/groups/{groupID}/payments", controller.ListGroupPaymentsHandler(cfg, groups))

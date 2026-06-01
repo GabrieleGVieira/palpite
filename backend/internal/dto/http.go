@@ -122,6 +122,37 @@ type GroupMemberDetailResponse struct {
 	UserID             string    `json:"user_id"`
 }
 
+type GroupFeedActorResponse struct {
+	AvatarURL *string `json:"avatarUrl,omitempty"`
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+}
+
+type FeedReactionSummaryResponse struct {
+	Count        int    `json:"count"`
+	ReactedByMe  bool   `json:"reactedByMe"`
+	ReactionType string `json:"reactionType"`
+}
+
+type GroupFeedEventResponse struct {
+	Actor     *GroupFeedActorResponse       `json:"actor,omitempty"`
+	CreatedAt time.Time                     `json:"createdAt"`
+	ID        string                        `json:"id"`
+	Metadata  map[string]any                `json:"metadata,omitempty"`
+	Reactions []FeedReactionSummaryResponse `json:"reactions"`
+	Type      string                        `json:"type"`
+}
+
+type GroupFeedResponse struct {
+	Events  []GroupFeedEventResponse `json:"events"`
+	HasMore bool                     `json:"hasMore"`
+	Page    int                      `json:"page"`
+}
+
+type FeedReactionRequest struct {
+	ReactionType string `json:"reactionType"`
+}
+
 type PaymentStatus string
 
 const (

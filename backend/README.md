@@ -1,6 +1,6 @@
-# PalpitAI Backend
+# Palpite Backend
 
-API HTTP/WebSocket em Go do PalpitAI. Autentica usuários via Supabase Auth, persiste dados no PostgreSQL, emite eventos em tempo real por WebSocket e sincroniza placares da Copa do Mundo via football-data.org.
+API HTTP/WebSocket em Go do Palpite. Autentica usuários via Supabase Auth, persiste dados no PostgreSQL, emite eventos em tempo real por WebSocket e sincroniza placares da Copa do Mundo via football-data.org.
 
 ## O que é
 

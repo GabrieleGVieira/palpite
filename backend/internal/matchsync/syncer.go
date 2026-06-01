@@ -12,6 +12,7 @@ import (
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
 	"github.com/gabrielevieira/palpitai/backend/internal/domain"
 	"github.com/gabrielevieira/palpitai/backend/internal/repositories"
+	"github.com/gabrielevieira/palpitai/backend/internal/usecase"
 )
 
 type Syncer struct {
@@ -161,9 +162,18 @@ func (syncer *Syncer) syncMatch(ctx context.Context, match domain.ProviderMatch)
 	}
 
 	// 6. Atualiza a pontuacao dos palpites dessa partida conforme o placar atual/final.
+	beforeByGroup, err := usecase.RankingSnapshotsByAffectedGroup(ctx, syncer.db, matchID)
+	if err != nil {
+		return domain.SyncSummary{}, err
+	}
 	scoredPredictions, err := repositories.ScoreProviderMatchPredictions(ctx, syncer.db, matchID, *match.HomeScore, *match.AwayScore)
 	if err != nil {
 		return domain.SyncSummary{}, err
+	}
+	if match.Status == "finished" && changedRows > 0 {
+		if err := usecase.PublishMatchScoringFeedEvents(ctx, syncer.db, matchID, *match.HomeScore, *match.AwayScore, beforeByGroup); err != nil {
+			return domain.SyncSummary{}, err
+		}
 	}
 
 	// 7. Se a pontuacao final mudou por causa de uma partida encerrada, notifica rankings afetados.
