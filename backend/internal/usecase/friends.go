@@ -27,18 +27,20 @@ type FriendshipStore interface {
 	GetFriendship(ctx context.Context, userID string, otherUserID string) (domain.Friendship, error)
 	ListFriends(ctx context.Context, userID string) ([]dto.FriendResponse, error)
 	ListPendingRequests(ctx context.Context, userID string) ([]dto.PendingFriendRequestResponse, error)
-	PublicProfile(ctx context.Context, userID string) (dto.PublicProfileResponse, error)
+	PublicProfile(ctx context.Context, requesterUserID string, userID string) (dto.PublicProfileResponse, error)
 	SearchUsers(ctx context.Context, requesterUserID string, query string, limit int) ([]dto.UserSearchResponse, error)
 	UserExists(ctx context.Context, userID string) (bool, error)
 }
 
 type FriendsUsecase struct {
+	db     Datastore
 	events social.EventPublisher
 	store  FriendshipStore
 }
 
 func NewFriendsUsecase(db Datastore) FriendsUsecase {
 	return FriendsUsecase{
+		db:     db,
 		events: social.LogEventPublisher{},
 		store:  repositories.NewFriendshipRepository(db),
 	}
@@ -139,6 +141,18 @@ func (uc FriendsUsecase) Delete(ctx context.Context, userID string, friendshipID
 	if friendship.RequesterUserID != userID && friendship.AddresseeUserID != userID {
 		return ErrFriendshipNotParticipant
 	}
+	if uc.db != nil {
+		return withTx(ctx, uc.db, func(tx repositories.Querier) error {
+			if err := refundChallengesForRemovedFriendship(ctx, tx, friendship); err != nil {
+				return err
+			}
+			if err := repositories.DeleteChallengesBetweenUsers(ctx, tx, friendship.RequesterUserID, friendship.AddresseeUserID); err != nil {
+				return err
+			}
+			repo := repositories.NewFriendshipRepository(tx)
+			return repo.Delete(ctx, friendship.ID)
+		})
+	}
 	return uc.store.Delete(ctx, friendship.ID)
 }
 
@@ -154,8 +168,28 @@ func (uc FriendsUsecase) SearchUsers(ctx context.Context, userID string, query s
 	return uc.store.SearchUsers(ctx, userID, strings.TrimSpace(query), 20)
 }
 
-func (uc FriendsUsecase) PublicProfile(ctx context.Context, userID string) (dto.PublicProfileResponse, error) {
-	return uc.store.PublicProfile(ctx, strings.TrimSpace(userID))
+func (uc FriendsUsecase) PublicProfile(ctx context.Context, requesterUserID string, userID string) (dto.PublicProfileResponse, error) {
+	return uc.store.PublicProfile(ctx, strings.TrimSpace(requesterUserID), strings.TrimSpace(userID))
+}
+
+func refundChallengesForRemovedFriendship(ctx context.Context, db repositories.Querier, friendship domain.Friendship) error {
+	challenges, err := repositories.ListRefundableChallengesBetweenUsers(ctx, db, friendship.RequesterUserID, friendship.AddresseeUserID)
+	if err != nil {
+		return err
+	}
+	refType := "challenge_refund"
+	for _, challenge := range challenges {
+		refID := challenge.ID
+		if _, err := repositories.CreditWallet(ctx, db, challenge.CreatorUserID, challenge.StakeAmount, domain.PalpicoinTransactionChallengeRefund, "Estorno por amizade removida", &refType, &refID); err != nil {
+			return err
+		}
+		if challenge.Status == domain.ChallengeStatusAccepted {
+			if _, err := repositories.CreditWallet(ctx, db, challenge.OpponentUserID, challenge.StakeAmount, domain.PalpicoinTransactionChallengeRefund, "Estorno por amizade removida", &refType, &refID); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (uc FriendsUsecase) pendingFriendshipForAddressee(ctx context.Context, userID string, friendshipID string) (domain.Friendship, error) {

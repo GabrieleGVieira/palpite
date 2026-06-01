@@ -171,6 +171,12 @@ func (syncer *Syncer) syncMatch(ctx context.Context, match domain.ProviderMatch)
 		return domain.SyncSummary{}, err
 	}
 	if match.Status == "finished" && changedRows > 0 {
+		if err := usecase.RewardPalpicoinsForMatchPredictions(ctx, syncer.db, matchID, *match.HomeScore, *match.AwayScore); err != nil {
+			return domain.SyncSummary{}, err
+		}
+		if err := usecase.SettlePalpicoinChallengesForMatch(ctx, syncer.db, matchID); err != nil {
+			return domain.SyncSummary{}, err
+		}
 		if err := usecase.PublishMatchScoringFeedEvents(ctx, syncer.db, matchID, *match.HomeScore, *match.AwayScore, beforeByGroup); err != nil {
 			return domain.SyncSummary{}, err
 		}

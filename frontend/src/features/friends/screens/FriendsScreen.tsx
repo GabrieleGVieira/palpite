@@ -83,6 +83,8 @@ export function FriendsScreen({ onBack, onOpenProfile }: Props) {
     mutationFn: removeFriend,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['friends'] });
+      await queryClient.invalidateQueries({ queryKey: ['challenges'] });
+      await queryClient.invalidateQueries({ queryKey: ['me', 'wallet'] });
       notification.showNotification('Amizade removida.');
     },
   });

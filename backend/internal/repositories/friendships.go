@@ -271,7 +271,7 @@ func (repo FriendshipRepository) SearchUsers(ctx context.Context, requesterUserI
 	return users, rows.Err()
 }
 
-func (repo FriendshipRepository) PublicProfile(ctx context.Context, userID string) (dto.PublicProfileResponse, error) {
+func (repo FriendshipRepository) PublicProfile(ctx context.Context, requesterUserID string, userID string) (dto.PublicProfileResponse, error) {
 	var profile dto.PublicProfileResponse
 	err := repo.db.QueryRow(ctx, `
 		with profile as (
@@ -296,6 +296,22 @@ func (repo FriendshipRepository) PublicProfile(ctx context.Context, userID strin
 			where gm.user_id = $1
 				and gm.status = 'active'
 		),
+		friendship as (
+			select id, status
+			from friendships
+			where least(requester_user_id, addressee_user_id) = least($2::uuid, $1::uuid)
+				and greatest(requester_user_id, addressee_user_id) = greatest($2::uuid, $1::uuid)
+				and status in ('PENDING', 'ACCEPTED', 'BLOCKED')
+			limit 1
+		),
+		visibility as (
+			select
+				$1::uuid = $2::uuid
+					or coalesce(uss.is_public_profile, true) = true
+					or exists (select 1 from friendship where status = 'ACCEPTED') as can_show_global_ranking
+			from profile p
+			left join user_social_settings uss on uss.user_id = p.user_id
+		),
 		ranking as (
 			select user_id, rank() over (order by total_points desc, display_name asc)::int as position
 			from (
@@ -318,11 +334,15 @@ func (repo FriendshipRepository) PublicProfile(ctx context.Context, userID strin
 			s.groups_count,
 			s.predictions_count,
 			s.total_points,
-			r.position
+			case when v.can_show_global_ranking then r.position else null end,
+			f.id::text,
+			f.status
 		from profile p
 		cross join stats s
+		cross join visibility v
 		left join ranking r on r.user_id = p.user_id
-	`, userID).Scan(
+		left join friendship f on true
+	`, userID, requesterUserID).Scan(
 		&profile.UserID,
 		&profile.Name,
 		&profile.AvatarURL,
@@ -331,12 +351,22 @@ func (repo FriendshipRepository) PublicProfile(ctx context.Context, userID strin
 		&profile.PredictionsCount,
 		&profile.TotalPoints,
 		&profile.GlobalRanking,
+		&profile.FriendshipID,
+		&profile.FriendshipStatus,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return dto.PublicProfileResponse{}, ErrNotFound
 	}
 	if strings.TrimSpace(profile.Name) == "" {
 		profile.Name = "Palpiteiro"
+	}
+	profile.Challenges = []dto.ChallengeResponse{}
+	if profile.FriendshipStatus != nil && *profile.FriendshipStatus == string(domain.FriendshipStatusAccepted) {
+		challenges, err := ListChallengesBetweenUsers(ctx, repo.db, requesterUserID, userID)
+		if err != nil {
+			return dto.PublicProfileResponse{}, err
+		}
+		profile.Challenges = challenges
 	}
 	return profile, err
 }

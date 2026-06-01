@@ -10,6 +10,8 @@ export type AppScreenName =
   | 'group-members'
   | 'group-member-detail'
   | 'friends'
+  | 'palpicoins'
+  | 'challenges'
   | 'public-profile'
   | 'profile';
 

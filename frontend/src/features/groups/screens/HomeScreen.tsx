@@ -21,12 +21,21 @@ import type { Group } from '../services/groups';
 
 type HomeScreenProps = {
   onCreateGroup: () => void;
+  onOpenChallenges: () => void;
   onOpenGroup: (group: Group) => void;
   onOpenFriends: () => void;
+  onOpenPalpicoins: () => void;
   onOpenProfile: () => void;
 };
 
-export function HomeScreen({ onCreateGroup, onOpenFriends, onOpenGroup, onOpenProfile }: HomeScreenProps) {
+export function HomeScreen({
+  onCreateGroup,
+  onOpenChallenges,
+  onOpenFriends,
+  onOpenGroup,
+  onOpenPalpicoins,
+  onOpenProfile,
+}: HomeScreenProps) {
   const { isSubmitting, logout, user } = useAuth();
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -90,7 +99,9 @@ export function HomeScreen({ onCreateGroup, onOpenFriends, onOpenGroup, onOpenPr
             setIsDeleteModalVisible(true);
           }}
           onLogout={logout}
+          onOpenChallenges={onOpenChallenges}
           onOpenFriends={onOpenFriends}
+          onOpenPalpicoins={onOpenPalpicoins}
           onOpenProfile={onOpenProfile}
           onOpenPrivacy={() => openExternalUrl(LEGAL_URLS.privacy)}
           isSubmitting={isSubmitting}

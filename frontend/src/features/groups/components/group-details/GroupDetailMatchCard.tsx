@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import type { GroupMatch } from '../../services/groups';
 import type { ScoreDraft } from '../../types';
@@ -13,6 +13,7 @@ type Props = {
   isSaving: boolean;
   match: GroupMatch;
   onChangeDraft: (matchID: string, key: keyof ScoreDraft, value: string) => void;
+  onCreateChallenge: (matchID: string) => void;
   onSavePrediction: (match: GroupMatch) => Promise<void>;
 };
 
@@ -21,6 +22,7 @@ export function GroupDetailMatchCard({
   isSaving,
   match,
   onChangeDraft,
+  onCreateChallenge,
   onSavePrediction,
 }: Props) {
   const hasStarted = new Date(match.kickoff_at).getTime() <= Date.now();
@@ -112,14 +114,21 @@ export function GroupDetailMatchCard({
           </Text>
         </View>
       ) : (
-        <FinishButton
-          disabledLabel={disabledLabel}
-          isDisabled={isPredictionClosed}
-          isLoading={isSaving}
-          onPress={() => onSavePrediction(match)}
-          loadingLabel="Salvando..."
-          waitingLabel="Salvar palpite"
-        />
+        <View style={styles.actionStack}>
+          <FinishButton
+            disabledLabel={disabledLabel}
+            isDisabled={isPredictionClosed}
+            isLoading={isSaving}
+            onPress={() => onSavePrediction(match)}
+            loadingLabel="Salvando..."
+            waitingLabel="Salvar palpite"
+          />
+          {!isPredictionClosed ? (
+            <Pressable onPress={() => onCreateChallenge(match.id)} style={styles.challengeButton}>
+              <Text style={styles.challengeButtonText}>Desafiar amigo</Text>
+            </Pressable>
+          ) : null}
+        </View>
       )}
     </View>
   );
@@ -282,6 +291,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
     textAlign: 'center',
+  },
+  actionStack: {
+    gap: 10,
+    marginTop: 14,
+  },
+  challengeButton: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderColor: '#1f7a4a',
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 46,
+  },
+  challengeButtonText: {
+    color: '#1f7a4a',
+    fontSize: 14,
+    fontWeight: '900',
   },
   saveButton: {
     alignItems: 'center',

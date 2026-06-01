@@ -20,7 +20,7 @@
     },
     "android": {
       "package": "com.palpite.app",
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1f7a4a"
@@ -31,16 +31,17 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "572a2d08-cd56-44f9-845a-40fdadf96b37"
-      }
-    },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/572a2d08-cd56-44f9-845a-40fdadf96b37"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2c312543-37bf-4de7-afb4-b43e1951079f"
+      }
+    },
+    "owner": "gabriele.vieira"
   }
 }

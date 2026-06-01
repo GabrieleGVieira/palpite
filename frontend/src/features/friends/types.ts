@@ -1,3 +1,5 @@
+import type { Challenge } from '../challenges/services/challenges';
+
 export type FriendshipStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'BLOCKED';
 
 export type Friend = {
@@ -25,6 +27,9 @@ export type UserSearchResult = {
 
 export type PublicProfile = {
   avatarUrl?: string | null;
+  challenges: Challenge[];
+  friendshipId?: string | null;
+  friendshipStatus?: FriendshipStatus | null;
   globalRanking: number | null;
   groupsCount: number;
   joinedAt: string | null;

@@ -129,6 +129,13 @@ func SaveMatchResult(ctx context.Context, db Datastore, matchID string, request 
 			return err
 		}
 
+		if err := RewardPalpicoinsForMatchPredictions(ctx, tx, matchID, request.HomeScore, request.AwayScore); err != nil {
+			return err
+		}
+		if err := SettlePalpicoinChallengesForMatch(ctx, tx, matchID); err != nil {
+			return err
+		}
+
 		return PublishMatchScoringFeedEvents(ctx, tx, matchID, request.HomeScore, request.AwayScore, beforeByGroup)
 	})
 	if err != nil {

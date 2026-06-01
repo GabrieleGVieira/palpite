@@ -7,8 +7,10 @@ import { BackButton } from '../../../shared/components/BackButton';
 import { EmptyBox } from '../../../shared/components/EmptyBox';
 import { LoadingIndicator } from '../../../shared/components/LoadingIndicator';
 import { colors, spacing } from '../../../shared/theme';
+import { useAuth } from '../../auth/hooks/useAuth';
 import { UserAvatar } from '../components/UserAvatar';
 import { getPublicProfile } from '../services/friends';
+import type { Challenge } from '../../challenges/services/challenges';
 
 type Props = {
   onBack: () => void;
@@ -16,6 +18,7 @@ type Props = {
 };
 
 export function PublicProfileScreen({ onBack, userID }: Props) {
+  const { user } = useAuth();
   const profileQuery = useQuery({
     queryFn: () => getPublicProfile(userID),
     queryKey: ['users', userID, 'profile'],
@@ -56,9 +59,32 @@ export function PublicProfileScreen({ onBack, userID }: Props) {
               <StatCard label="Grupos" value={String(profileQuery.data.groupsCount)} />
             </View>
 
-            <View style={styles.futurePanel}>
-              <Text style={styles.futureTitle}>Estatísticas</Text>
-              <Text style={styles.futureText}>Comparativos e desempenho ficarão disponíveis aqui.</Text>
+            <View style={styles.challengePanel}>
+              <Text style={styles.sectionTitle}>Desafios entre vocês</Text>
+              {profileQuery.data.friendshipStatus !== 'ACCEPTED' ? (
+                <Text style={styles.mutedText}>Disponível apenas para amigos.</Text>
+              ) : null}
+              {profileQuery.data.friendshipStatus === 'ACCEPTED' && !profileQuery.data.challenges?.length ? (
+                <Text style={styles.mutedText}>Nenhum desafio entre vocês ainda.</Text>
+              ) : null}
+              {(profileQuery.data.challenges ?? []).map((challenge) => (
+                <View key={challenge.id} style={styles.challengeRow}>
+                  <Text style={styles.challengeTitle}>
+                    {challenge.homeTeam && challenge.awayTeam
+                      ? `${challenge.homeTeam} x ${challenge.awayTeam}`
+                      : 'Jogo selecionado'}
+                  </Text>
+                  <Text style={styles.challengeText}>Valor: {challenge.stakeAmount} Palpicoins</Text>
+                  <Text style={styles.challengeText}>Status: {challengeStatusLabel(challenge.status)}</Text>
+                  {challenge.status === 'SETTLED' &&
+                  challenge.creatorPoints != null &&
+                  challenge.opponentPoints != null ? (
+                    <Text style={styles.challengeResult}>
+                      {scoreLabel(challenge, user?.id, profileQuery.data.name)}
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
             </View>
           </>
         ) : null}
@@ -81,6 +107,23 @@ function formatDate(value: string | null) {
     return '-';
   }
   return new Intl.DateTimeFormat('pt-BR', { month: 'short', year: 'numeric' }).format(new Date(value));
+}
+
+function challengeStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    ACCEPTED: 'Aceito',
+    CANCELLED: 'Cancelado',
+    DECLINED: 'Recusado',
+    PENDING: 'Pendente',
+    SETTLED: 'Finalizado',
+  };
+  return labels[status] ?? status;
+}
+
+function scoreLabel(challenge: Challenge, currentUserID?: string, friendName = 'amigo') {
+  const myPoints = challenge.creatorUserId === currentUserID ? challenge.creatorPoints : challenge.opponentPoints;
+  const friendPoints = challenge.creatorUserId === currentUserID ? challenge.opponentPoints : challenge.creatorPoints;
+  return `Final: você ${myPoints} x ${friendPoints} ${friendName}`;
 }
 
 const styles = StyleSheet.create({
@@ -155,22 +198,44 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  futurePanel: {
+  challengePanel: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: 8,
     borderWidth: 1,
+    gap: spacing.md,
     padding: spacing.lg,
   },
-  futureTitle: {
+  sectionTitle: {
     color: colors.primaryText,
     fontSize: 17,
     fontWeight: '800',
   },
-  futureText: {
+  mutedText: {
     color: colors.mutedText,
     fontSize: 14,
     lineHeight: 20,
-    marginTop: spacing.xs,
+  },
+  challengeRow: {
+    borderColor: colors.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: spacing.xs,
+    padding: spacing.md,
+  },
+  challengeTitle: {
+    color: colors.primaryText,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  challengeText: {
+    color: colors.mutedText,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  challengeResult: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '900',
   },
 });

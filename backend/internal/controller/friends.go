@@ -18,7 +18,7 @@ type FriendsService interface {
 	Delete(ctx context.Context, userID string, friendshipID string) error
 	ListFriends(ctx context.Context, userID string) ([]dto.FriendResponse, error)
 	ListPendingRequests(ctx context.Context, userID string) ([]dto.PendingFriendRequestResponse, error)
-	PublicProfile(ctx context.Context, userID string) (dto.PublicProfileResponse, error)
+	PublicProfile(ctx context.Context, requesterUserID string, profileUserID string) (dto.PublicProfileResponse, error)
 	SearchUsers(ctx context.Context, userID string, query string) ([]dto.UserSearchResponse, error)
 }
 
@@ -155,12 +155,13 @@ func SearchUsersHandler(cfg config.Config, friends FriendsService) http.HandlerF
 
 func PublicProfileHandler(cfg config.Config, friends FriendsService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := userIDFromRequest(r, cfg); err != nil {
+		userID, err := userIDFromRequest(r, cfg)
+		if err != nil {
 			writeError(w, http.StatusUnauthorized, "Informe um token de autenticacao valido.")
 			return
 		}
 
-		profile, err := friends.PublicProfile(r.Context(), r.PathValue("id"))
+		profile, err := friends.PublicProfile(r.Context(), userID, r.PathValue("id"))
 		if err != nil {
 			writeFriendshipError(w, err, "Não foi possivel carregar o perfil.")
 			return

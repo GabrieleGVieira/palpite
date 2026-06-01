@@ -7,6 +7,7 @@ import { SignupScreen } from '../features/auth/screens/SignupScreen';
 import { FriendsScreen } from '../features/friends/screens/FriendsScreen';
 import { PublicProfileScreen } from '../features/friends/screens/PublicProfileScreen';
 import { ProfileScreen } from '../features/account/screens/ProfileScreen';
+import { ChallengesScreen } from '../features/challenges/screens/ChallengesScreen';
 import { CreateGroupScreen } from '../features/groups/screens/CreateGroupScreen';
 import { GroupAdminScreen } from '../features/groups/screens/GroupAdminScreen';
 import { GroupDetailScreen } from '../features/groups/screens/GroupDetailScreen';
@@ -15,6 +16,7 @@ import { GroupMembersScreen } from '../features/groups/screens/GroupMembersScree
 import { HomeScreen } from '../features/groups/screens/HomeScreen';
 import type { Group, GroupMember } from '../features/groups/services/groups';
 import { OnboardingScreen } from '../features/onboarding/screens/OnboardingScreen';
+import { PalpicoinsScreen } from '../features/palpicoins/screens/PalpicoinsScreen';
 import { colors } from '../shared/theme';
 import type { AppScreenName, AuthScreenName } from './types';
 
@@ -120,6 +122,14 @@ function renderAppFlow({
     );
   }
 
+  if (appScreen === 'palpicoins') {
+    return <PalpicoinsScreen onBack={() => setAppScreen('home')} />;
+  }
+
+  if (appScreen === 'challenges') {
+    return <ChallengesScreen onBack={() => setAppScreen('home')} />;
+  }
+
   if (appScreen === 'public-profile' && selectedPublicProfileUserID) {
     return (
       <PublicProfileScreen
@@ -189,11 +199,13 @@ function renderAppFlow({
   return (
     <HomeScreen
       onCreateGroup={() => setAppScreen('create-group')}
+      onOpenChallenges={() => setAppScreen('challenges')}
       onOpenFriends={() => setAppScreen('friends')}
       onOpenGroup={(group) => {
         setSelectedGroup(group);
         setAppScreen('group-detail');
       }}
+      onOpenPalpicoins={() => setAppScreen('palpicoins')}
       onOpenProfile={() => setAppScreen('profile')}
     />
   );

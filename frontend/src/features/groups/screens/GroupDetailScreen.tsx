@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
 
 import { GroupDetailHeader } from '../components/group-details/GroupDetailHeader';
 import { GroupDetailMatchCard } from '../components/group-details/GroupDetailMatchCard';
@@ -10,6 +11,7 @@ import { GroupDetailRankingCard } from '../components/group-details/GroupDetailR
 import { GroupFeedScreen } from '../components/group-details/GroupFeedScreen';
 import { EmptyBox } from '../../../shared/components/EmptyBox';
 import { LoadingIndicator } from '../../../shared/components/LoadingIndicator';
+import { ChallengeFriendModal } from '../../challenges/components/ChallengeFriendModal';
 
 type GroupDetailScreenProps = {
   group: Group;
@@ -26,6 +28,7 @@ export function GroupDetailScreen({
   onOpenAdmin,
   onOpenMembers,
 }: GroupDetailScreenProps) {
+  const [challengeMatchID, setChallengeMatchID] = useState<string | null>(null);
   const {
     activeTab,
     drafts,
@@ -104,6 +107,7 @@ export function GroupDetailScreen({
                   isSaving={isSaving}
                   match={match}
                   onChangeDraft={updateDraft}
+                  onCreateChallenge={setChallengeMatchID}
                   onSavePrediction={savePrediction}
                 />
               );
@@ -141,6 +145,7 @@ export function GroupDetailScreen({
           />
         ) : null}
       </ScrollView>
+      <ChallengeFriendModal matchID={challengeMatchID} onClose={() => setChallengeMatchID(null)} />
     </SafeAreaView>
   );
 }

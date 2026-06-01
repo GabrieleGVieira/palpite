@@ -30,12 +30,15 @@ type UserSearchResponse struct {
 }
 
 type PublicProfileResponse struct {
-	AvatarURL        *string    `json:"avatarUrl,omitempty"`
-	GlobalRanking    *int       `json:"globalRanking"`
-	GroupsCount      int        `json:"groupsCount"`
-	JoinedAt         *time.Time `json:"joinedAt"`
-	Name             string     `json:"name"`
-	PredictionsCount int        `json:"predictionsCount"`
-	TotalPoints      int        `json:"totalPoints"`
-	UserID           string     `json:"userId"`
+	AvatarURL        *string             `json:"avatarUrl,omitempty"`
+	Challenges       []ChallengeResponse `json:"challenges"`
+	FriendshipID     *string             `json:"friendshipId,omitempty"`
+	FriendshipStatus *string             `json:"friendshipStatus,omitempty"`
+	GlobalRanking    *int                `json:"globalRanking"`
+	GroupsCount      int                 `json:"groupsCount"`
+	JoinedAt         *time.Time          `json:"joinedAt"`
+	Name             string              `json:"name"`
+	PredictionsCount int                 `json:"predictionsCount"`
+	TotalPoints      int                 `json:"totalPoints"`
+	UserID           string              `json:"userId"`
 }

@@ -179,7 +179,7 @@ func (store *fakeFriendshipStore) ListPendingRequests(_ context.Context, _ strin
 	return nil, nil
 }
 
-func (store *fakeFriendshipStore) PublicProfile(_ context.Context, _ string) (dto.PublicProfileResponse, error) {
+func (store *fakeFriendshipStore) PublicProfile(_ context.Context, _ string, _ string) (dto.PublicProfileResponse, error) {
 	return dto.PublicProfileResponse{}, nil
 }
 

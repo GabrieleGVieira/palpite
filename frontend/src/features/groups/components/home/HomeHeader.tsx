@@ -8,7 +8,9 @@ type HomeHeaderProps = {
   userName?: string;
   onCreateGroup: () => void;
   onDeleteAccount: () => void;
+  onOpenChallenges: () => void;
   onOpenFriends: () => void;
+  onOpenPalpicoins: () => void;
   onLogout: () => void;
   onOpenProfile: () => void;
   onOpenPrivacy: () => void;
@@ -20,7 +22,9 @@ export function HomeHeader({
   userName,
   onCreateGroup,
   onDeleteAccount,
+  onOpenChallenges,
   onOpenFriends,
+  onOpenPalpicoins,
   onLogout,
   onOpenProfile,
   onOpenPrivacy,
@@ -73,6 +77,16 @@ export function HomeHeader({
           onPress={onOpenFriends}
           style={({ pressed }) => [styles.tabButtonSecondary, pressed && styles.pressed]}>
           <Text style={styles.tabButtonSecondaryText}>Amigos</Text>
+        </Pressable>
+        <Pressable
+          onPress={onOpenPalpicoins}
+          style={({ pressed }) => [styles.tabButtonSecondary, pressed && styles.pressed]}>
+          <Text style={styles.tabButtonSecondaryText}>Palpicoins</Text>
+        </Pressable>
+        <Pressable
+          onPress={onOpenChallenges}
+          style={({ pressed }) => [styles.tabButtonSecondary, pressed && styles.pressed]}>
+          <Text style={styles.tabButtonSecondaryText}>Desafios</Text>
         </Pressable>
       </View>
 
