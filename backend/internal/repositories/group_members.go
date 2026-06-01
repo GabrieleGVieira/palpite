@@ -202,7 +202,7 @@ func ListGroupMemberSummaries(ctx context.Context, db Querier, groupID string) (
 	return members, rows.Err()
 }
 
-func GroupMemberDetail(ctx context.Context, db Querier, groupID string, targetUserID string) (dto.GroupMemberDetailResponse, error) {
+func GroupMemberDetail(ctx context.Context, db Querier, groupID string, viewerUserID string, targetUserID string) (dto.GroupMemberDetailResponse, error) {
 	var member dto.GroupMemberDetailResponse
 	err := db.QueryRow(ctx, `
 		with prediction_stats as (
@@ -241,14 +241,20 @@ func GroupMemberDetail(ctx context.Context, db Querier, groupID string, targetUs
 			r.position,
 			r.total_points,
 			coalesce(ps.predictions_count, 0)::int,
-			coalesce(ps.correct_predictions, 0)::int
+			coalesce(ps.correct_predictions, 0)::int,
+			f.id::text,
+			f.status
 		from group_members gm
 		left join prediction_stats ps on ps.user_id = gm.user_id
 		left join ranking r on r.user_id = gm.user_id
+		left join friendships f
+			on least(f.requester_user_id, f.addressee_user_id) = least($3::uuid, gm.user_id)
+			and greatest(f.requester_user_id, f.addressee_user_id) = greatest($3::uuid, gm.user_id)
+			and f.status in ('PENDING', 'ACCEPTED', 'BLOCKED')
 		where gm.group_id = $1
 			and gm.user_id = $2
 			and gm.status = 'active'
-	`, groupID, targetUserID).Scan(
+	`, groupID, targetUserID, viewerUserID).Scan(
 		&member.UserID,
 		&member.DisplayName,
 		&member.AvatarURL,
@@ -258,6 +264,8 @@ func GroupMemberDetail(ctx context.Context, db Querier, groupID string, targetUs
 		&member.Points,
 		&member.PredictionsCount,
 		&member.CorrectPredictions,
+		&member.FriendshipID,
+		&member.FriendshipStatus,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return dto.GroupMemberDetailResponse{}, ErrNotFound

@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { BackButton } from '../../../shared/components/BackButton';
 import { FinishButton } from '../../../shared/components/FinishButton';
 import { LoadingIndicator } from '../../../shared/components/LoadingIndicator';
+import { SwitchBox } from '../../../shared/components/SwitchBox';
 import { colors } from '../../../shared/theme';
 import { getProfile, updateProfile, updateProfileAvatar } from '../services/account';
 
@@ -18,6 +19,7 @@ type Props = {
 export function ProfileScreen({ fallbackName, onBack }: Props) {
   const [displayName, setDisplayName] = useState(fallbackName ?? '');
   const [avatarURL, setAvatarURL] = useState('');
+  const [isPublicProfile, setIsPublicProfile] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -32,6 +34,7 @@ export function ProfileScreen({ fallbackName, onBack }: Props) {
         const profile = await getProfile();
         setDisplayName(profile.display_name || fallbackName || '');
         setAvatarURL(profile.avatar_url ?? '');
+        setIsPublicProfile(profile.is_public_profile ?? true);
       } catch (loadError) {
         setError(
           loadError instanceof Error ? loadError.message : 'Não foi possível carregar seu perfil.',
@@ -52,9 +55,11 @@ export function ProfileScreen({ fallbackName, onBack }: Props) {
       const profile = await updateProfile({
         avatar_url: avatarURL.trim() || null,
         display_name: displayName.trim(),
+        is_public_profile: isPublicProfile,
       });
       setDisplayName(profile.display_name);
       setAvatarURL(profile.avatar_url ?? '');
+      setIsPublicProfile(profile.is_public_profile ?? true);
       Alert.alert('Perfil atualizado', 'Suas informações foram salvas.');
     } catch (saveError) {
       setError(
@@ -144,6 +149,15 @@ export function ProfileScreen({ fallbackName, onBack }: Props) {
                 placeholder="Seu nome"
                 style={styles.input}
                 value={displayName}
+              />
+            </View>
+
+            <View style={styles.publicProfileBox}>
+              <SwitchBox
+                onPress={setIsPublicProfile}
+                subtitle="Permite aparecer na busca de adicionar amigos."
+                title="Perfil público"
+                value={isPublicProfile}
               />
             </View>
 
@@ -250,5 +264,8 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontSize: 13,
     lineHeight: 18,
+  },
+  publicProfileBox: {
+    alignSelf: 'stretch',
   },
 });

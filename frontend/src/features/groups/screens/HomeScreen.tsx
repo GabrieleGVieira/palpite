@@ -22,10 +22,11 @@ import type { Group } from '../services/groups';
 type HomeScreenProps = {
   onCreateGroup: () => void;
   onOpenGroup: (group: Group) => void;
+  onOpenFriends: () => void;
   onOpenProfile: () => void;
 };
 
-export function HomeScreen({ onCreateGroup, onOpenGroup, onOpenProfile }: HomeScreenProps) {
+export function HomeScreen({ onCreateGroup, onOpenFriends, onOpenGroup, onOpenProfile }: HomeScreenProps) {
   const { isSubmitting, logout, user } = useAuth();
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -89,6 +90,7 @@ export function HomeScreen({ onCreateGroup, onOpenGroup, onOpenProfile }: HomeSc
             setIsDeleteModalVisible(true);
           }}
           onLogout={logout}
+          onOpenFriends={onOpenFriends}
           onOpenProfile={onOpenProfile}
           onOpenPrivacy={() => openExternalUrl(LEGAL_URLS.privacy)}
           isSubmitting={isSubmitting}

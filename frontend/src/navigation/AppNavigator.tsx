@@ -4,6 +4,8 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
 import { SignupScreen } from '../features/auth/screens/SignupScreen';
+import { FriendsScreen } from '../features/friends/screens/FriendsScreen';
+import { PublicProfileScreen } from '../features/friends/screens/PublicProfileScreen';
 import { ProfileScreen } from '../features/account/screens/ProfileScreen';
 import { CreateGroupScreen } from '../features/groups/screens/CreateGroupScreen';
 import { GroupAdminScreen } from '../features/groups/screens/GroupAdminScreen';
@@ -23,6 +25,7 @@ export function AppNavigator() {
   const [appScreen, setAppScreen] = useState<AppScreenName>('home');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [selectedMember, setSelectedMember] = useState<GroupMember | null>(null);
+  const [selectedPublicProfileUserID, setSelectedPublicProfileUserID] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -45,9 +48,11 @@ export function AppNavigator() {
     appScreen,
     fallbackName: session.user.user_metadata.full_name as string | undefined,
     selectedMember,
+    selectedPublicProfileUserID,
     selectedGroup,
     setAppScreen,
     setSelectedMember,
+    setSelectedPublicProfileUserID,
     setSelectedGroup,
   });
 }
@@ -80,9 +85,11 @@ type AppFlowParams = {
   appScreen: AppScreenName;
   fallbackName?: string;
   selectedMember: GroupMember | null;
+  selectedPublicProfileUserID: string | null;
   selectedGroup: Group | null;
   setAppScreen: (screen: AppScreenName) => void;
   setSelectedMember: (member: GroupMember | null) => void;
+  setSelectedPublicProfileUserID: (userID: string | null) => void;
   setSelectedGroup: (group: Group | null) => void;
 };
 
@@ -90,13 +97,36 @@ function renderAppFlow({
   appScreen,
   fallbackName,
   selectedMember,
+  selectedPublicProfileUserID,
   selectedGroup,
   setAppScreen,
   setSelectedMember,
+  setSelectedPublicProfileUserID,
   setSelectedGroup,
 }: AppFlowParams) {
   if (appScreen === 'profile') {
     return <ProfileScreen fallbackName={fallbackName} onBack={() => setAppScreen('home')} />;
+  }
+
+  if (appScreen === 'friends') {
+    return (
+      <FriendsScreen
+        onBack={() => setAppScreen('home')}
+        onOpenProfile={(userID) => {
+          setSelectedPublicProfileUserID(userID);
+          setAppScreen('public-profile');
+        }}
+      />
+    );
+  }
+
+  if (appScreen === 'public-profile' && selectedPublicProfileUserID) {
+    return (
+      <PublicProfileScreen
+        onBack={() => setAppScreen('friends')}
+        userID={selectedPublicProfileUserID}
+      />
+    );
   }
 
   if (appScreen === 'create-group') {
@@ -159,6 +189,7 @@ function renderAppFlow({
   return (
     <HomeScreen
       onCreateGroup={() => setAppScreen('create-group')}
+      onOpenFriends={() => setAppScreen('friends')}
       onOpenGroup={(group) => {
         setSelectedGroup(group);
         setAppScreen('group-detail');

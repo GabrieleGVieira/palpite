@@ -71,7 +71,18 @@ func UpdateProfile(ctx context.Context, db Datastore, userID string, request dto
 		}
 	}
 
-	profile, err := repositories.UpdateUserProfile(ctx, db, userID, displayName, avatarURL)
+	isPublicProfile := true
+	currentProfile, err := repositories.UserProfile(ctx, db, userID)
+	if err == nil {
+		isPublicProfile = currentProfile.IsPublicProfile
+	} else if err != repositories.ErrNotFound {
+		return dto.ProfileResponse{}, err
+	}
+	if request.IsPublicProfile != nil {
+		isPublicProfile = *request.IsPublicProfile
+	}
+
+	profile, err := repositories.UpdateUserProfile(ctx, db, userID, displayName, avatarURL, isPublicProfile)
 	if err == nil {
 		return profile, nil
 	}

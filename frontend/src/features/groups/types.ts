@@ -61,6 +61,8 @@ export type GroupMember = {
 export type GroupMemberDetail = GroupMember & {
   accuracy_percentage: number | null;
   correct_predictions: number | null;
+  friendship_id?: string | null;
+  friendship_status?: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'BLOCKED' | null;
   predictions_count: number | null;
 };
 

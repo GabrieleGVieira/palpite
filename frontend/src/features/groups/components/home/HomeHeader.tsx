@@ -8,6 +8,7 @@ type HomeHeaderProps = {
   userName?: string;
   onCreateGroup: () => void;
   onDeleteAccount: () => void;
+  onOpenFriends: () => void;
   onLogout: () => void;
   onOpenProfile: () => void;
   onOpenPrivacy: () => void;
@@ -19,6 +20,7 @@ export function HomeHeader({
   userName,
   onCreateGroup,
   onDeleteAccount,
+  onOpenFriends,
   onLogout,
   onOpenProfile,
   onOpenPrivacy,
@@ -66,6 +68,11 @@ export function HomeHeader({
           onPress={onCreateGroup}
           style={({ pressed }) => [styles.tabButton, pressed && styles.pressed]}>
           <Text style={styles.tabButtonText}>Criar grupo</Text>
+        </Pressable>
+        <Pressable
+          onPress={onOpenFriends}
+          style={({ pressed }) => [styles.tabButtonSecondary, pressed && styles.pressed]}>
+          <Text style={styles.tabButtonSecondaryText}>Amigos</Text>
         </Pressable>
       </View>
 
@@ -197,6 +204,8 @@ const styles = StyleSheet.create({
   },
   actionTabs: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
   tabButton: {
     alignItems: 'center',
@@ -208,6 +217,21 @@ const styles = StyleSheet.create({
   },
   tabButtonText: {
     color: colors.white,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tabButtonSecondary: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 46,
+    paddingHorizontal: 18,
+  },
+  tabButtonSecondaryText: {
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '800',
   },

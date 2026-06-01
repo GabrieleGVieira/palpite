@@ -9,10 +9,13 @@ export type AppScreenName =
   | 'group-admin'
   | 'group-members'
   | 'group-member-detail'
+  | 'friends'
+  | 'public-profile'
   | 'profile';
 
 export type RootNavigationState = {
   appScreen: AppScreenName;
   authScreen: AuthScreenName;
   selectedGroup: Group | null;
+  selectedPublicProfileUserID: string | null;
 };

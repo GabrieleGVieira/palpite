@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { BackButton } from '../../../shared/components/BackButton';
 import { LoadingIndicator } from '../../../shared/components/LoadingIndicator';
 import { colors } from '../../../shared/theme';
+import { useAuth } from '../../auth/hooks/useAuth';
+import { sendFriendRequest } from '../../friends/services/friends';
 import {
   getGroupMemberDetail,
   type Group,
@@ -20,8 +22,10 @@ type Props = {
 };
 
 export function GroupMemberDetailScreen({ group, member, onBack }: Props) {
+  const { user } = useAuth();
   const [detail, setDetail] = useState<GroupMemberDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSendingFriendRequest, setIsSendingFriendRequest] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadDetail = useCallback(async () => {
@@ -49,8 +53,32 @@ export function GroupMemberDetailScreen({ group, member, onBack }: Props) {
     ...member,
     accuracy_percentage: null,
     correct_predictions: null,
+    friendship_id: null,
+    friendship_status: null,
     predictions_count: null,
   };
+  const isOwnProfile = user?.id === visibleDetail.user_id;
+
+  async function handleAddFriend() {
+    setIsSendingFriendRequest(true);
+    setError(null);
+
+    try {
+      await sendFriendRequest(visibleDetail.user_id);
+      setDetail((current) =>
+        current ? { ...current, friendship_status: 'PENDING' } : current,
+      );
+      Alert.alert('Solicitação enviada', `Convite enviado para ${displayName(visibleDetail)}.`);
+    } catch (sendError) {
+      setError(
+        sendError instanceof Error
+          ? sendError.message
+          : 'Não foi possível enviar a solicitação.',
+      );
+    } finally {
+      setIsSendingFriendRequest(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -72,6 +100,13 @@ export function GroupMemberDetailScreen({ group, member, onBack }: Props) {
               </View>
               <Text style={styles.groupText}>{group.name}</Text>
               <Text style={styles.joinedText}>Entrou em {formatDate(visibleDetail.joined_at)}</Text>
+              {!isOwnProfile ? (
+                <FriendActionButton
+                  isLoading={isSendingFriendRequest}
+                  onPress={handleAddFriend}
+                  status={visibleDetail.friendship_status ?? null}
+                />
+              ) : null}
             </View>
 
             <View style={styles.statsGrid}>
@@ -92,6 +127,40 @@ export function GroupMemberDetailScreen({ group, member, onBack }: Props) {
         ) : null}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function FriendActionButton({
+  isLoading,
+  onPress,
+  status,
+}: {
+  isLoading: boolean;
+  onPress: () => void;
+  status: GroupMemberDetail['friendship_status'];
+}) {
+  const disabled = isLoading || status === 'PENDING' || status === 'ACCEPTED' || status === 'BLOCKED';
+  const label = isLoading
+    ? 'Enviando...'
+    : status === 'ACCEPTED'
+      ? 'Amigo'
+      : status === 'PENDING'
+        ? 'Solicitação enviada'
+        : status === 'BLOCKED'
+          ? 'Indisponível'
+          : 'Adicionar amigo';
+
+  return (
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.friendButton,
+        disabled && styles.friendButtonDisabled,
+        pressed && styles.pressed,
+      ]}>
+      <Text style={styles.friendButtonText}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -229,6 +298,26 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 12,
     marginTop: 4,
+  },
+  friendButton: {
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    justifyContent: 'center',
+    marginTop: 16,
+    minHeight: 44,
+    paddingHorizontal: 18,
+  },
+  friendButtonDisabled: {
+    backgroundColor: '#8a9490',
+  },
+  friendButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  pressed: {
+    opacity: 0.86,
   },
   statsGrid: {
     flexDirection: 'row',

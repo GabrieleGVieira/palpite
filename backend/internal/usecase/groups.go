@@ -182,7 +182,7 @@ func MemberDetail(ctx context.Context, db Datastore, userID string, groupID stri
 		return dto.GroupMemberDetailResponse{}, err
 	}
 
-	member, err := repositories.GroupMemberDetail(ctx, db, groupID, targetUserID)
+	member, err := repositories.GroupMemberDetail(ctx, db, groupID, userID, targetUserID)
 	if errors.Is(err, repositories.ErrNotFound) {
 		return dto.GroupMemberDetailResponse{}, ErrGroupNotFound
 	}

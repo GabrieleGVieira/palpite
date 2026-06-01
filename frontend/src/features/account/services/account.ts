@@ -7,6 +7,7 @@ import { supabase } from '../../../services/supabase';
 export type Profile = {
   avatar_url?: string | null;
   display_name: string;
+  is_public_profile?: boolean;
 };
 
 export async function deleteAccount() {

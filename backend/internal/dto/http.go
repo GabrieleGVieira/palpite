@@ -90,13 +90,15 @@ type GroupMemberResponse struct {
 }
 
 type ProfileResponse struct {
-	AvatarURL   *string `json:"avatar_url,omitempty"`
-	DisplayName string  `json:"display_name"`
+	AvatarURL       *string `json:"avatar_url,omitempty"`
+	DisplayName     string  `json:"display_name"`
+	IsPublicProfile bool    `json:"is_public_profile"`
 }
 
 type UpdateProfileRequest struct {
-	AvatarURL   *string `json:"avatar_url"`
-	DisplayName string  `json:"display_name"`
+	AvatarURL       *string `json:"avatar_url"`
+	DisplayName     string  `json:"display_name"`
+	IsPublicProfile *bool   `json:"is_public_profile"`
 }
 
 type GroupMemberSummaryResponse struct {
@@ -114,6 +116,8 @@ type GroupMemberDetailResponse struct {
 	AvatarURL          *string   `json:"avatar_url,omitempty"`
 	CorrectPredictions *int      `json:"correct_predictions,omitempty"`
 	DisplayName        string    `json:"display_name"`
+	FriendshipID       *string   `json:"friendship_id,omitempty"`
+	FriendshipStatus   *string   `json:"friendship_status,omitempty"`
 	JoinedAt           time.Time `json:"joined_at"`
 	Points             *int      `json:"points,omitempty"`
 	PredictionsCount   *int      `json:"predictions_count,omitempty"`
