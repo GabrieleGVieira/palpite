@@ -25,7 +25,7 @@ export function GroupAdminRequests({
       <View style={styles.requestsHeader}>
         <View>
           <Text style={styles.cardTitle}>Solicitações</Text>
-          <Text style={styles.cardSubtitle}>Usuários aguardando aceite</Text>
+          <Text style={styles.cardSubtitle}>Palpiteiros aguardando aceite</Text>
         </View>
         <Pressable onPress={loadRequests} style={styles.refreshButton}>
           <Text style={styles.refreshButtonText}>Atualizar</Text>

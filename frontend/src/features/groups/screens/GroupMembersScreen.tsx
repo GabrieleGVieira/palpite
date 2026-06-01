@@ -30,7 +30,7 @@ export function GroupMembersScreen({ group, onBack, onOpenMember }: Props) {
       setError(
         loadError instanceof Error
           ? loadError.message
-          : 'Não foi possível carregar os participantes.',
+          : 'Não foi possível carregar os Palpiteiros.',
       );
     } finally {
       setIsLoading(false);
@@ -50,11 +50,11 @@ export function GroupMembersScreen({ group, onBack, onOpenMember }: Props) {
         </View>
 
         <View>
-          <Text style={styles.title}>Participantes</Text>
+          <Text style={styles.title}>Palpiteiros</Text>
           <Text style={styles.subtitle}>{group.name}</Text>
         </View>
 
-        {isLoading ? <LoadingIndicator text="Carregando participantes..." /> : null}
+        {isLoading ? <LoadingIndicator text="Carregando Palpiteiros..." /> : null}
 
         {!isLoading && error ? (
           <View style={styles.errorBox}>
@@ -66,7 +66,7 @@ export function GroupMembersScreen({ group, onBack, onOpenMember }: Props) {
         ) : null}
 
         {!isLoading && !error && members.length === 0 ? (
-          <EmptyBox title="Nenhum participante" text="Este grupo ainda não tem membros ativos." />
+          <EmptyBox title="Nenhum Palpiteiro" text="Este grupo ainda não tem membros ativos." />
         ) : null}
 
         {!isLoading && !error

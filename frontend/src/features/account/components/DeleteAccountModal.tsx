@@ -64,7 +64,7 @@ export function DeleteAccountModal({
             bolões, rankings e resultados.
           </Text>
           <Text style={styles.description}>
-            Se você for dono de algum grupo, transfira a propriedade para outro participante antes
+            Se você for dono de algum grupo, transfira a propriedade para outro Palpiteiro antes
             de excluir sua conta.
           </Text>
           <Text style={styles.description}>O processamento pode levar até 30 dias.</Text>
@@ -110,7 +110,7 @@ export function DeleteAccountModal({
 const styles = StyleSheet.create({
   overlay: {
     alignItems: 'center',
-    backgroundColor: 'rgba(14, 56, 42, 0.44)',
+    backgroundColor: 'rgba(30, 30, 30, 0.44)',
     flex: 1,
     justifyContent: 'center',
     padding: 20,

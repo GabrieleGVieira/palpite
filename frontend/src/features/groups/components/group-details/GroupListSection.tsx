@@ -69,7 +69,7 @@ export function GroupListSection({
               <Text style={styles.groupMeta}>
                 {isPendingMembership
                   ? 'Aguardando aprovação do dono'
-                  : `${group.role === 'owner' ? 'Dono' : 'Membro'} · ${group.member_count} participante${group.member_count === 1 ? '' : 's'}`}
+                  : `${group.role === 'owner' ? 'Dono' : 'Membro'} · ${group.member_count} Palpiteiro${group.member_count === 1 ? '' : 's'}`}
               </Text>
             </View>
             {isPendingMembership ? (

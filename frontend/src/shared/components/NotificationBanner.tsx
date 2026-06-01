@@ -19,8 +19,8 @@ export function NotificationBanner({ message }: NotificationBannerProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#123d2a',
-    borderColor: '#296943',
+    backgroundColor: '#1E1E1E',
+    borderColor: '#a03222',
     borderRadius: 8,
     borderWidth: 1,
     padding: 14,

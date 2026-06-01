@@ -34,7 +34,7 @@ export function GroupMemberDetailScreen({ group, member, onBack }: Props) {
       setError(
         loadError instanceof Error
           ? loadError.message
-          : 'Não foi possível carregar o participante.',
+          : 'Não foi possível carregar o Palpiteiro.',
       );
     } finally {
       setIsLoading(false);
@@ -58,7 +58,7 @@ export function GroupMemberDetailScreen({ group, member, onBack }: Props) {
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <BackButton onPress={onBack} />
 
-        {isLoading ? <LoadingIndicator text="Carregando participante..." /> : null}
+        {isLoading ? <LoadingIndicator text="Carregando Palpiteiro..." /> : null}
 
         {!isLoading && error ? <Text style={styles.errorText}>{error}</Text> : null}
 

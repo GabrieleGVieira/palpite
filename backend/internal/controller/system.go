@@ -51,7 +51,7 @@ func StatusHandler(cfg config.Config, db usecase.Datastore, redis RedisStatusSer
 		}
 
 		writeJSON(w, http.StatusOK, dto.StatusResponse{
-			App:       "palpitai-api",
+			App:       "palpite-api",
 			Database:  databaseStatus,
 			Env:       cfg.Env,
 			Redis:     redisStatus(redis),

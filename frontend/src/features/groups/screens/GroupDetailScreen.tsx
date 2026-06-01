@@ -121,7 +121,7 @@ export function GroupDetailScreen({
         {activeTab === 'ranking' && !isLoadingRanking && !rankingError && ranking.length === 0 ? (
           <EmptyBox
             title="Ranking vazio"
-            text="Os participantes ainda não pontuaram neste grupo."
+            text="Os Palpiteiros ainda não pontuaram neste grupo."
           />
         ) : null}
 

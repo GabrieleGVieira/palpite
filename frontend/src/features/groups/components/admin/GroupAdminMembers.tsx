@@ -37,7 +37,7 @@ export function GroupAdminMembers({
       <View style={styles.header}>
         <View>
           <Text style={styles.cardTitle}>Membros</Text>
-          <Text style={styles.cardSubtitle}>Participantes ativos e permissões</Text>
+          <Text style={styles.cardSubtitle}>Palpiteiros ativos e permissões</Text>
         </View>
         <Pressable onPress={loadMembers} style={styles.refreshButton}>
           <Text style={styles.refreshButtonText}>Atualizar</Text>
@@ -47,7 +47,7 @@ export function GroupAdminMembers({
       {isLoadingMembers ? <LoadingIndicator text="Carregando..." /> : null}
 
       {!isLoadingMembers && members.length === 0 ? (
-        <EmptyBox title="Nenhum participante." text="Nenhum membro ativo encontrado." />
+        <EmptyBox title="Nenhum Palpiteiro." text="Nenhum membro ativo encontrado." />
       ) : null}
 
       {members.map((member) => {
@@ -61,7 +61,7 @@ export function GroupAdminMembers({
                 <Text style={styles.memberName}>
                   {member.display_name || `Usuário ${member.user_id.slice(0, 8)}`}
                 </Text>
-                <Text style={styles.memberMeta}>{isOwner ? 'Dono do grupo' : 'Participante'}</Text>
+                <Text style={styles.memberMeta}>{isOwner ? 'Dono do grupo' : 'Palpiteiro'}</Text>
               </View>
 
               <View style={styles.badges}>

@@ -33,7 +33,7 @@ export function MatchPredictionCard({
     return (
       <View style={styles.card}>
         <CardHeader isOpen={false} />
-        <Text style={styles.summaryText}>Carregando previsão...</Text>
+        <Text style={styles.summaryText}>Carregando análise da PalpitAI...</Text>
       </View>
     );
   }
@@ -42,7 +42,7 @@ export function MatchPredictionCard({
     return (
       <View style={styles.card}>
         <CardHeader isOpen={false} />
-        <Text style={styles.summaryText}>Não foi possível carregar a previsão agora.</Text>
+        <Text style={styles.summaryText}>Não foi possível carregar a análise da PalpitAI agora.</Text>
       </View>
     );
   }
@@ -52,7 +52,7 @@ export function MatchPredictionCard({
       <View style={styles.card}>
         <View style={styles.summaryButton}>
           <CardHeader isOpen={false} showChevron={false} />
-          <Text style={styles.summaryText}>Previsão ainda não disponível para este jogo.</Text>
+          <Text style={styles.summaryText}>Análise da PalpitAI ainda não disponível para este jogo.</Text>
         </View>
       </View>
     );
@@ -116,13 +116,13 @@ export function MatchPredictionCard({
 
           {hasExplanation ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Análise da IA</Text>
+              <Text style={styles.sectionTitle}>Análise da PalpitAI</Text>
               <AiExplanationBox explanation={prediction.explanation} />
             </View>
           ) : null}
 
           <Text style={styles.disclaimer}>
-            Essa previsão é uma estimativa baseada em dados. Use como apoio para o seu palpite.
+            Essa análise é uma estimativa baseada em dados. Use como apoio para seu palpite.
           </Text>
         </View>
       ) : null}
@@ -133,7 +133,7 @@ export function MatchPredictionCard({
 function CardHeader({ isOpen, showChevron = true }: { isOpen: boolean; showChevron?: boolean }) {
   return (
     <View style={styles.header}>
-      <Text style={styles.title}>Palpite! para este jogo</Text>
+      <Text style={styles.title}>PalpitAI para este jogo</Text>
       {showChevron && <Text style={styles.chevron}>{isOpen ? '▲' : '▼'}</Text>}
     </View>
   );

@@ -18,7 +18,7 @@ func BuildPredictionExplanationPrompt(input ExplanationPromptInput) (Prompt, err
 	}
 
 	system := strings.TrimSpace(`
-Voce e um assistente do Palpite!. Sua tarefa e explicar previsoes ja calculadas para usuarios de bolao.
+Voce e a PalpitAI, assistente do Palpite! Sua tarefa e explicar previsoes ja calculadas para Palpiteiros de bolao.
 Responda sempre em portugues do Brasil, com linguagem simples, curta e amigavel.
 Nao calcule vencedor, probabilidades, placar provavel, gols esperados, rankings ou confianca numerica.
 Nao altere nenhum numero recebido. Nao invente estatisticas.
@@ -28,7 +28,7 @@ Retorne apenas JSON valido no formato solicitado, sem markdown.
 `)
 
 	user := fmt.Sprintf(strings.TrimSpace(`
-Explique a previsao abaixo para um usuario comum de bolao.
+Explique a previsao abaixo para um Palpiteiro comum de bolao.
 
 Regras:
 - summary: no maximo 240 caracteres.
@@ -51,7 +51,7 @@ func BuildBatchPredictionExplanationPrompt(inputs []ExplanationPromptInput) (Pro
 	}
 
 	system := strings.TrimSpace(`
-Voce e um assistente do Palpite!. Sua tarefa e explicar previsoes ja calculadas para usuarios de bolao.
+Voce e a PalpitAI, assistente do Palpite! Sua tarefa e explicar previsoes ja calculadas para Palpiteiros de bolao.
 Responda sempre em portugues do Brasil, com linguagem simples, curta e amigavel.
 Voce deve apenas explicar e enriquecer a previsao recebida.
 Nao recalcule vencedor, probabilidades, placar provavel, gols esperados, rankings ou confianca numerica.
@@ -61,7 +61,7 @@ Retorne apenas JSON valido no formato solicitado, sem markdown.
 `)
 
 	user := fmt.Sprintf(strings.TrimSpace(`
-Explique as previsoes abaixo para usuarios comuns de bolao.
+Explique as previsoes abaixo para Palpiteiros comuns de bolao.
 
 Regras:
 - Voce recebeu exatamente %d partidas.

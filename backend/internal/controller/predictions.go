@@ -62,7 +62,7 @@ func GetMatchPredictionHandler(cfg config.Config, predictions PredictionReader) 
 				return
 			}
 
-			writeError(w, http.StatusInternalServerError, "Não foi possível carregar a previsão.")
+			writeError(w, http.StatusInternalServerError, "Não foi possível carregar a análise da PalpitAI.")
 			return
 		}
 
@@ -80,7 +80,7 @@ func GetMatchPredictionHandler(cfg config.Config, predictions PredictionReader) 
 			response.Goals = mapGoalPredictionResponse(goalPrediction)
 			response.TopScores = mapTopScoreResponses(goalPrediction.TopScoreProbabilities)
 		} else if !apperrors.IsNotFound(err) {
-			writeError(w, http.StatusInternalServerError, "Não foi possível carregar a previsão.")
+			writeError(w, http.StatusInternalServerError, "Não foi possível carregar a análise da PalpitAI.")
 			return
 		}
 
@@ -94,7 +94,7 @@ func GetMatchPredictionHandler(cfg config.Config, predictions PredictionReader) 
 				UserTip:     explanation.UserTip,
 			}
 		} else if !apperrors.IsNotFound(err) {
-			writeError(w, http.StatusInternalServerError, "Não foi possível carregar a previsão.")
+			writeError(w, http.StatusInternalServerError, "Não foi possível carregar a análise da PalpitAI.")
 			return
 		}
 

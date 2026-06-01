@@ -1,4 +1,4 @@
-# PalpitAI ML Prediction Engine
+# PalpitAI Prediction Engine
 
 ## Target labels
 

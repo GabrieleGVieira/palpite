@@ -113,7 +113,7 @@ export function ProfileScreen({ fallbackName, onBack }: Props) {
         <View>
           <Text style={styles.title}>Editar perfil</Text>
           <Text style={styles.subtitle}>
-            Nome e foto aparecem para participantes dos seus grupos.
+            Nome e foto aparecem para Palpiteiros dos seus grupos.
           </Text>
         </View>
 

@@ -107,7 +107,7 @@ function Avatar({ event }: { event: GroupFeedEvent }) {
 }
 
 function eventDescription(event: GroupFeedEvent) {
-  const actorName = event.actor?.name || 'Participante';
+  const actorName = event.actor?.name || 'Palpiteiro';
   const metadata = event.metadata ?? {};
   const homeTeam = asString(metadata.homeTeam);
   const awayTeam = asString(metadata.awayTeam);

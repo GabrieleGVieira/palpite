@@ -87,7 +87,7 @@ export function GroupDetailMatchCard({
         </View>
       ) : (
         <Text style={[styles.predictionText, styles.predictionTextSolo]}>
-          Você não palpitou neste jogo.
+          Você ainda não deu seu palpite neste jogo.
         </Text>
       )}
 
@@ -104,7 +104,7 @@ export function GroupDetailMatchCard({
       {isLive ? (
         <View style={styles.liveBox}>
           <View style={styles.liveLabelRow}>
-            <ActivityIndicator color="#c23f34" size="small" />
+            <ActivityIndicator color="#a03222" size="small" />
             <Text style={styles.liveLabel}>Ao vivo</Text>
           </View>
           <Text style={styles.liveScore}>

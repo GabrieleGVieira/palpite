@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://palpitai.app/sitemap.xml
+Sitemap: https://palpite.app/sitemap.xml

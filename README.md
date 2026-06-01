@@ -1,19 +1,19 @@
 # Palpite!
 
-App mobile de bolão da Copa do Mundo 2026 com grupos, palpites, ranking em tempo real e previsões geradas por machine learning.
+App mobile de bolão da Copa do Mundo 2026 com grupos, palpites, ranking em tempo real e análises complementares da PalpitAI.
 
 ## O que é
 
-Palpite! é um bolão social onde usuários criam ou entram em grupos, registram palpites para cada partida da Copa do Mundo e acompanham o ranking em tempo real. O app combina uma API em Go com um pipeline de ML em Python para gerar previsões de resultado e placar com explicações em linguagem natural via LLM.
+Palpite! é uma plataforma social de bolões e previsões esportivas onde Palpiteiros criam ou entram em grupos, registram palpites para cada partida da Copa do Mundo e acompanham o ranking em tempo real. A PalpitAI aparece como recurso complementar, com análises, sugestões e explicações em linguagem natural.
 
 ## Arquitetura
 
 ```text
-palpitAI/
+palpite/
 ├── backend/      # API HTTP/WebSocket em Go
 ├── frontend/     # App mobile React Native + Expo
 ├── ml-service/   # Pipeline ML e API de inferência em Python
-└── docs/         # Documentação técnica dos motores de IA e métricas
+└── docs/         # Documentação técnica dos motores da PalpitAI e métricas
 ```
 
 ## Stack
@@ -25,7 +25,7 @@ palpitAI/
 | ML           | Python, scikit-learn, FastAPI, pandas                    |
 | Banco        | PostgreSQL (Supabase)                                    |
 | Cache        | Redis (Upstash)                                          |
-| IA           | Gemini API para explicações                              |
+| PalpitAI     | Gemini API para explicações e análises complementares     |
 | Dados        | football-data.org, CSVs históricos de partidas internacionais |
 
 ## Requisitos
@@ -133,7 +133,7 @@ uvicorn app.api.main:app --reload
 - Ranking em tempo real por grupo via WebSocket
 - Sincronização automática de placares via football-data.org
 - Previsões de resultado e placar geradas por ML
-- Explicações das previsões em linguagem natural via LLM
+- Análises da PalpitAI em linguagem natural via LLM
 
 ## Qualidade
 

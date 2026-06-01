@@ -1,4 +1,4 @@
-# PalpitAI Landing
+# Palpite! Landing
 
 Landing page independente do app mobile, criada com React, TypeScript, Vite e CSS simples.
 
@@ -25,7 +25,7 @@ npm run preview
 
 ## GitHub Pages
 
-Por padrão o Vite usa `base: "/"`, adequado para domínio próprio como `https://palpitai.com.br`.
+Por padrão o Vite usa `base: "/"`, adequado para domínio próprio como `https://palpite.app`.
 
 Se o deploy for em um repositório GitHub Pages com subcaminho, informe o base path no build:
 
@@ -37,7 +37,7 @@ O diretório gerado para publicação é `landing/dist`.
 
 ## Páginas públicas
 
-A landing expõe `/privacy`, `/terms` e `/account-deletion`. A página `/account-deletion` descreve o fluxo de exclusão de conta e dados do PalpitAI para uso no Google Play Console.
+A landing expõe `/privacy`, `/terms` e `/account-deletion`. A página `/account-deletion` descreve o fluxo de exclusão de conta e dados do Palpite! para uso no Google Play Console.
 
 ## Integrações futuras
 

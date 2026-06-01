@@ -47,7 +47,7 @@ export function SignupScreen({ onBackToLogin }: SignupScreenProps) {
 
           <Header
             title="Crie sua conta"
-            subtitle="Monte seus grupos, registre palpites e acompanhe os insights do Palpite! durante a competição."
+            subtitle="Monte seus grupos, registre palpites e entre na disputa dos Palpiteiros."
             topSpacing={20}
           />
 

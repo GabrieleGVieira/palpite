@@ -10,8 +10,8 @@ const privacySections: LegalSection[] = [
   {
     title: '1. Introdução',
     paragraphs: [
-      'Bem-vindo ao PalpitAI.',
-      'O PalpitAI é uma plataforma de bolões esportivos que permite a criação e participação em grupos de palpites, rankings e competições esportivas.',
+      'Bem-vindo ao Palpite!',
+      'O Palpite! é uma plataforma de bolões esportivos que permite a criação e participação em grupos de palpites, rankings e competições esportivas.',
       'Esta Política de Privacidade descreve como coletamos, utilizamos, armazenamos e protegemos suas informações.',
       'Ao utilizar o aplicativo, você concorda com os termos descritos neste documento.',
     ],
@@ -21,10 +21,10 @@ const privacySections: LegalSection[] = [
     paragraphs: [
       'Podemos coletar as seguintes informações:',
       'Dados de cadastro: nome, endereço de e-mail, foto de perfil e identificador único da conta.',
-      'Dados de autenticação: quando o usuário realiza login por provedores externos, como Google, recebemos apenas as informações autorizadas pelo próprio usuário.',
+      'Dados de autenticação: quando o Palpiteiro realiza login por provedores externos, como Google, recebemos apenas as informações autorizadas pelo próprio Palpiteiro.',
       'Dados de uso: dispositivo utilizado, sistema operacional, versão do aplicativo, data e horário de acesso, eventos de navegação e informações relacionadas ao uso das funcionalidades do aplicativo.',
       'Dados relacionados aos bolões: palpites realizados, participação em grupos, rankings e histórico de resultados.',
-      'Notificações: caso autorizado pelo usuário, poderemos armazenar identificadores de notificação para envio de avisos e atualizações.',
+      'Notificações: caso autorizado pelo Palpiteiro, poderemos armazenar identificadores de notificação para envio de avisos e atualizações.',
     ],
   },
   {
@@ -35,7 +35,7 @@ const privacySections: LegalSection[] = [
       'Gerenciar grupos e bolões',
       'Calcular pontuações e rankings',
       'Exibir estatísticas e histórico',
-      'Melhorar a experiência do usuário',
+      'Melhorar a experiência dos Palpiteiros',
       'Corrigir falhas e problemas técnicos',
       'Enviar notificações relacionadas ao funcionamento do aplicativo',
       'Prevenir fraudes e uso indevido da plataforma',
@@ -52,7 +52,7 @@ const privacySections: LegalSection[] = [
   {
     title: '5. Segurança',
     paragraphs: [
-      'Adotamos medidas técnicas e administrativas razoáveis para proteger os dados dos usuários contra acesso não autorizado, alteração indevida, divulgação indevida e destruição ou perda de informações.',
+      'Adotamos medidas técnicas e administrativas razoáveis para proteger os dados dos Palpiteiros contra acesso não autorizado, alteração indevida, divulgação indevida e destruição ou perda de informações.',
       'Embora empreguemos mecanismos de segurança, nenhum sistema é totalmente imune a riscos.',
     ],
   },
@@ -65,8 +65,8 @@ const privacySections: LegalSection[] = [
   {
     title: '7. Exclusão da conta',
     paragraphs: [
-      'O usuário poderá solicitar a exclusão de sua conta e dos dados associados.',
-      'A solicitação poderá ser realizada por meio dos canais de suporte disponibilizados pelo PalpitAI.',
+      'O Palpiteiro poderá solicitar a exclusão de sua conta e dos dados associados.',
+      'A solicitação poderá ser realizada por meio dos canais de suporte disponibilizados pelo Palpite!',
       'Algumas informações poderão ser mantidas quando exigidas por obrigação legal ou regulatória.',
     ],
   },
@@ -87,7 +87,7 @@ const privacySections: LegalSection[] = [
   {
     title: '10. Contato',
     paragraphs: [
-      'Em caso de dúvidas sobre esta Política de Privacidade ou sobre o tratamento de dados pessoais, entre em contato pelo e-mail contato@palpitai.app.',
+      'Em caso de dúvidas sobre esta Política de Privacidade ou sobre o tratamento de dados pessoais, entre em contato pelo e-mail contato@palpite.app.',
     ],
   },
 ];
@@ -96,73 +96,73 @@ const termsSections: LegalSection[] = [
   {
     title: '1. Aceitação dos termos',
     paragraphs: [
-      'Ao acessar ou utilizar o PalpitAI, você declara que leu, compreendeu e concorda com estes Termos de Uso.',
+      'Ao acessar ou utilizar o Palpite!, você declara que leu, compreendeu e concorda com estes Termos de Uso.',
       'Se você não concordar com estes termos, não deverá utilizar o aplicativo.',
     ],
   },
   {
-    title: '2. Sobre o PalpitAI',
+    title: '2. Sobre o Palpite!',
     paragraphs: [
-      'O PalpitAI é uma plataforma de bolões esportivos que permite criar grupos, registrar palpites, acompanhar rankings, consultar estatísticas e visualizar previsões com IA.',
-      'O PalpitAI não é uma plataforma oficial de apostas, jogos de azar ou transações financeiras.',
+      'O Palpite! é uma plataforma de bolões esportivos que permite criar grupos, registrar palpites, acompanhar rankings, consultar estatísticas e visualizar análises da PalpitAI.',
+      'O Palpite! não é uma plataforma oficial de apostas, jogos de azar ou transações financeiras.',
     ],
   },
   {
-    title: '3. Cadastro e conta do usuário',
+    title: '3. Cadastro e conta do Palpiteiro',
     paragraphs: [
-      'Para utilizar determinadas funcionalidades, o usuário poderá precisar criar uma conta ou realizar login por provedores externos, como Google.',
-      'O usuário é responsável por manter seus dados de acesso protegidos e por informar dados corretos no cadastro.',
+      'Para utilizar determinadas funcionalidades, o Palpiteiro poderá precisar criar uma conta ou realizar login por provedores externos, como Google.',
+      'O Palpiteiro é responsável por manter seus dados de acesso protegidos e por informar dados corretos no cadastro.',
     ],
   },
   {
     title: '4. Uso permitido da plataforma',
     paragraphs: [
-      'O usuário deve utilizar o PalpitAI de forma lícita, respeitosa e compatível com a finalidade do aplicativo.',
+      'O Palpiteiro deve utilizar o Palpite! de forma lícita, respeitosa e compatível com a finalidade do aplicativo.',
       'É proibido tentar acessar áreas restritas, interferir no funcionamento da plataforma, explorar falhas técnicas ou utilizar o app para atividades ilegais.',
     ],
   },
   {
     title: '5. Bolões, palpites e rankings',
     paragraphs: [
-      'Os palpites e rankings têm finalidade recreativa e competitiva entre usuários e grupos.',
+      'Os palpites e rankings têm finalidade recreativa e competitiva entre Palpiteiros e grupos.',
       'Rankings, pontuações e critérios de desempate dependem das regras configuradas pelo app ou pelo grupo, podendo ser ajustados conforme evolução do serviço.',
-      'O usuário é responsável pelos palpites enviados em sua conta.',
+      'O Palpiteiro é responsável pelos palpites enviados em sua conta.',
     ],
   },
   {
-    title: '6. Previsões, estatísticas e IA',
+    title: '6. PalpitAI, estatísticas e tendências',
     paragraphs: [
-      'As previsões com IA, estatísticas e análises exibidas pelo PalpitAI são apenas informativas e não garantem resultados esportivos.',
+      'As análises da PalpitAI, estatísticas e tendências exibidas pelo Palpite! são apenas informativas e não garantem resultados esportivos.',
       'Essas informações podem conter limitações, imprecisões ou variações conforme dados disponíveis, modelos utilizados e eventos externos.',
-      'O usuário não deve tomar decisões financeiras, de apostas ou de risco com base exclusiva nas previsões do PalpitAI.',
+      'O Palpiteiro não deve tomar decisões financeiras, de apostas ou de risco com base exclusiva nas análises da PalpitAI.',
     ],
   },
   {
     title: '7. Recursos pagos futuros',
     paragraphs: [
-      'O PalpitAI poderá oferecer recursos pagos, assinaturas ou funcionalidades premium futuramente.',
+      'O Palpite! poderá oferecer recursos pagos, assinaturas ou funcionalidades premium futuramente.',
       'Quando isso ocorrer, as condições comerciais, preços, formas de pagamento e regras específicas serão apresentadas antes da contratação.',
     ],
   },
   {
-    title: '8. Responsabilidades do usuário',
+    title: '8. Responsabilidades do Palpiteiro',
     paragraphs: [
-      'O usuário é responsável pelo conteúdo que envia, pelas interações realizadas em grupos e pelo uso adequado da plataforma.',
-      'O usuário deve respeitar outros participantes e não publicar conteúdo ofensivo, discriminatório, fraudulento ou que viole direitos de terceiros.',
+      'O Palpiteiro é responsável pelo conteúdo que envia, pelas interações realizadas em grupos e pelo uso adequado da plataforma.',
+      'O Palpiteiro deve respeitar outros Palpiteiros e não publicar conteúdo ofensivo, discriminatório, fraudulento ou que viole direitos de terceiros.',
     ],
   },
   {
     title: '9. Limitação de responsabilidade',
     paragraphs: [
-      'O PalpitAI busca manter o serviço disponível e funcional, mas pode haver interrupções, falhas técnicas, indisponibilidades temporárias ou alterações de funcionalidades.',
-      'Na medida permitida pela legislação aplicável, o PalpitAI não se responsabiliza por perdas decorrentes do uso inadequado da plataforma, decisões tomadas com base em previsões ou eventos fora de seu controle razoável.',
+      'O Palpite! busca manter o serviço disponível e funcional, mas pode haver interrupções, falhas técnicas, indisponibilidades temporárias ou alterações de funcionalidades.',
+      'Na medida permitida pela legislação aplicável, o Palpite! não se responsabiliza por perdas decorrentes do uso inadequado da plataforma, decisões tomadas com base nas análises da PalpitAI ou eventos fora de seu controle razoável.',
     ],
   },
   {
     title: '10. Suspensão ou encerramento de conta',
     paragraphs: [
-      'Contas poderão ser suspensas ou encerradas em caso de violação destes termos, uso indevido da plataforma, fraude, risco à segurança ou solicitação do próprio usuário.',
-      'Quando possível, o PalpitAI poderá comunicar o usuário sobre a medida adotada.',
+      'Contas poderão ser suspensas ou encerradas em caso de violação destes termos, uso indevido da plataforma, fraude, risco à segurança ou solicitação do próprio Palpiteiro.',
+      'Quando possível, o Palpite! poderá comunicar o Palpiteiro sobre a medida adotada.',
     ],
   },
   {
@@ -175,7 +175,7 @@ const termsSections: LegalSection[] = [
   {
     title: '12. Contato',
     paragraphs: [
-      'Em caso de dúvidas sobre estes Termos de Uso, entre em contato pelo e-mail contato@palpitai.app.',
+      'Em caso de dúvidas sobre estes Termos de Uso, entre em contato pelo e-mail contato@palpite.app.',
     ],
   },
 ];
@@ -185,12 +185,12 @@ const accountDeletionSections: LegalSection[] = [
     title: 'Como solicitar a exclusão da conta',
     paragraphs: ['Pelo aplicativo:'],
     bullets: [
-      'Faça login no PalpitAI.',
+      'Faça login no Palpite!',
       'Acesse Perfil.',
       'Entre em Configurações.',
       'Selecione “Excluir conta”.',
       'Leia as informações apresentadas.',
-      'Se você for dono de algum grupo, transfira a propriedade para outro participante antes de continuar.',
+      'Se você for dono de algum grupo, transfira a propriedade para outro Palpiteiro antes de continuar.',
       'Confirme a exclusão da conta digitando a confirmação solicitada.',
     ],
   },
@@ -209,7 +209,7 @@ const accountDeletionSections: LegalSection[] = [
       'avatar/foto de perfil',
       'preferências pessoais',
       'vínculos pessoais com grupos e bolões',
-      'dados de autenticação associados ao usuário, quando aplicável',
+      'dados de autenticação associados ao Palpiteiro, quando aplicável',
     ],
   },
   {
@@ -228,7 +228,7 @@ const accountDeletionSections: LegalSection[] = [
   {
     title: 'Anonimização',
     paragraphs: [
-      'Quando necessário, esses dados serão anonimizados para não identificar diretamente o usuário.',
+      'Quando necessário, esses dados serão anonimizados para não identificar diretamente o Palpiteiro.',
     ],
   },
   {
@@ -246,19 +246,19 @@ const accountDeletionSections: LegalSection[] = [
 
 const pageContent = {
   accountDeletion: {
-    title: 'Exclusão de Conta e Dados – PalpitAI',
+    title: 'Exclusão de Conta e Dados – Palpite!',
     updatedAt: 'Última atualização: 29 de maio de 2026',
     intro:
-      'O PalpitAI respeita a privacidade dos usuários e permite que você solicite a exclusão da sua conta e dos dados associados.',
+      'O Palpite! respeita a privacidade dos Palpiteiros e permite que você solicite a exclusão da sua conta e dos dados associados.',
     sections: accountDeletionSections,
   },
   privacy: {
-    title: 'Política de Privacidade – PalpitAI',
+    title: 'Política de Privacidade – Palpite!',
     updatedAt: 'Última atualização: 29 de maio de 2026',
     sections: privacySections,
   },
   terms: {
-    title: 'Termos de Uso – PalpitAI',
+    title: 'Termos de Uso – Palpite!',
     updatedAt: 'Última atualização: 29 de maio de 2026',
     sections: termsSections,
   },
@@ -271,7 +271,7 @@ export default function LegalPage({ type }: { type: keyof typeof pageContent }) 
     <main className="legal-page">
       <article className="section-shell legal-article">
         <a className="legal-back-link" href={appPath()}>
-          Voltar para o PalpitAI
+          Voltar para o Palpite!
         </a>
         <header className="legal-header">
           <p className="eyebrow">Legal</p>

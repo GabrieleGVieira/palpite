@@ -121,7 +121,7 @@ func JoinGroupHandler(cfg config.Config, groups usecase.GroupUsecase) http.Handl
 			case apperrors.IsNotFound(err):
 				writeError(w, http.StatusNotFound, "Grupo não encontrado.")
 			case apperrors.IsConflict(err):
-				writeError(w, http.StatusConflict, "Este grupo atingiu o limite de participantes.")
+				writeError(w, http.StatusConflict, "Este grupo atingiu o limite de Palpiteiros.")
 			default:
 				writeError(w, http.StatusInternalServerError, "Não foi possivel entrar no grupo.")
 			}
@@ -166,9 +166,9 @@ func ListGroupMembersHandler(cfg config.Config, groups usecase.GroupUsecase) htt
 			case apperrors.IsNotFound(err):
 				writeError(w, http.StatusNotFound, "Grupo não encontrado.")
 			case apperrors.IsForbidden(err):
-				writeError(w, http.StatusForbidden, "Apenas participantes do grupo podem ver os membros.")
+				writeError(w, http.StatusForbidden, "Apenas Palpiteiros do grupo podem ver os membros.")
 			default:
-				writeError(w, http.StatusInternalServerError, "Não foi possivel listar os participantes.")
+				writeError(w, http.StatusInternalServerError, "Não foi possivel listar os Palpiteiros.")
 			}
 			return
 		}
@@ -191,11 +191,11 @@ func GroupMemberDetailHandler(cfg config.Config, groups usecase.GroupUsecase) ht
 		if err != nil {
 			switch {
 			case apperrors.IsNotFound(err):
-				writeError(w, http.StatusNotFound, "Participante não encontrado.")
+				writeError(w, http.StatusNotFound, "Palpiteiro não encontrado.")
 			case apperrors.IsForbidden(err):
-				writeError(w, http.StatusForbidden, "Apenas participantes do grupo podem ver os membros.")
+				writeError(w, http.StatusForbidden, "Apenas Palpiteiros do grupo podem ver os membros.")
 			default:
-				writeError(w, http.StatusInternalServerError, "Não foi possivel carregar o participante.")
+				writeError(w, http.StatusInternalServerError, "Não foi possivel carregar o Palpiteiro.")
 			}
 			return
 		}
@@ -214,7 +214,7 @@ func ListGroupMembersAdminHandler(cfg config.Config, groups usecase.GroupUsecase
 
 		members, err := groups.ListMembers(r.Context(), userID, r.PathValue("groupID"))
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Não foi possivel listar os participantes.")
+			writeError(w, http.StatusInternalServerError, "Não foi possivel listar os Palpiteiros.")
 			return
 		}
 
@@ -318,7 +318,7 @@ func ApproveJoinRequestHandler(cfg config.Config, groups usecase.GroupUsecase) h
 			case apperrors.IsNotFound(err):
 				writeError(w, http.StatusNotFound, "Solicitacao não encontrada.")
 			case apperrors.IsConflict(err):
-				writeError(w, http.StatusConflict, "Este grupo atingiu o limite de participantes.")
+				writeError(w, http.StatusConflict, "Este grupo atingiu o limite de Palpiteiros.")
 			default:
 				writeError(w, http.StatusInternalServerError, "Não foi possivel aprovar a solicitacao.")
 			}
@@ -367,11 +367,11 @@ func RemoveGroupMemberHandler(cfg config.Config, groups usecase.GroupUsecase) ht
 
 		if err := groups.RemoveMember(r.Context(), ownerID, r.PathValue("groupID"), r.PathValue("userID")); err != nil {
 			if apperrors.IsNotFound(err) {
-				writeError(w, http.StatusNotFound, "Participante não encontrado.")
+				writeError(w, http.StatusNotFound, "Palpiteiro não encontrado.")
 				return
 			}
 
-			writeError(w, http.StatusInternalServerError, "Não foi possivel remover o participante.")
+			writeError(w, http.StatusInternalServerError, "Não foi possivel remover o Palpiteiro.")
 			return
 		}
 
@@ -391,7 +391,7 @@ func TransferGroupOwnershipHandler(cfg config.Config, groups usecase.GroupUsecas
 
 		if err := groups.TransferOwnership(r.Context(), ownerID, r.PathValue("groupID"), r.PathValue("userID")); err != nil {
 			if apperrors.IsNotFound(err) {
-				writeError(w, http.StatusNotFound, "Participante não encontrado.")
+				writeError(w, http.StatusNotFound, "Palpiteiro não encontrado.")
 				return
 			}
 

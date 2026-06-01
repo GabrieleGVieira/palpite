@@ -31,7 +31,7 @@ export function PaymentSettingsCard({
       {isPaid ? (
         <>
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Valor por participante</Text>
+            <Text style={styles.label}>Valor por Palpiteiro</Text>
             <TextInput
               keyboardType="decimal-pad"
               onChangeText={setPaymentAmount}

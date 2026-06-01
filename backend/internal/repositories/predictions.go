@@ -125,7 +125,7 @@ func ScoreMatchPredictions(ctx context.Context, db Querier, matchID string, requ
 				when sign(p.home_score - p.away_score) = sign($2 - $3) then 5
 
 				-- 4. Errou o vencedor, mas acertou a quantidade de gols de um dos times.
-				-- (Exemplo: Jogo 2x1, Palpite 0x1. Errou quem venceu, mas cravou os gols do visitante).
+				-- (Exemplo: Jogo 2x1, Palpite 0x1. Errou quem venceu, mas acertou os gols do visitante).
 				when p.home_score = $2 or p.away_score = $3 then 3
 
 				-- 5. Resultado incorreto não recebe pontos.

@@ -167,7 +167,7 @@ export function useGroupAdminScreen(
 
   const loadMembers = useCallback(async () => {
     const result = await refetchMembers();
-    const nextError = queryErrorMessage(result.error, 'Não foi possível carregar participantes.');
+    const nextError = queryErrorMessage(result.error, 'Não foi possível carregar Palpiteiros.');
     if (nextError) {
       showError(nextError);
     }
@@ -259,9 +259,9 @@ export function useGroupAdminScreen(
         ...group,
         member_count: Math.max(group.member_count - 1, 1),
       });
-      showSuccess('Participante removido.');
+      showSuccess('Palpiteiro removido.');
     } catch (removeError) {
-      showError(queryErrorMessage(removeError, 'Não foi possível remover o participante.') ?? 'Não foi possível remover o participante.');
+      showError(queryErrorMessage(removeError, 'Não foi possível remover o Palpiteiro.') ?? 'Não foi possível remover o Palpiteiro.');
     } finally {
       setRemovingUserID(null);
     }

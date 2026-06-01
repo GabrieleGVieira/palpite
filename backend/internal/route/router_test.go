@@ -133,8 +133,8 @@ func TestStatusHandler(t *testing.T) {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	if payload.App != "palpitai-api" {
-		t.Fatalf("expected app palpitai-api, got %q", payload.App)
+	if payload.App != "palpite-api" {
+		t.Fatalf("expected app palpite-api, got %q", payload.App)
 	}
 
 	if payload.Env != "test" {

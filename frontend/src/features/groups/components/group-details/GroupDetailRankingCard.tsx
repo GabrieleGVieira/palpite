@@ -9,7 +9,7 @@ export function GroupDetailRankingCard({ entry, key }: { entry: RankingEntry; ke
       </View>
       <View style={styles.rankingUserInfo}>
         <Text style={styles.rankingUser}>{entry.display_name || entry.user_id}</Text>
-        <Text style={styles.rankingMeta}>Participante do grupo</Text>
+        <Text style={styles.rankingMeta}>Palpiteiro do grupo</Text>
       </View>
       <Text style={styles.rankingPoints}>{entry.total_points} pts</Text>
     </View>

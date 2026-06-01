@@ -1,10 +1,10 @@
 # Palpite! Frontend
 
-App mobile em React Native com Expo para criação de grupos de bolão, palpites da Copa do Mundo 2026, ranking em tempo real e visualização de previsões de ML.
+App mobile em React Native com Expo para criação de grupos de bolão, palpites da Copa do Mundo 2026, ranking em tempo real e visualização de análises da PalpitAI.
 
 ## O que é
 
-O frontend é o ponto de entrada do usuário no Palpite!. Permite criar e entrar em grupos, registrar palpites antes do início de cada partida e acompanhar o ranking atualizado em tempo real via WebSocket. O app também exibe as previsões de resultado e placar geradas pelo pipeline de ML com explicações em linguagem natural.
+O frontend é o ponto de entrada dos Palpiteiros no Palpite! O app permite criar e entrar em grupos, registrar palpites antes do início de cada partida e acompanhar o ranking atualizado em tempo real via WebSocket. O app também exibe análises da PalpitAI geradas pelo pipeline de ML com explicações em linguagem natural.
 
 ## Tecnologias
 
@@ -21,7 +21,7 @@ O frontend é o ponto de entrada do usuário no Palpite!. Permite criar e entrar
 
 | Fonte            | Uso                                              |
 | ---------------- | ------------------------------------------------ |
-| Backend Go (API) | Grupos, palpites, ranking e previsões de ML      |
+| Backend Go (API) | Grupos, palpites, ranking e análises de ML      |
 | Supabase Auth    | Login, cadastro, sessão e token de acesso        |
 | WebSocket (/ws)  | Eventos em tempo real de jogos e ranking         |
 

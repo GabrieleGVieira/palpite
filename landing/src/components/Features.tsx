@@ -1,10 +1,11 @@
 const features = [
-  'Rankings automáticos',
+  'Ranking dos Palpiteiros',
   'Bolões privados',
-  'Competições internacionais',
-  'Previsões com IA',
+  'Palpites por partida',
+  'Palpitômetro preparado',
+  'Palpicoins em preparação',
+  'Sugestões da PalpitAI',
   'Atualizações em tempo real',
-  'Experiência simples para amigos e grupos',
 ];
 
 export default function Features() {
@@ -13,13 +14,13 @@ export default function Features() {
       <div className="section-shell feature-layout">
         <div className="section-heading compact">
           <p className="eyebrow">Diferenciais</p>
-          <h2 id="features-title">Feito para bolão online e para Copa do Mundo 2026</h2>
+          <h2 id="features-title">Feito para competir com amigos na Copa do Mundo 2026</h2>
           <p>
-            Combine grupos privados, app de palpites e previsões com IA em uma experiência simples
-            para disputar com amigos sem planilhas ou conferência manual.
+            Crie grupos privados, registre palpites, acompanhe rankings e mantenha a resenha
+            viva sem planilhas ou conferência manual.
           </p>
         </div>
-        <div className="feature-list" aria-label="Diferenciais do PalpitAI">
+        <div className="feature-list" aria-label="Diferenciais do Palpite!">
           {features.map((feature) => (
             <div className="feature-item" key={feature}>
               <span aria-hidden="true" />

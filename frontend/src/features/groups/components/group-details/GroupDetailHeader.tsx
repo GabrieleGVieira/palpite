@@ -59,7 +59,7 @@ export function GroupDetailHeader({
       <NotificationBanner message={notificationMessage} />
 
       <Pressable onPress={onOpenMembers} style={styles.membersButton}>
-        <Text style={styles.membersButtonText}>Participantes</Text>
+        <Text style={styles.membersButtonText}>Palpiteiros</Text>
       </Pressable>
 
       <View style={styles.tabs}>

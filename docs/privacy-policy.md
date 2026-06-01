@@ -1,17 +1,17 @@
-# Politica de Privacidade - PalpitAI
+# Politica de Privacidade - Palpite!
 
 Ultima atualizacao: 27 de maio de 2026
 
-Esta politica descreve como o PalpitAI coleta, usa e protege dados dos usuarios.
+Esta politica descreve como o Palpite! coleta, usa e protege dados dos Palpiteiros.
 
 ## Dados Coletados
 
-O PalpitAI pode coletar:
+O Palpite! pode coletar:
 
 - nome informado no cadastro;
 - endereco de e-mail usado para autenticacao;
 - identificadores de conta gerados pelo provedor de autenticacao;
-- grupos criados ou acessados pelo usuario;
+- grupos criados ou acessados pelo Palpiteiro;
 - palpites, pontuacoes e participacao em rankings;
 - dados tecnicos necessarios para funcionamento do app, como tokens de sessao.
 
@@ -19,7 +19,7 @@ O PalpitAI pode coletar:
 
 Os dados sao usados para:
 
-- autenticar usuarios;
+- autenticar Palpiteiros;
 - permitir criacao, entrada e administracao de grupos;
 - registrar palpites;
 - calcular pontuacao e ranking;
@@ -28,11 +28,11 @@ Os dados sao usados para:
 
 ## Compartilhamento
 
-O PalpitAI usa provedores externos para operar o servico, incluindo Supabase para autenticacao e banco de dados. Os dados nao sao vendidos.
+O Palpite! usa provedores externos para operar o servico, incluindo Supabase para autenticacao e banco de dados. Os dados nao sao vendidos.
 
 ## Armazenamento e Seguranca
 
-Os dados sao armazenados em servicos de infraestrutura usados pelo PalpitAI. Medidas tecnicas e organizacionais devem ser aplicadas para reduzir acesso indevido, perda ou alteracao dos dados.
+Os dados sao armazenados em servicos de infraestrutura usados pelo Palpite! Medidas tecnicas e organizacionais devem ser aplicadas para reduzir acesso indevido, perda ou alteracao dos dados.
 
 ## Retencao e Exclusao
 
@@ -40,7 +40,7 @@ Os dados podem ser mantidos enquanto a conta estiver ativa ou enquanto forem nec
 
 ## Criancas
 
-O PalpitAI nao e direcionado a criancas. Caso seja identificada coleta indevida de dados de criancas, os dados deverao ser removidos.
+O Palpite! nao e direcionado a criancas. Caso seja identificada coleta indevida de dados de criancas, os dados deverao ser removidos.
 
 ## Contato
 

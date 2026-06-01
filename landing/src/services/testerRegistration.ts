@@ -3,7 +3,7 @@ export type TesterRegistrationPayload = {
   email: string;
 };
 
-const storageKey = 'palpitai_android_testers';
+const storageKey = 'palpite_android_testers';
 
 export async function registerTester(payload: TesterRegistrationPayload): Promise<void> {
   const currentRegistrations = readRegistrations();

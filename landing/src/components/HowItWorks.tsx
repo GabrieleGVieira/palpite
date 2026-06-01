@@ -7,18 +7,18 @@ const steps = [
     image: '/onboarding-groups.png',
   },
   {
-    title: 'Faça palpites',
-    text: 'Palpite em partidas e competições.',
+    title: 'Dê seu palpite',
+    text: 'Registre placares nas partidas e competições.',
     image: '/make-predictions.png',
   },
   {
-    title: 'Ganhe pontos',
-    text: 'Acompanhe rankings automáticos.',
+    title: 'Suba no ranking',
+    text: 'Acompanhe a disputa dos Palpiteiros.',
     image: '/onboarding-live.png',
   },
   {
-    title: 'Use IA',
-    text: 'Receba análises e previsões para ajudar suas decisões.',
+    title: 'Consulte a PalpitAI',
+    text: 'Veja análises e tendências como apoio complementar.',
     image: '/onboarding-ai.png',
   },
 ];
@@ -31,8 +31,8 @@ export default function HowItWorks() {
           <p className="eyebrow">Como funciona</p>
           <h2 id="how-title">Seu bolão com amigos em poucos passos</h2>
           <p>
-            O PalpitAI organiza o bolão de futebol, centraliza os palpites de futebol e mantém o
-            ranking de palpites atualizado para todo mundo acompanhar.
+            O Palpite! organiza o bolão de futebol, centraliza os palpites e mantém o ranking
+            atualizado para todo mundo acompanhar.
           </p>
         </div>
         <div className="card-grid four-columns">

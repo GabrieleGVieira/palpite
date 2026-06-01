@@ -12,14 +12,14 @@ const steps = [
     eyebrow: 'Bolão com amigos',
     title: 'Crie grupos e dispute rodada por rodada',
     description:
-      'Monte bolões privados, convide sua turma e acompanhe quem está subindo no ranking.',
+      'Monte bolões privados, convide sua turma e acompanhe quem sobe no ranking dos Palpiteiros.',
     image: require('../../../../assets/onboarding-groups.png'),
   },
   {
-    eyebrow: 'Insights com IA',
+    eyebrow: 'PalpitAI',
     title: 'Receba contexto antes de palpitar',
     description:
-      'Veja tendências, momento das seleções e sinais úteis para decidir seu palpite com mais clareza.',
+      'Veja tendências, momento das seleções e sinais úteis da PalpitAI como apoio complementar.',
     image: require('../../../../assets/onboarding-ai.png'),
   },
   {

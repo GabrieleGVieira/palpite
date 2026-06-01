@@ -10,7 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const RedisChannel = "palpitai:realtime:events"
+const RedisChannel = "palpite:realtime:events"
 
 type RedisPublisher struct {
 	client *cache.RedisClient

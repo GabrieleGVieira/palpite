@@ -1,6 +1,6 @@
 # ML Service — Visão Geral do Pipeline
 
-O pipeline de ML do PalpitAI é dividido em etapas sequenciais. Cada etapa produz dados que alimentam a próxima, culminando em previsões de resultado e placar que o backend Go consome do banco de dados.
+O pipeline de ML da PalpitAI é dividido em etapas sequenciais. Cada etapa produz dados que alimentam a próxima, culminando em previsões de resultado e placar que o backend Go consome do banco de dados.
 
 ---
 

@@ -1,4 +1,4 @@
-const SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL ?? 'https://palpitai.com.br';
+const SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL ?? 'https://palpite.app';
 
 export const LEGAL_URLS = {
   accountDeletion: `${SITE_URL}/account-deletion`,

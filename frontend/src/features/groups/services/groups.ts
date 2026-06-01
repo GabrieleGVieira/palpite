@@ -88,7 +88,7 @@ export async function listJoinRequests(groupID: string) {
 
 export async function listGroupMembers(groupID: string) {
   const data = await apiClient<ListGroupMembersResponse>(`/api/v1/groups/${groupID}/members`, {
-    fallbackError: 'Não foi possivel carregar os participantes.',
+    fallbackError: 'Não foi possivel carregar os Palpiteiros.',
   });
 
   return data.members;
@@ -96,7 +96,7 @@ export async function listGroupMembers(groupID: string) {
 
 export async function getGroupMemberDetail(groupID: string, userID: string) {
   return apiClient<GroupMemberDetail>(`/api/v1/groups/${groupID}/members/${userID}`, {
-    fallbackError: 'Não foi possivel carregar o participante.',
+    fallbackError: 'Não foi possivel carregar o Palpiteiro.',
   });
 }
 
@@ -138,7 +138,7 @@ export async function approveJoinRequest(groupID: string, userID: string) {
 
 export async function removeGroupMember(groupID: string, userID: string) {
   await apiClient<Record<string, string>>(`/api/v1/groups/${groupID}/members/${userID}`, {
-    fallbackError: 'Não foi possivel remover o participante.',
+    fallbackError: 'Não foi possivel remover o Palpiteiro.',
     method: 'DELETE',
   });
 }

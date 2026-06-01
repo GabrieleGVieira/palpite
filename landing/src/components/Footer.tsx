@@ -5,8 +5,8 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="section-shell footer-content">
         <div>
-          <p>PalpitAI</p>
-          <p>App de bolão com IA para futebol. Beta Android, iPhone em breve.</p>
+          <p>Palpite!</p>
+          <p>Bolões, rankings e resenha para quem vive futebol. Beta Android, iPhone em breve.</p>
         </div>
         <nav className="footer-links" aria-label="Links legais">
           <a href={appPath('privacy')}>Política de Privacidade</a>

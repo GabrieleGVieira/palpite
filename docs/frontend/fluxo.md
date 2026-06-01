@@ -1,6 +1,6 @@
 # Frontend — Fluxo do Sistema
 
-Documentação dos fluxos principais do app mobile React Native do PalpitAI: inicialização, autenticação, grupos, palpites e realtime.
+Documentação dos fluxos principais do app mobile React Native do Palpite!: inicialização, autenticação, grupos, palpites e realtime.
 
 ---
 
@@ -125,7 +125,7 @@ flowchart TD
     TABS -- "Jogos" --> MATCHES["GET /api/v1/groups/{gid}/matches"]
     TABS -- "Ranking" --> RANKING["GET /api/v1/groups/{gid}/ranking\n(lazy: só carrega ao clicar)"]
 
-    MATCHES --> CARD["Match card\n(placar atual + palpite do usuário)"]
+    MATCHES --> CARD["Match card\n(placar atual + palpite do Palpiteiro)"]
     CARD --> EDIT_PRED["Edita home_score / away_score\n(somente antes do kickoff)"]
     EDIT_PRED --> SAVE_PRED["PUT /api/v1/groups/{gid}/matches/{mid}/prediction"]
     SAVE_PRED --> UPDATE_CACHE["Atualiza cache in-place\nInvalida ranking + score"]
@@ -258,9 +258,9 @@ graph LR
 
 ---
 
-## 7. Feature de previsões de IA
+## 7. Feature de análises da PalpitAI
 
-O módulo `features/predictions` exibe a previsão gerada pelo ML+IA diretamente no card de partida, antes do kickoff.
+O módulo `features/predictions` exibe a previsão gerada pelo ML e PalpitAI diretamente no card de partida, antes do kickoff.
 
 ```mermaid
 flowchart TD

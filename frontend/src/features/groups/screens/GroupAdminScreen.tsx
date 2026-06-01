@@ -72,7 +72,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
     const name = member.display_name || `Usuário ${member.user_id.slice(0, 8)}`;
 
     Alert.alert(
-      'Remover participante',
+      'Remover Palpiteiro',
       `Você tem certeza que deseja remover ${name} deste grupo?`,
       [
         { style: 'cancel', text: 'Cancelar' },
@@ -114,7 +114,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
           />
           <AdminTabButton
             activeTab={activeTab}
-            label="Participantes"
+            label="Palpiteiros"
             tab="participants"
             onChangeTab={setActiveTab}
           />
@@ -165,7 +165,7 @@ export function GroupAdminScreen({ group, onBack, onGroupUpdated }: GroupAdminSc
             {group.role === 'owner' && isPaid && !isPaymentControlSaved ? (
               <EmptyBox
                 title="Salve a participação paga."
-                text="Depois de salvar o grupo, os controles de pagamento dos participantes aparecem aqui."
+                text="Depois de salvar o grupo, os controles de pagamento dos Palpiteiros aparecem aqui."
               />
             ) : null}
 

@@ -7,15 +7,15 @@ export default function Header() {
 
   return (
     <header className="site-header">
-      <a className="brand" href={homeHref} aria-label="PalpitAI inicio">
+      <a className="brand" href={homeHref} aria-label="Palpite! inicio">
         <img
           className="brand-mark"
-          src={assetPath('/splash-palpitai.png')}
+          src={assetPath('/splash-palpite.png')}
           alt=""
           width="34"
           height="34"
         />
-        <span>PalpitAI</span>
+        <span>Palpite!</span>
       </a>
       <nav className="header-nav" aria-label="Navegação principal">
         <a href={appPath('#como-funciona')}>Como funciona</a>

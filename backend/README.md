@@ -1,10 +1,10 @@
-# Palpite Backend
+# Palpite! Backend
 
-API HTTP/WebSocket em Go do Palpite. Autentica usuários via Supabase Auth, persiste dados no PostgreSQL, emite eventos em tempo real por WebSocket e sincroniza placares da Copa do Mundo via football-data.org.
+API HTTP/WebSocket em Go do Palpite! A API autentica Palpiteiros via Supabase Auth, persiste dados no PostgreSQL, emite eventos em tempo real por WebSocket e sincroniza placares da Copa do Mundo via football-data.org.
 
 ## O que é
 
-O backend é o núcleo do sistema: recebe palpites, calcula pontuação, serve o ranking e coordena atualizações em tempo real para todos os clientes conectados. Um worker separado faz polling na API da football-data.org e propaga mudanças de placar e status de partidas via WebSocket. O backend também integra com o pipeline de ML via banco de dados e gera explicações de previsões com a Gemini API.
+O backend é o núcleo do sistema: recebe palpites, calcula pontuação, serve o ranking e coordena atualizações em tempo real para todos os clientes conectados. Um worker separado faz polling na API da football-data.org e propaga mudanças de placar e status de partidas via WebSocket. O backend também integra com o pipeline da PalpitAI via banco de dados e gera explicações com a Gemini API.
 
 ## Tecnologias
 
@@ -23,7 +23,7 @@ O backend é o núcleo do sistema: recebe palpites, calcula pontuação, serve o
 | Fonte                  | Uso                                                    |
 | ---------------------- | ------------------------------------------------------ |
 | football-data.org API  | Placares, status e resultados das partidas em tempo real |
-| PostgreSQL (Supabase)  | Grupos, membros, palpites, ranking e previsões de ML   |
+| PostgreSQL (Supabase)  | Grupos, membros, palpites, ranking e análises de ML   |
 | Redis (Upstash)        | Cache de sessões e estado do hub WebSocket             |
 | Gemini API            | Explicações textuais das previsões geradas pelo ML     |
 

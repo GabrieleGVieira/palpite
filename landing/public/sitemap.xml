@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://palpitai.com.br/</loc>
+    <loc>https://palpite.app/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://palpitai.com.br/privacy</loc>
+    <loc>https://palpite.app/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://palpitai.com.br/terms</loc>
+    <loc>https://palpite.app/terms</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://palpitai.com.br/account-deletion</loc>
+    <loc>https://palpite.app/account-deletion</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>

@@ -17,7 +17,7 @@ export function ParticipantsCard({
   return (
     <View style={styles.row}>
       <View style={[styles.fieldGroup, styles.limitField]}>
-        <Text style={styles.label}>Participantes</Text>
+        <Text style={styles.label}>Palpiteiros</Text>
         <TextInput
           editable={!hasUnlimitedParticipants}
           keyboardType="number-pad"

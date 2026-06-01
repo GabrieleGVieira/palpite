@@ -1,10 +1,10 @@
 # PalpitAI ML Service
 
-Pipeline de machine learning e API de inferência do PalpitAI. Calcula métricas de seleções, treina modelos supervisionados para prever resultado e placar de partidas da Copa do Mundo e serve previsões para o backend Go.
+Pipeline de machine learning e API de inferência da PalpitAI. Calcula métricas de seleções, treina modelos supervisionados para prever resultado e placar de partidas da Copa do Mundo e serve análises para o backend Go.
 
 ## O que é
 
-O ML Service é responsável por toda a inteligência preditiva do PalpitAI. Opera em quatro etapas sequenciais: cálculo de métricas históricas de seleções, treinamento de modelos de resultado (classificação) e de gols (regressão Poisson), calibração conjunta dos modelos, e geração de previsões futuras salvas no banco. O backend Go consome essas previsões diretamente do PostgreSQL e as expõe no app com explicações geradas por LLM.
+O ML Service é responsável pela inteligência preditiva da PalpitAI. Opera em quatro etapas sequenciais: cálculo de métricas históricas de seleções, treinamento de modelos de resultado (classificação) e de gols (regressão Poisson), calibração conjunta dos modelos, e geração de previsões futuras salvas no banco. O backend Go consome essas previsões diretamente do PostgreSQL e as expõe no app como análises complementares.
 
 ## Tecnologias
 
@@ -85,7 +85,7 @@ python app/scripts/build_historical_training_features.py \
 
 ```bash
 python app/scripts/train_model.py \
-  --model-name palpitai-result-model \
+  --model-name palpite-result-model \
   --version v1.0.0 \
   --train-until 2018-12-31 \
   --test-from 2019-01-01 \
@@ -97,7 +97,7 @@ python app/scripts/train_model.py \
 
 ```bash
 python app/scripts/train_goals_model.py \
-  --model-name palpitai-goals-model \
+  --model-name palpite-goals-model \
   --version v1.0.0 \
   --train-until 2018-12-31 \
   --test-from 2019-01-01 \
@@ -109,7 +109,7 @@ python app/scripts/train_goals_model.py \
 
 ```bash
 python app/scripts/predict_upcoming_matches.py \
-  --model-name palpitai-result-model \
+  --model-name palpite-result-model \
   --version v1.0.0 \
   --from-date 2026-06-01 \
   --to-date 2026-07-31
@@ -119,7 +119,7 @@ python app/scripts/predict_upcoming_matches.py \
 
 ```bash
 python app/scripts/predict_match_goals.py \
-  --model-name palpitai-goals-model \
+  --model-name palpite-goals-model \
   --version v1.0.0 \
   --from-date 2026-06-01 \
   --to-date 2026-07-31 \
@@ -130,9 +130,9 @@ python app/scripts/predict_match_goals.py \
 
 ```bash
 python app/scripts/calibrate_score_result_predictions.py \
-  --result-model-name palpitai-result-model \
+  --result-model-name palpite-result-model \
   --result-version v1.0.0 \
-  --goal-model-name palpitai-goals-model \
+  --goal-model-name palpite-goals-model \
   --goal-version v1.0.0 \
   --from-date 2026-06-01 \
   --to-date 2026-07-31 \

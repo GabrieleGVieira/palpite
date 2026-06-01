@@ -53,14 +53,14 @@ export default function App() {
           <div className="section-shell testing-grid">
             <div className="testing-copy">
               <p className="eyebrow">Acesso antecipado</p>
-              <h2 id="testing-title">PalpitAI Beta para Android</h2>
+              <h2 id="testing-title">Palpite! Beta para Android</h2>
               <p>
-                O PalpitAI ainda está em desenvolvimento. Cadastre seu e-mail Google para receber
+                O Palpite! ainda está em desenvolvimento. Cadastre seu e-mail Google para receber
                 acesso antecipado à versão Beta para Android.
               </p>
               <p>
                 A lista será usada para organizar o Beta fechado do app de bolão online, validar o
-                ranking de palpites e preparar a experiência para grupos antes do lançamento.
+                ranking dos Palpiteiros e preparar a experiência para grupos antes do lançamento.
               </p>
             </div>
             <TesterForm />

@@ -102,7 +102,7 @@ export function useGroupDetailScreen(group: Group, onGroupLeft: () => void) {
 
       updateMatchPrediction(match.id, prediction);
       await loadRanking();
-      showSuccess('Palpite salvo.');
+      showSuccess('Seu palpite foi registrado.');
     } catch (saveError) {
       showError(errorMessage(saveError, 'Não foi possível salvar o palpite.'));
     } finally {

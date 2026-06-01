@@ -1,18 +1,18 @@
-# PalpitAI AI Explanation Engine
+# PalpitAI Explanation Engine
 
 ## Objetivo
 
-A Etapa 4 usa IA apenas para explicar previsões já calculadas. A IA não decide vencedor, probabilidades, placar provável, gols esperados, métricas, rankings ou confiança numérica.
+A Etapa 4 usa a PalpitAI apenas para explicar previsões já calculadas. A PalpitAI não decide vencedor, probabilidades, placar provável, gols esperados, métricas, rankings ou confiança numérica.
 
-O app nunca chama IA diretamente. O app lê explicações previamente salvas em `prediction_explanations`.
+O app nunca chama a PalpitAI diretamente. O app lê explicações previamente salvas em `prediction_explanations`.
 
-## O que a IA faz
+## O que a PalpitAI faz
 
 - Transforma dados de `match_predictions`, `match_goal_predictions`, `match_score_probabilities` e `match_features` em texto curto.
 - Escreve em português do Brasil.
 - Retorna JSON estruturado validado pelo backend.
 
-## O que a IA não faz
+## O que a PalpitAI não faz
 
 - Não calcula probabilidades.
 - Não altera placar provável.
@@ -25,7 +25,7 @@ O app nunca chama IA diretamente. O app lê explicações previamente salvas em 
 1. O worker busca partidas no intervalo informado.
 2. Ignora partidas sem `match_prediction` ou sem `match_goal_prediction`.
 3. Monta `input_snapshot`.
-4. Chama o provider de IA.
+4. Chama o provider da PalpitAI.
 5. Valida JSON, campos obrigatórios, `bet_style` e linguagem proibida.
 6. Salva em `prediction_explanations`.
 
@@ -79,7 +79,7 @@ Prompt version: prediction-explanation-v1
 
 ## Prompt
 
-O prompt recebe dados estruturados da partida, probabilidades, expected goals, top placares e métricas principais. Ele instrui a IA a retornar somente JSON, sem markdown, sem alterar números e sem linguagem de certeza.
+O prompt recebe dados estruturados da partida, probabilidades, expected goals, top placares e métricas principais. Ele instrui a PalpitAI a retornar somente JSON, sem markdown, sem alterar números e sem linguagem de certeza.
 
 ## Resposta
 

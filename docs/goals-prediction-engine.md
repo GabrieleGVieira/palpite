@@ -77,9 +77,9 @@ Comando:
 
 ```bash
 python ml-service/app/scripts/calibrate_score_result_predictions.py \
-  --result-model-name palpitai-result-model \
+  --result-model-name palpite-result-model \
   --result-version v1.0.0 \
-  --goal-model-name palpitai-goals-model \
+  --goal-model-name palpite-goals-model \
   --goal-version v1.0.0 \
   --from-date 2026-06-01 \
   --to-date 2026-07-31 \

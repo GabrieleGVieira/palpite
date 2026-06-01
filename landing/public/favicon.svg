@@ -1,7 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="PalpitAI">
-  <rect width="64" height="64" rx="14" fill="#f5f8ef"/>
-  <circle cx="32" cy="32" r="20" fill="#10b981"/>
-  <path d="M32 14l7 10-7 6-7-6 7-10zM18 29l11 3 1 10-10 4-2-17zM46 29l-11 3-1 10 10 4 2-17zM25 49l7-6 7 6-7 5-7-5z" fill="#f8fafc"/>
-  <path d="M32 30l8 6-3 10H27l-3-10 8-6z" fill="#123d2a"/>
-  <path d="M12 52h40" stroke="#cfe0c9" stroke-width="4" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Palpite!">
+  <rect width="64" height="64" fill="#cfe88f"/>
+  <path d="M0 42 26 29M36 8h28M51 18h13M2 22h28" stroke="#eef8cf" stroke-width="2" opacity=".8"/>
+  <path d="M18 48V17h16c11 0 18 6 18 16S45 49 34 49H27v9h-9z" fill="#07833f" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M13 51 38 25" stroke="#fff" stroke-width="4" stroke-linecap="square"/>
+  <path d="M15 52 39 27" stroke="#07833f" stroke-width="2" stroke-linecap="square"/>
+  <circle cx="42" cy="31" r="10" fill="#fff"/>
+  <path d="m42 25 6 4-2 7h-8l-2-7z" fill="#036735"/>
+  <path d="M42 21v7M33 29l7 2M35 39l5-6M49 39l-5-6M51 29l-7 2" stroke="#036735" stroke-width="2"/>
+  <circle cx="24" cy="54" r="5" fill="none" stroke="#fff" stroke-width="3"/>
 </svg>

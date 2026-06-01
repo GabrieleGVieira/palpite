@@ -1,14 +1,14 @@
 {
-  "name": "PalpitAI",
-  "short_name": "PalpitAI",
-  "description": "App de bolao com IA para futebol.",
+  "name": "Palpite!",
+  "short_name": "Palpite!",
+  "description": "Onde a resenha vira competição.",
   "start_url": ".",
   "display": "browser",
   "background_color": "#f5f8ef",
-  "theme_color": "#f5f8ef",
+  "theme_color": "#1f7a4a",
   "icons": [
     {
-      "src": "splash-palpitai.png",
+      "src": "splash-palpite.png",
       "sizes": "700x700",
       "type": "image/png",
       "purpose": "any"

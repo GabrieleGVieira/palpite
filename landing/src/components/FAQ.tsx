@@ -1,23 +1,23 @@
 const questions = [
   {
-    question: 'O que é o PalpitAI?',
+    question: 'O que é o Palpite!?',
     answer:
-      'PalpitAI é um app de bolão de futebol com IA para criar grupos, registrar palpites e acompanhar rankings.',
+      'Palpite! é a forma mais divertida de competir com amigos, acompanhar rankings e testar quem realmente entende de futebol.',
   },
   {
     question: 'Como funciona o app de bolão?',
     answer:
-      'Você cria ou entra em um bolão online, faz palpites de futebol nas partidas e soma pontos automaticamente no ranking.',
+      'Você cria ou entra em um bolão online, faz palpites nas partidas e soma pontos automaticamente no ranking dos Palpiteiros.',
   },
   {
-    question: 'O PalpitAI usa inteligência artificial?',
+    question: 'O Palpite! tem IA?',
     answer:
-      'Sim. O app usa previsões com IA para apoiar suas decisões antes de enviar os palpites.',
+      'Sim. A PalpitAI aparece como recurso complementar com análises, sugestões e explicações para apoiar seus palpites.',
   },
   {
     question: 'Posso criar bolões com amigos?',
     answer:
-      'Sim. O PalpitAI foi pensado para bolão com amigos, grupos privados e rankings simples de acompanhar.',
+      'Sim. O Palpite! foi pensado para bolão com amigos, grupos privados, resenha e rankings simples de acompanhar.',
   },
   {
     question: 'O app está disponível para iPhone?',

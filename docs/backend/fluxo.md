@@ -1,6 +1,6 @@
 # Backend — Fluxo do Sistema
 
-Documentação dos fluxos principais do backend Go do PalpitAI: ciclo de vida de requisições HTTP, WebSocket, sincronização de partidas e geração de explicações de IA.
+Documentação dos fluxos principais do backend Go do Palpite!: ciclo de vida de requisições HTTP, WebSocket, sincronização de partidas e geração de explicações da PalpitAI.
 
 ---
 
@@ -216,7 +216,7 @@ flowchart TD
 
 ## 5. Leitura de previsão de partida
 
-O endpoint `GET /api/v1/matches/{matchID}/prediction` agrega probabilidades, expected goals, top placares e explicação de IA em uma única resposta.
+O endpoint `GET /api/v1/matches/{matchID}/prediction` agrega probabilidades, expected goals, top placares e explicação da PalpitAI em uma única resposta.
 
 ```mermaid
 sequenceDiagram
@@ -256,7 +256,7 @@ sequenceDiagram
 
 ---
 
-## 6. Geração de explicações de IA
+## 6. Geração de explicações da PalpitAI
 
 O worker `cmd/workers/generate_prediction_explanations` lê previsões do ML e gera explicações em português via Gemini API.
 

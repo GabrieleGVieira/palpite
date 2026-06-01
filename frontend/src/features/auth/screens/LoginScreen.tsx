@@ -42,7 +42,7 @@ export function LoginScreen({ onCreateAccount }: LoginScreenProps) {
 
           <Header
             title="Bem-vindo ao Palpite!"
-            subtitle="Entre no seu bolão inteligente e acompanhe palpites, rankings e insights com IA."
+            subtitle="Entre no bolão, acompanhe rankings e mostre quem entende de futebol."
             topSpacing={32}
           />
 
