@@ -50,7 +50,7 @@ jobs:
 
       - name: Build landing
         env:
-          VITE_BASE_PATH: /palpitAI/
+          VITE_BASE_PATH: /palpite/
         run: npm run build
 
       - name: Export Expo Web app
@@ -64,7 +64,7 @@ jobs:
       - name: Prepare Expo Web PWA
         working-directory: .
         env:
-          EXPO_WEB_BASE_PATH: /palpitAI/app/
+          EXPO_WEB_BASE_PATH: /palpite/app/
         run: node scripts/prepare-expo-web-pwa.mjs frontend/dist
 
       - name: Mount Expo Web app under landing
