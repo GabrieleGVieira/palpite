@@ -1,10 +1,12 @@
 package route
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
 	"github.com/gabrielevieira/palpitai/backend/internal/controller"
+	googleintegration "github.com/gabrielevieira/palpitai/backend/internal/google"
 	predictionservice "github.com/gabrielevieira/palpitai/backend/internal/predictions/service"
 	"github.com/gabrielevieira/palpitai/backend/internal/usecase"
 )
@@ -30,8 +32,10 @@ func NewRouter(cfg config.Config, db usecase.Datastore, services ...Services) ht
 	predictionReader := predictionservice.NewPredictionReadService(db)
 	wallet := usecase.NewWalletUsecase(db)
 	challenges := usecase.NewChallengeUsecase(db)
+	betaAndroid := usecase.NewBetaAndroidUsecase(db, googleintegration.NewGroupMemberAdder(cfg, slog.Default()), cfg.PlayStoreBetaURL, slog.Default())
 
 	mux.HandleFunc("GET /health", controller.HealthHandler(db, redis))
+	mux.HandleFunc("POST /api/beta/android", controller.BetaAndroidSignupHandler(betaAndroid))
 	mux.HandleFunc("GET /ws", controller.RealtimeHandler(cfg, db, realtimeHub))
 	mux.HandleFunc("GET /api/v1/status", controller.StatusHandler(cfg, db, redis))
 	mux.HandleFunc("DELETE /api/v1/me", controller.DeleteAccountHandler(cfg, accounts))

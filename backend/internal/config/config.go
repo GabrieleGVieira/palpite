@@ -19,6 +19,10 @@ type Config struct {
 	GeminiRateLimitMaxWaits        string
 	GeminiRequestDelaySeconds      string
 	GeminiTimeoutSeconds           string
+	GoogleGroupEmail               string
+	GooglePrivateKey               string
+	GoogleServiceAccountEmail      string
+	GoogleWorkspaceDelegatedAdmin  string
 	AIExplanationBatchSize         string
 	AIExplanationMinBatchSize      string
 	AIExplanationRetryMissing      string
@@ -27,6 +31,7 @@ type Config struct {
 	AIExplanationRefreshDays       string
 	AIExplanationMaxAgeHours       string
 	Port                           string
+	PlayStoreBetaURL               string
 	RedisURL                       string
 	SupabaseKey                    string
 	SupabaseServiceRoleKey         string
@@ -49,6 +54,10 @@ func Load() Config {
 		GeminiRateLimitMaxWaits:        getEnv("GEMINI_RATE_LIMIT_MAX_WAITS", "1"),
 		GeminiRequestDelaySeconds:      getEnv("GEMINI_REQUEST_DELAY_SECONDS", "15"),
 		GeminiTimeoutSeconds:           getEnv("GEMINI_TIMEOUT_SECONDS", "30"),
+		GoogleGroupEmail:               getEnv("GOOGLE_GROUP_EMAIL", ""),
+		GooglePrivateKey:               getEnv("GOOGLE_PRIVATE_KEY", ""),
+		GoogleServiceAccountEmail:      getEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL", ""),
+		GoogleWorkspaceDelegatedAdmin:  getEnv("GOOGLE_WORKSPACE_DELEGATED_ADMIN_EMAIL", ""),
 		AIExplanationBatchSize:         getEnv("AI_EXPLANATION_BATCH_SIZE", "2"),
 		AIExplanationMinBatchSize:      getEnv("AI_EXPLANATION_MIN_BATCH_SIZE", "1"),
 		AIExplanationRetryMissing:      getEnv("AI_EXPLANATION_RETRY_MISSING", "true"),
@@ -57,6 +66,7 @@ func Load() Config {
 		AIExplanationRefreshDays:       getEnv("AI_EXPLANATION_REFRESH_DAYS", "7"),
 		AIExplanationMaxAgeHours:       getEnv("AI_EXPLANATION_MAX_AGE_HOURS", "24"),
 		Port:                           getEnv("PORT", "3000"),
+		PlayStoreBetaURL:               getEnv("PLAY_STORE_BETA_URL", ""),
 		RedisURL:                       getEnv("REDIS_URL", ""),
 		SupabaseKey:                    getEnv("SUPABASE_KEY", ""),
 		SupabaseServiceRoleKey:         getEnv("SUPABASE_SERVICE_ROLE_KEY", ""),

@@ -1,61 +1,41 @@
 export type TesterRegistrationPayload = {
-  name: string;
+  name?: string;
   email: string;
+  consent: boolean;
 };
 
-const storageKey = 'palpite_android_testers';
+export type TesterRegistrationResult = {
+  success: boolean;
+  redirectUrl?: string;
+  message?: string;
+};
 
-export async function registerTester(payload: TesterRegistrationPayload): Promise<void> {
-  const currentRegistrations = readRegistrations();
-  const nextRegistrations = [
-    ...currentRegistrations.filter((registration) => registration.email !== payload.email),
-    {
-      ...payload,
-      registeredAt: new Date().toISOString(),
+const apiUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
+
+export async function registerTester(
+  payload: TesterRegistrationPayload,
+): Promise<TesterRegistrationResult> {
+  const response = await fetch(`${apiUrl}/api/beta/android`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  ];
+    body: JSON.stringify(payload),
+  });
 
-  localStorage.setItem(storageKey, JSON.stringify(nextRegistrations));
-
-  // Future integration point:
-  // - send tester data to Supabase;
-  // - sync approved Google emails with Google Groups;
-  // - enroll or invite testers to Play Store Closed Testing.
-  await Promise.resolve();
-}
-
-function readRegistrations(): Array<TesterRegistrationPayload & { registeredAt: string }> {
-  const storedValue = localStorage.getItem(storageKey);
-
-  if (!storedValue) {
-    return [];
-  }
-
+  let body: TesterRegistrationResult & { error?: string };
   try {
-    const parsedValue: unknown = JSON.parse(storedValue);
-
-    if (!Array.isArray(parsedValue)) {
-      return [];
-    }
-
-    return parsedValue.filter(isStoredRegistration);
+    body = await response.json();
   } catch {
-    return [];
-  }
-}
-
-function isStoredRegistration(
-  value: unknown,
-): value is TesterRegistrationPayload & { registeredAt: string } {
-  if (!value || typeof value !== 'object') {
-    return false;
+    body = {
+      success: false,
+      message: 'Não foi possível processar a resposta do servidor.',
+    };
   }
 
-  const registration = value as Record<string, unknown>;
+  if (!response.ok && response.status !== 202) {
+    throw new Error(body.error ?? body.message ?? 'Não foi possível cadastrar seu e-mail.');
+  }
 
-  return (
-    typeof registration.name === 'string' &&
-    typeof registration.email === 'string' &&
-    typeof registration.registeredAt === 'string'
-  );
+  return body;
 }

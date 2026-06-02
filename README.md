@@ -68,6 +68,11 @@ GEMINI_RATE_LIMIT_COOLDOWN_SECONDS=1800
 GEMINI_RATE_LIMIT_MAX_WAITS=1
 GEMINI_REQUEST_DELAY_SECONDS=15
 GEMINI_TIMEOUT_SECONDS=30
+GOOGLE_SERVICE_ACCOUNT_EMAIL=service-account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+GOOGLE_GROUP_EMAIL=beta-testers@seudominio.com
+GOOGLE_WORKSPACE_DELEGATED_ADMIN_EMAIL=admin@seudominio.com
+PLAY_STORE_BETA_URL=https://play.google.com/apps/testing/com.palpite.app
 AI_EXPLANATION_BATCH_SIZE=2
 AI_EXPLANATION_MIN_BATCH_SIZE=1
 AI_EXPLANATION_RETRY_MISSING=true
@@ -176,7 +181,14 @@ uvicorn app.api.main:app --reload
 - Previsões de resultado e placar geradas por ML
 - Análises da PalpitAI em linguagem natural via LLM
 - Landing pública com privacidade, termos, exclusão de conta e formulário Beta Android
+- Cadastro Beta Android via backend, tabela `beta_testers_android`, Google Group vinculado à track de teste no Play Console e redirecionamento para `PLAY_STORE_BETA_URL`
 - PWA gerada pelo app Expo em `frontend` com manifest e service worker preparados no build web
+
+## Beta Android
+
+O formulário da landing chama `POST /api/beta/android`. O backend valida consentimento e e-mail, evita duplicidade, salva em `beta_testers_android`, adiciona o e-mail ao `GOOGLE_GROUP_EMAIL` via Admin SDK Directory API quando as credenciais estão disponíveis e retorna `PLAY_STORE_BETA_URL` para redirecionamento.
+
+Antes de publicar o fluxo, vincule o Google Group à track de teste no Play Console. A API oficial do Google Play Developer não suporta adicionar e-mails individuais diretamente na lista de testers da Play Console; o caminho suportado aqui é usar Google Groups como fonte de testers.
 
 ## Qualidade
 

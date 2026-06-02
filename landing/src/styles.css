@@ -517,7 +517,28 @@ h3 {
   border-color: rgba(160, 50, 34, 0.72);
 }
 
+.form-checkbox {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  margin: 4px 0 16px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.form-checkbox input {
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  accent-color: var(--primary);
+}
+
 .field-error {
+  display: block;
+  margin-top: -8px;
+  margin-bottom: 12px;
   color: var(--danger);
   font-size: 0.88rem;
 }
@@ -539,6 +560,16 @@ h3 {
   border-radius: 8px;
   background: #f5f8ef;
   color: var(--success);
+  font-weight: 700;
+}
+
+.error-message {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(160, 50, 34, 0.26);
+  border-radius: 8px;
+  background: #fff7f3;
+  color: var(--danger);
   font-weight: 700;
 }
 

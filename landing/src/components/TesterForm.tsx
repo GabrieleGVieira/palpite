@@ -2,8 +2,8 @@ import { FormEvent, useState } from 'react';
 import { registerTester } from '../services/testerRegistration';
 
 type FormErrors = {
-  name?: string;
   email?: string;
+  consent?: string;
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -11,17 +11,15 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function TesterForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors: FormErrors = {};
-
-    if (!name.trim()) {
-      nextErrors.name = 'Informe seu nome.';
-    }
 
     if (!email.trim()) {
       nextErrors.email = 'Informe seu e-mail Google.';
@@ -29,19 +27,55 @@ export default function TesterForm() {
       nextErrors.email = 'Informe um e-mail válido.';
     }
 
+    if (!consent) {
+      nextErrors.consent = 'Confirme o consentimento para receber acesso beta e comunicações.';
+    }
+
     setErrors(nextErrors);
     setSuccessMessage('');
+    setErrorMessage('');
 
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
     setIsSubmitting(true);
-    await registerTester({ name: name.trim(), email: email.trim().toLowerCase() });
-    setIsSubmitting(false);
-    setName('');
-    setEmail('');
-    setSuccessMessage('Cadastro realizado! Em breve você receberá acesso ao Beta.');
+    try {
+      const result = await registerTester({
+        name: name.trim() || undefined,
+        email: email.trim().toLowerCase(),
+        consent,
+      });
+
+      if (!result.success) {
+        setErrorMessage(
+          result.message ??
+            'Recebemos seu e-mail, mas tivemos um problema ao liberar o acesso automaticamente. Tente novamente mais tarde.',
+        );
+        return;
+      }
+
+      setSuccessMessage(
+        'Cadastro realizado! Você será redirecionado para acessar a versão beta no Google Play.',
+      );
+      setName('');
+      setEmail('');
+      setConsent(false);
+
+      window.setTimeout(() => {
+        if (result.redirectUrl) {
+          window.location.assign(result.redirectUrl);
+        }
+      }, 1400);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível cadastrar seu e-mail agora. Tente novamente mais tarde.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -52,7 +86,7 @@ export default function TesterForm() {
       </p>
 
       <div className="form-field">
-        <label htmlFor="tester-name">Nome</label>
+        <label htmlFor="tester-name">Nome opcional</label>
         <input
           id="tester-name"
           name="name"
@@ -60,14 +94,7 @@ export default function TesterForm() {
           autoComplete="name"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          aria-invalid={Boolean(errors.name)}
-          aria-describedby={errors.name ? 'tester-name-error' : undefined}
         />
-        {errors.name ? (
-          <span className="field-error" id="tester-name-error">
-            {errors.name}
-          </span>
-        ) : null}
       </div>
 
       <div className="form-field">
@@ -90,6 +117,24 @@ export default function TesterForm() {
         ) : null}
       </div>
 
+      <label className="form-checkbox" htmlFor="tester-consent">
+        <input
+          id="tester-consent"
+          name="consent"
+          type="checkbox"
+          checked={consent}
+          onChange={(event) => setConsent(event.target.checked)}
+          aria-invalid={Boolean(errors.consent)}
+          aria-describedby={errors.consent ? 'tester-consent-error' : undefined}
+        />
+        <span>Autorizo receber acesso beta e comunicações sobre o Palpite!</span>
+      </label>
+      {errors.consent ? (
+        <span className="field-error" id="tester-consent-error">
+          {errors.consent}
+        </span>
+      ) : null}
+
       <button className="button button-primary form-submit" type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Enviando...' : 'Cadastrar e-mail Google'}
       </button>
@@ -97,6 +142,12 @@ export default function TesterForm() {
       {successMessage ? (
         <p className="success-message" role="status">
           {successMessage}
+        </p>
+      ) : null}
+
+      {errorMessage ? (
+        <p className="error-message" role="alert">
+          {errorMessage}
         </p>
       ) : null}
     </form>

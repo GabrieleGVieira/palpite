@@ -51,6 +51,11 @@ GEMINI_RATE_LIMIT_COOLDOWN_SECONDS=1800
 GEMINI_RATE_LIMIT_MAX_WAITS=1
 GEMINI_REQUEST_DELAY_SECONDS=15
 GEMINI_TIMEOUT_SECONDS=30
+GOOGLE_SERVICE_ACCOUNT_EMAIL=service-account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+GOOGLE_GROUP_EMAIL=beta-testers@seudominio.com
+GOOGLE_WORKSPACE_DELEGATED_ADMIN_EMAIL=admin@seudominio.com
+PLAY_STORE_BETA_URL=https://play.google.com/apps/testing/com.palpite.app
 AI_EXPLANATION_BATCH_SIZE=2
 AI_EXPLANATION_MIN_BATCH_SIZE=1
 AI_EXPLANATION_RETRY_MISSING=true
@@ -191,9 +196,30 @@ GET    /api/v1/groups/{groupID}/matches
 GET    /api/v1/groups/{groupID}/ranking
 PUT    /api/v1/groups/{groupID}/matches/{matchID}/prediction
 PUT    /api/v1/matches/{matchID}/result
+POST   /api/beta/android
 ```
 
 Todas as rotas de usuário exigem `Authorization: Bearer <access_token>` do Supabase Auth.
+`POST /api/beta/android` é público e tem rate limit simples por IP.
+
+## Beta Android via Google Groups
+
+O fluxo da landing é:
+
+```text
+Landing form -> POST /api/beta/android -> beta_testers_android -> Google Group -> Play Store
+```
+
+Configure:
+
+- `PLAY_STORE_BETA_URL`: link de teste do app no Google Play, por exemplo `https://play.google.com/apps/testing/com.palpitai.app`.
+- `GOOGLE_GROUP_EMAIL`: e-mail do Google Group usado como fonte de testers.
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL` e `GOOGLE_PRIVATE_KEY`: credenciais da service account usada para chamar a Admin SDK Directory API.
+- `GOOGLE_WORKSPACE_DELEGATED_ADMIN_EMAIL`: opcional, mas normalmente necessário para domain-wide delegation no Google Workspace.
+
+No Play Console, vincule previamente o Google Group à track de teste Android. A API oficial do Google Play Developer não adiciona e-mails individuais diretamente à lista de testers da Play Console; por isso a integração usa Google Groups como fonte de testers.
+
+Quando as credenciais Google não estão configuradas, o backend usa um adapter local/mock para desenvolvimento e mantém a integração isolada em `internal/google`.
 
 ## Realtime (WebSocket)
 

@@ -63,4 +63,12 @@ A PWA autenticada é gerada pelo app Expo em `frontend` via `npm run build:web`.
 
 ## Cadastro Beta Android
 
-O formulário Android salva cadastros temporariamente em `localStorage`. A função `registerTester` em `src/services/testerRegistration.ts` isola o ponto de integração futura com Supabase, Google Groups ou Play Store Closed Testing.
+O formulário Android envia `POST /api/beta/android` para o backend configurado em `VITE_API_URL`. O backend salva o e-mail, adiciona o usuário ao Google Group vinculado à track de teste no Play Console e retorna a URL configurada em `PLAY_STORE_BETA_URL` para redirecionamento.
+
+Configure `VITE_API_URL` apontando para a API pública:
+
+```env
+VITE_API_URL=https://palpitai-api.onrender.com
+```
+
+Não configure chaves Google na landing. `GOOGLE_PRIVATE_KEY`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_GROUP_EMAIL` e `PLAY_STORE_BETA_URL` pertencem somente ao backend.
