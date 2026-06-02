@@ -51,10 +51,6 @@ GEMINI_RATE_LIMIT_COOLDOWN_SECONDS=1800
 GEMINI_RATE_LIMIT_MAX_WAITS=1
 GEMINI_REQUEST_DELAY_SECONDS=15
 GEMINI_TIMEOUT_SECONDS=30
-GOOGLE_SERVICE_ACCOUNT_EMAIL=service-account@project.iam.gserviceaccount.com
-GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-GOOGLE_GROUP_EMAIL=beta-testers@seudominio.com
-GOOGLE_WORKSPACE_DELEGATED_ADMIN_EMAIL=admin@seudominio.com
 PLAY_STORE_BETA_URL=https://play.google.com/apps/testing/com.palpite.app
 AI_EXPLANATION_BATCH_SIZE=2
 AI_EXPLANATION_MIN_BATCH_SIZE=1
@@ -202,24 +198,19 @@ POST   /api/beta/android
 Todas as rotas de usuário exigem `Authorization: Bearer <access_token>` do Supabase Auth.
 `POST /api/beta/android` é público e tem rate limit simples por IP.
 
-## Beta Android via Google Groups
+## Beta Android
 
 O fluxo da landing é:
 
 ```text
-Landing form -> POST /api/beta/android -> beta_testers_android -> Google Group -> Play Store
+Landing form -> POST /api/beta/android -> beta_testers_android(status=pending_approval)
 ```
 
-Configure:
+O signup público valida consentimento/e-mail, salva ou atualiza o registro e retorna sucesso para a landing. A aprovação do e-mail na lista de testers é manual/externa ao fluxo principal.
 
-- `PLAY_STORE_BETA_URL`: link de teste do app no Google Play, por exemplo `https://play.google.com/apps/testing/com.palpitai.app`.
-- `GOOGLE_GROUP_EMAIL`: e-mail do Google Group usado como fonte de testers.
-- `GOOGLE_SERVICE_ACCOUNT_EMAIL` e `GOOGLE_PRIVATE_KEY`: credenciais da service account usada para chamar a Admin SDK Directory API.
-- `GOOGLE_WORKSPACE_DELEGATED_ADMIN_EMAIL`: opcional, mas normalmente necessário para domain-wide delegation no Google Workspace.
+`PLAY_STORE_BETA_URL` ainda pode ser configurado para uso futuro, mas a landing não redireciona automaticamente após o cadastro.
 
-No Play Console, vincule previamente o Google Group à track de teste Android. A API oficial do Google Play Developer não adiciona e-mails individuais diretamente à lista de testers da Play Console; por isso a integração usa Google Groups como fonte de testers.
-
-Quando as credenciais Google não estão configuradas, o backend usa um adapter local/mock para desenvolvimento e mantém a integração isolada em `internal/google`.
+O adapter de Google Groups permanece isolado em `internal/google` para uso futuro, mas não faz parte do signup público da landing.
 
 ## Realtime (WebSocket)
 

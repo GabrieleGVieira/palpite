@@ -16,7 +16,7 @@ export default function Hero() {
             cada jogo mais divertido.
           </p>
           <div className="hero-actions" aria-label="Ações da landing">
-            <a className="button button-primary" href={playStoreUrl} rel="noreferrer" target="_blank">
+            <a className="button button-primary" href={appPath('#teste-android')}>
               Baixar no Android
             </a>
             <a className="button button-secondary" href="https://palpite.expo.app" rel="noreferrer" target="_blank">

@@ -7,6 +7,7 @@ export type TesterRegistrationPayload = {
 export type TesterRegistrationResult = {
   success: boolean;
   redirectUrl?: string;
+  status?: string;
   message?: string;
 };
 

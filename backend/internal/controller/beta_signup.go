@@ -27,6 +27,7 @@ type betaAndroidSignupRequest struct {
 type betaAndroidSignupResponse struct {
 	Success     bool   `json:"success"`
 	RedirectURL string `json:"redirectUrl,omitempty"`
+	Status      string `json:"status,omitempty"`
 	Message     string `json:"message,omitempty"`
 }
 
@@ -56,6 +57,7 @@ func BetaAndroidSignupHandler(signups BetaAndroidSignupUsecase) http.HandlerFunc
 			writeJSON(w, http.StatusOK, betaAndroidSignupResponse{
 				Success:     true,
 				RedirectURL: result.RedirectURL,
+				Status:      result.Status,
 			})
 			return
 		}
@@ -65,14 +67,6 @@ func BetaAndroidSignupHandler(signups BetaAndroidSignupUsecase) http.HandlerFunc
 			writeError(w, http.StatusBadRequest, "Informe um e-mail valido.")
 		case errors.Is(err, usecase.ErrBetaAndroidConsentRequired):
 			writeError(w, http.StatusBadRequest, "Confirme o consentimento para receber acesso beta e comunicacoes sobre o app.")
-		case errors.Is(err, usecase.ErrBetaAndroidGroupAddFailed):
-			writeJSON(w, http.StatusAccepted, betaAndroidSignupResponse{
-				Success: false,
-				Message: "Recebemos seu e-mail, mas tivemos um problema ao liberar o acesso automaticamente. Tente novamente mais tarde.",
-			})
-		case errors.Is(err, usecase.ErrBetaAndroidRedirectNotReady):
-			slog.Error("beta android redirect url not configured")
-			writeError(w, http.StatusInternalServerError, "Cadastro recebido, mas o link do beta ainda nao esta configurado.")
 		default:
 			slog.Error("beta android signup failed", "error", err)
 			writeError(w, http.StatusInternalServerError, "Nao foi possivel processar o cadastro agora.")

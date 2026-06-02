@@ -561,6 +561,7 @@ h3 {
   background: #f5f8ef;
   color: var(--success);
   font-weight: 700;
+  white-space: pre-line;
 }
 
 .error-message {

@@ -7,6 +7,8 @@ type FormErrors = {
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const receivedMessage =
+  'Cadastro recebido!\nVocê receberá acesso à versão beta do Palpite! assim que seu e-mail for aprovado na lista de testes.';
 
 export default function TesterForm() {
   const [name, setName] = useState('');
@@ -56,17 +58,11 @@ export default function TesterForm() {
       }
 
       setSuccessMessage(
-        'Cadastro realizado! Você será redirecionado para acessar a versão beta no Google Play.',
+        receivedMessage,
       );
       setName('');
       setEmail('');
       setConsent(false);
-
-      window.setTimeout(() => {
-        if (result.redirectUrl) {
-          window.location.assign(result.redirectUrl);
-        }
-      }, 1400);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -136,7 +132,7 @@ export default function TesterForm() {
       ) : null}
 
       <button className="button button-primary form-submit" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Enviando...' : 'Cadastrar e-mail Google'}
+        {isSubmitting ? 'Enviando...' : successMessage ? 'Cadastro recebido' : 'Cadastrar e-mail Google'}
       </button>
 
       {successMessage ? (

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const themeColor = '#4A0F1B';
+const themeColor = '#f5f8ef';
 
 export function PwaHead() {
   useEffect(() => {
