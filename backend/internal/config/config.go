@@ -36,6 +36,12 @@ type Config struct {
 	SupabaseKey                    string
 	SupabaseServiceRoleKey         string
 	SupabaseURL                    string
+	Email                          EmailConfig
+}
+
+type EmailConfig struct {
+	ResendAPIKey      string
+	NotificationEmail string
 }
 
 func Load() Config {
@@ -71,6 +77,10 @@ func Load() Config {
 		SupabaseKey:                    getEnv("SUPABASE_KEY", ""),
 		SupabaseServiceRoleKey:         getEnv("SUPABASE_SERVICE_ROLE_KEY", ""),
 		SupabaseURL:                    getEnv("SUPABASE_URL", ""),
+		Email: EmailConfig{
+			ResendAPIKey:      getEnv("RESEND_API_KEY", ""),
+			NotificationEmail: getEnv("BETA_SIGNUP_NOTIFICATION_EMAIL", "gabrielevieira011@gmail.com"),
+		},
 	}
 }
 

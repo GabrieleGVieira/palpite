@@ -3,32 +3,25 @@ package usecase
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/gabrielevieira/palpitai/backend/internal/domain"
+	emailservice "github.com/gabrielevieira/palpitai/backend/internal/email"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-func TestBetaAndroidSignupPersistsPendingApprovalWithoutAddingGoogleGroup(t *testing.T) {
+func TestBetaAndroidSignupPersistsPendingApprovalAndSendsNotification(t *testing.T) {
 	now := time.Now()
 	db := &betaSignupFakeDB{
-		row: betaSignupFakeRow{values: []any{
-			"tester-id",
-			"Gabriele",
-			"user@example.com",
-			domain.BetaTesterSourceLanding,
-			domain.BetaTesterPlatformAndroid,
-			domain.BetaTesterStatusPendingApproval,
-			"",
-			now,
-			now,
-		}},
+		row: betaSignupFakeRow{values: betaSignupRowValues(now, "Gabriele", "user@example.com", domain.BetaTesterStatusPendingApproval)},
 	}
 	groupAdder := &countingGroupAdder{}
+	emailSender := &fakeEmailSender{}
 
-	result, err := NewBetaAndroidUsecase(db, groupAdder, "https://play.example/beta", nil).Signup(context.Background(), BetaAndroidSignupInput{
+	result, err := NewBetaAndroidUsecase(db, groupAdder, emailSender, "admin@example.com", "https://play.example/beta", nil).Signup(context.Background(), BetaAndroidSignupInput{
 		Name:    " Gabriele ",
 		Email:   " USER@Example.COM ",
 		Consent: true,
@@ -49,25 +42,53 @@ func TestBetaAndroidSignupPersistsPendingApprovalWithoutAddingGoogleGroup(t *tes
 	if len(db.queryArgs) < 2 || db.queryArgs[0] != "Gabriele" || db.queryArgs[1] != "user@example.com" {
 		t.Fatalf("expected trimmed name and normalized email in repository args, got %#v", db.queryArgs)
 	}
+	if len(emailSender.messages) != 1 {
+		t.Fatalf("expected one notification email, got %d", len(emailSender.messages))
+	}
+	message := emailSender.messages[0]
+	if message.Subject != "[Palpite!] Novo interessado no beta Android" {
+		t.Fatalf("unexpected notification subject: %q", message.Subject)
+	}
+	if len(message.To) != 1 || message.To[0] != "admin@example.com" {
+		t.Fatalf("unexpected notification recipients: %#v", message.To)
+	}
+	if !strings.Contains(message.Text, "Email: user@example.com") ||
+		!strings.Contains(message.Text, "Status: pending_approval") ||
+		!strings.Contains(message.HTML, "<strong>Email:</strong> user@example.com") {
+		t.Fatalf("unexpected notification body: %#v", message)
+	}
+}
+
+func TestBetaAndroidSignupSucceedsWhenNotificationEmailFails(t *testing.T) {
+	now := time.Now()
+	db := &betaSignupFakeDB{
+		row: betaSignupFakeRow{values: betaSignupRowValues(now, "Gabriele", "user@example.com", domain.BetaTesterStatusPendingApproval)},
+	}
+	emailSender := &fakeEmailSender{err: errors.New("resend unavailable")}
+
+	result, err := NewBetaAndroidUsecase(db, nil, emailSender, "admin@example.com", "", nil).Signup(context.Background(), BetaAndroidSignupInput{
+		Name:    "Gabriele",
+		Email:   "user@example.com",
+		Consent: true,
+	})
+	if err != nil {
+		t.Fatalf("expected signup to succeed when notification fails, got %v", err)
+	}
+	if result.Status != domain.BetaTesterStatusPendingApproval {
+		t.Fatalf("expected status %q, got %q", domain.BetaTesterStatusPendingApproval, result.Status)
+	}
+	if len(emailSender.messages) != 1 {
+		t.Fatalf("expected notification attempt, got %d", len(emailSender.messages))
+	}
 }
 
 func TestBetaAndroidSignupAllowsMissingGoogleGroupAdapter(t *testing.T) {
 	now := time.Now()
 	db := &betaSignupFakeDB{
-		row: betaSignupFakeRow{values: []any{
-			"tester-id",
-			"",
-			"user@example.com",
-			domain.BetaTesterSourceLanding,
-			domain.BetaTesterPlatformAndroid,
-			domain.BetaTesterStatusPendingApproval,
-			"",
-			now,
-			now,
-		}},
+		row: betaSignupFakeRow{values: betaSignupRowValues(now, "", "user@example.com", domain.BetaTesterStatusPendingApproval)},
 	}
 
-	_, err := NewBetaAndroidUsecase(db, nil, "", nil).Signup(context.Background(), BetaAndroidSignupInput{
+	_, err := NewBetaAndroidUsecase(db, nil, nil, "", "", nil).Signup(context.Background(), BetaAndroidSignupInput{
 		Email:   "user@example.com",
 		Consent: true,
 	})
@@ -79,7 +100,7 @@ func TestBetaAndroidSignupAllowsMissingGoogleGroupAdapter(t *testing.T) {
 func TestBetaAndroidSignupRequiresConsent(t *testing.T) {
 	db := &betaSignupFakeDB{}
 
-	_, err := NewBetaAndroidUsecase(db, nil, "", nil).Signup(context.Background(), BetaAndroidSignupInput{
+	_, err := NewBetaAndroidUsecase(db, nil, nil, "", "", nil).Signup(context.Background(), BetaAndroidSignupInput{
 		Email: "user@example.com",
 	})
 	if !errors.Is(err, ErrBetaAndroidConsentRequired) {
@@ -93,7 +114,7 @@ func TestBetaAndroidSignupRequiresConsent(t *testing.T) {
 func TestBetaAndroidSignupRejectsInvalidEmail(t *testing.T) {
 	db := &betaSignupFakeDB{}
 
-	_, err := NewBetaAndroidUsecase(db, nil, "", nil).Signup(context.Background(), BetaAndroidSignupInput{
+	_, err := NewBetaAndroidUsecase(db, nil, nil, "", "", nil).Signup(context.Background(), BetaAndroidSignupInput{
 		Email:   "invalid-email",
 		Consent: true,
 	})
@@ -112,6 +133,30 @@ type countingGroupAdder struct {
 func (adder *countingGroupAdder) AddMember(context.Context, string) error {
 	adder.calls++
 	return nil
+}
+
+type fakeEmailSender struct {
+	messages []emailservice.Message
+	err      error
+}
+
+func (sender *fakeEmailSender) Send(_ context.Context, message emailservice.Message) error {
+	sender.messages = append(sender.messages, message)
+	return sender.err
+}
+
+func betaSignupRowValues(now time.Time, name string, email string, status string) []any {
+	return []any{
+		"tester-id",
+		name,
+		email,
+		domain.BetaTesterSourceLanding,
+		domain.BetaTesterPlatformAndroid,
+		status,
+		"",
+		now,
+		now,
+	}
 }
 
 type betaSignupFakeDB struct {

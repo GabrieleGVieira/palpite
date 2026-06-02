@@ -52,6 +52,8 @@ GEMINI_RATE_LIMIT_MAX_WAITS=1
 GEMINI_REQUEST_DELAY_SECONDS=15
 GEMINI_TIMEOUT_SECONDS=30
 PLAY_STORE_BETA_URL=https://play.google.com/apps/testing/com.palpite.app
+RESEND_API_KEY=
+BETA_SIGNUP_NOTIFICATION_EMAIL=
 AI_EXPLANATION_BATCH_SIZE=2
 AI_EXPLANATION_MIN_BATCH_SIZE=1
 AI_EXPLANATION_RETRY_MISSING=true
@@ -206,7 +208,7 @@ O fluxo da landing é:
 Landing form -> POST /api/beta/android -> beta_testers_android(status=pending_approval)
 ```
 
-O signup público valida consentimento/e-mail, salva ou atualiza o registro e retorna sucesso para a landing. A aprovação do e-mail na lista de testers é manual/externa ao fluxo principal.
+O signup público valida consentimento/e-mail, salva ou atualiza o registro, envia um alerta via Resend para `BETA_SIGNUP_NOTIFICATION_EMAIL` e retorna sucesso para a landing. Se o envio de e-mail falhar ou `RESEND_API_KEY` estiver vazio, o cadastro continua funcionando e a falha fica apenas no log.
 
 `PLAY_STORE_BETA_URL` ainda pode ser configurado para uso futuro, mas a landing não redireciona automaticamente após o cadastro.
 

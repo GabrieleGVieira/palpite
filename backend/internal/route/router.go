@@ -6,6 +6,7 @@ import (
 
 	"github.com/gabrielevieira/palpitai/backend/internal/config"
 	"github.com/gabrielevieira/palpitai/backend/internal/controller"
+	emailservice "github.com/gabrielevieira/palpitai/backend/internal/email"
 	predictionservice "github.com/gabrielevieira/palpitai/backend/internal/predictions/service"
 	"github.com/gabrielevieira/palpitai/backend/internal/usecase"
 )
@@ -31,7 +32,8 @@ func NewRouter(cfg config.Config, db usecase.Datastore, services ...Services) ht
 	predictionReader := predictionservice.NewPredictionReadService(db)
 	wallet := usecase.NewWalletUsecase(db)
 	challenges := usecase.NewChallengeUsecase(db)
-	betaAndroid := usecase.NewBetaAndroidUsecase(db, nil, cfg.PlayStoreBetaURL, slog.Default())
+	betaAndroidEmailSender := emailservice.NewResendSender(cfg.Email, slog.Default())
+	betaAndroid := usecase.NewBetaAndroidUsecase(db, nil, betaAndroidEmailSender, cfg.Email.NotificationEmail, cfg.PlayStoreBetaURL, slog.Default())
 
 	mux.HandleFunc("GET /health", controller.HealthHandler(db, redis))
 	mux.HandleFunc("POST /api/beta/android", controller.BetaAndroidSignupHandler(betaAndroid))
