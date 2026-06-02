@@ -33,7 +33,7 @@ palpite/
 ## Requisitos
 
 - Go 1.24+
-- Node.js + npm
+- Node.js 22.12+ + npm
 - Python 3.11+
 - Projeto Supabase (PostgreSQL)
 - Redis (Upstash)
@@ -116,6 +116,8 @@ VITE_SUPABASE_URL=https://project.supabase.co
 VITE_SUPABASE_ANON_KEY=chave_publica
 ```
 
+`VITE_SUPABASE_KEY` ainda é aceito por compatibilidade, mas `VITE_SUPABASE_ANON_KEY` é o nome preferido.
+
 ## Como rodar
 
 **API:**
@@ -144,6 +146,7 @@ npm run start
 
 ```bash
 cd landing
+npm install
 npm run dev
 ```
 
@@ -172,7 +175,8 @@ uvicorn app.api.main:app --reload
 - Sincronização automática de placares via football-data.org
 - Previsões de resultado e placar geradas por ML
 - Análises da PalpitAI em linguagem natural via LLM
-- Landing com páginas públicas de privacidade, termos, exclusão de conta, formulário Beta Android e PWA em `/app`
+- Landing pública com privacidade, termos, exclusão de conta e formulário Beta Android
+- PWA gerada pelo app Expo em `frontend` com manifest e service worker preparados no build web
 
 ## Qualidade
 
@@ -188,6 +192,20 @@ make fmt && make vet && make test
 ```bash
 cd frontend
 npm run lint && npm run typecheck && npm run test
+```
+
+**Landing:**
+
+```bash
+cd landing
+npm run build
+```
+
+**ML Service:**
+
+```bash
+cd ml-service
+pytest
 ```
 
 ## Commits

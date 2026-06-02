@@ -30,6 +30,7 @@ O frontend é o ponto de entrada dos Palpiteiros no Palpite! O app permite criar
 ## Configuração
 
 ```bash
+cd frontend
 npm install
 cp .env.example .env
 ```
@@ -50,6 +51,16 @@ npm run android      # Android Emulator ou dispositivo
 npm run ios          # iOS Simulator ou dispositivo
 npm run web          # navegador
 ```
+
+## PWA web
+
+O app Expo também pode ser exportado como PWA:
+
+```bash
+npm run build:web
+```
+
+O script gera `dist/` com o export web do Expo e roda `scripts/prepare-expo-web-pwa.mjs` para copiar manifest, service worker e assets PWA. Veja `PWA_SETUP.md` para notas de publicação e instalação.
 
 ## Estrutura
 

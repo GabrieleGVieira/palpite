@@ -39,7 +39,7 @@ flowchart TD
     end
 
     subgraph "Etapa 4 — Explicações"
-        BACKEND["Backend Go\n(worker generate_prediction_explanations)"]
+        BACKEND["Backend Go\n(cmd/generate-ai-explanations)"]
         GEMINI["Gemini API\nGera texto explicativo em PT"]
     end
 

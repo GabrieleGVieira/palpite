@@ -1,6 +1,6 @@
 # Palpite! Landing
 
-Landing page independente do app mobile, criada com React, TypeScript, Vite e CSS simples. Também hospeda páginas legais e uma experiência PWA em `/app`.
+Landing page independente do app mobile, criada com React, TypeScript, Vite e CSS simples. Hospeda a página pública, páginas legais e o formulário Beta Android.
 
 ## Configuração
 
@@ -50,7 +50,7 @@ VITE_BASE_PATH=/nome-do-repositorio/ npm run build
 
 O diretório gerado para publicação é `landing/dist`.
 
-## Páginas públicas e PWA
+## Páginas públicas
 
 A landing expõe:
 
@@ -58,8 +58,9 @@ A landing expõe:
 - `/privacy` — política de privacidade
 - `/terms` — termos de uso
 - `/account-deletion` — fluxo de exclusão de conta e dados para uso no Google Play Console
-- `/app` — PWA autenticada com Supabase, listagem de grupos, jogos, ranking, palpites e análise da PalpitAI
 
-## Integrações futuras
+A PWA autenticada é gerada pelo app Expo em `frontend` via `npm run build:web`.
 
-O formulário Android salva cadastros temporariamente em `localStorage`. A função `registerTester` em `src/services/testerRegistration.ts` isola o ponto para integrar depois com Supabase, Google Groups e Play Store Closed Testing.
+## Cadastro Beta Android
+
+O formulário Android salva cadastros temporariamente em `localStorage`. A função `registerTester` em `src/services/testerRegistration.ts` isola o ponto de integração futura com Supabase, Google Groups ou Play Store Closed Testing.

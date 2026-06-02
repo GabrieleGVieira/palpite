@@ -1,6 +1,6 @@
 # Frontend — Fluxo do Sistema
 
-Documentação dos fluxos principais do app mobile React Native do Palpite!: inicialização, autenticação, grupos, palpites, feed, amigos, Palpicoins, desafios, perfil e realtime.
+Documentação dos fluxos principais do app React Native/Expo do Palpite!: inicialização, autenticação, grupos, palpites, feed, amigos, Palpicoins, desafios, perfil, realtime e export PWA.
 
 ---
 
@@ -187,6 +187,19 @@ flowchart TD
 ```
 
 Palpicoins são exibidos no app como moeda virtual sem valor monetário. O frontend mostra o aviso retornado pela API nos fluxos de carteira, histórico, ranking e desafios.
+
+---
+
+## 4.1 PWA web
+
+O mesmo app Expo pode ser executado no navegador com `npm run web` durante desenvolvimento ou exportado com:
+
+```bash
+cd frontend
+npm run build:web
+```
+
+O build gera `frontend/dist` e executa `scripts/prepare-expo-web-pwa.mjs`, que prepara manifest, service worker e assets PWA para publicação.
 
 ---
 

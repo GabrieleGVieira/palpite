@@ -11,13 +11,15 @@ Esse comando executa o Expo Web com `npx expo start --web`.
 ## Build
 
 ```sh
-npx expo export --platform web
+npm run build:web
 ```
 
-O script equivalente do projeto também está disponível:
+Esse script executa o export web do Expo e depois prepara os arquivos PWA em `dist/`.
+
+Para rodar apenas o export do Expo:
 
 ```sh
-npm run build:web
+npm run export:web
 ```
 
 ## Deploy
@@ -36,7 +38,7 @@ npx eas deploy
 ## Notas de compatibilidade Web
 
 - O slug Expo permanece `palpitai`.
-- O PWA usa `public/manifest.json`, `public/sw.js`, `public/logo192.png`, `public/logo512.png` e `public/favicon.png`.
+- O PWA publicado usa os arquivos preparados em `dist/` pelo script `scripts/prepare-expo-web-pwa.mjs`.
 - O upload de avatar usa `expo-file-system` apenas no Android/iOS e usa `fetch(uri).blob()` no Web.
 - A seleção de imagem mantém `expo-image-picker`; no Web a solicitação explícita de permissão da galeria é ignorada.
 - `AsyncStorage`, `expo-clipboard`, `expo-status-bar` e `react-native-safe-area-context` foram mantidos por terem suporte ou fallback compatível no Expo Web.

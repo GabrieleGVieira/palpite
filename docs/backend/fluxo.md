@@ -17,7 +17,7 @@ graph TD
     FOOTBALL["football-data.org"]
     GEMINI["Gemini API"]
     MATCHSYNC["Worker MatchSync (cmd/matchsync)"]
-    WORKER["Worker Explanations"]
+    WORKER["Worker Explanations\n(cmd/generate-ai-explanations)"]
     MLDB["Tabelas ML no banco"]
     SOCIAL["Amigos, feed, desafios,\nPalpicoins e pagamentos"]
 
@@ -100,6 +100,16 @@ Os módulos atuais do backend usam essa mesma separação para:
 - carteira, transações e ranking de Palpicoins;
 - desafios entre amigos;
 - leitura de previsões e explicações da PalpitAI.
+
+Comandos operacionais principais:
+
+```bash
+cd backend
+make migrate
+make run
+make matchsync
+make explanations MODE=seed LIMIT=50
+```
 
 ---
 
@@ -320,7 +330,7 @@ sequenceDiagram
 
 ## 8. Geração de explicações da PalpitAI
 
-O worker `cmd/workers/generate_prediction_explanations` lê previsões do ML e gera explicações em português via Gemini API.
+O worker `cmd/generate-ai-explanations` lê previsões do ML e gera explicações em português via Gemini API.
 
 ```mermaid
 sequenceDiagram

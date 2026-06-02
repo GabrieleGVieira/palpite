@@ -66,6 +66,7 @@ make explanations MODE=seed LIMIT=50
 `MODE=seed` usa uma janela a partir da data atual com tamanho `AI_EXPLANATION_SEED_DAYS`.
 `MODE=refresh` usa `AI_EXPLANATION_REFRESH_DAYS`.
 `LIMIT` é opcional no Makefile (default: 15).
+Antes de rodar o worker, o pipeline Python precisa ter preenchido `match_predictions`, `match_goal_predictions` e `match_score_probabilities`.
 
 Equivalente direto:
 
@@ -73,6 +74,7 @@ Equivalente direto:
 go run ./cmd/generate-ai-explanations \
   --from-date=2026-06-01 \
   --to-date=2026-07-31 \
+  --mode=seed \
   --limit=50
 ```
 

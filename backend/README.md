@@ -86,10 +86,12 @@ make matchsync
 make explanations MODE=seed LIMIT=50
 ```
 
+`MODE=seed` usa uma janela futura a partir da data atual. `MODE=refresh` reprocessa previsões recentes conforme `AI_EXPLANATION_REFRESH_DAYS`.
+
 **Migrations:**
 
 ```bash
-go run ./cmd/migrate
+make migrate
 ```
 
 **Seed inicial:**
@@ -239,14 +241,14 @@ Arquivos de migration:
 | `202605260002_create_goal_prediction_tables` | `goal_models`, `match_goal_predictions`, `match_score_probabilities` |
 | `202605260003_add_score_result_calibration` | Colunas de calibração em `match_goal_predictions` |
 | `202605260004_create_prediction_explanations` | `prediction_explanations` |
-| `202605260005_add_prediction_explanation_refresh_fields` | Campos de refresh, validade e tentativas em `prediction_explanations` |
-| `202605290001_create_group_payments` | `group_payments` |
-| `202605290002_add_group_member_avatar_url` | Avatar em membros de grupo |
-| `202605290003_create_group_feed_events` | `group_feed_events`, `group_feed_reactions` |
-| `202606010001_allow_multiple_feed_reactions` | Reações múltiplas por evento |
+| `202605260005_add_prediction_explanation_refresh_fields` | Campos de refresh, erro e auditoria em `prediction_explanations` |
+| `202605290001_create_group_payments` | Campos de bolão pago em `groups` e status de pagamento em `group_members` |
+| `202605290002_add_group_member_avatar_url` | Snapshot de avatar em membros de grupo |
+| `202605290003_create_group_feed_events` | `group_feed_events`, reações e índices do feed |
+| `202606010001_allow_multiple_feed_reactions` | Múltiplas reações por evento de feed |
 | `202606010002_create_friendships` | `friendships` |
-| `202606010003_create_user_social_settings` | `user_social_settings` |
-| `202606010004_create_palpicoins_and_challenges` | `palpicoin_wallets`, `palpicoin_transactions`, `challenges` |
+| `202606010003_create_user_social_settings` | Configurações de perfil público |
+| `202606010004_create_palpicoins_and_challenges` | Carteira, transações, ranking e desafios com Palpicoins |
 
 ## Qualidade
 

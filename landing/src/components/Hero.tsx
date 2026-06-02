@@ -19,7 +19,7 @@ export default function Hero() {
             <a className="button button-primary" href={playStoreUrl} rel="noreferrer" target="_blank">
               Baixar no Android
             </a>
-            <a className="button button-secondary" href={appPath('/app')}>
+            <a className="button button-secondary" href="https://palpite.expo.app" rel="noreferrer" target="_blank">
               Usar no iPhone
             </a>
           </div>
