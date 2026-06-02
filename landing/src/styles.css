@@ -574,6 +574,76 @@ h3 {
   font-weight: 700;
 }
 
+.approval-page {
+  min-height: calc(100vh - 160px);
+  padding: 76px 0;
+}
+
+.approval-panel {
+  max-width: 620px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.approval-panel h1 {
+  margin-bottom: 16px;
+  font-size: 2rem;
+}
+
+.approval-summary {
+  display: grid;
+  gap: 14px;
+}
+
+.approval-summary p {
+  margin: 0;
+  color: var(--text);
+}
+
+.approval-summary dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.approval-summary dl div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.approval-summary dt {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.approval-summary dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-strong);
+  font-weight: 800;
+}
+
+.approval-muted {
+  color: var(--muted);
+}
+
+.approval-button {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.approval-button:disabled {
+  opacity: 0.72;
+  cursor: progress;
+}
+
 .faq-section {
   padding-top: 42px;
 }

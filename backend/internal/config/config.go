@@ -31,6 +31,9 @@ type Config struct {
 	AIExplanationRefreshDays       string
 	AIExplanationMaxAgeHours       string
 	Port                           string
+	BetaApprovalBaseURL            string
+	BetaApprovalSecret             string
+	BetaAndroidPlayStoreURL        string
 	PlayStoreBetaURL               string
 	RedisURL                       string
 	SupabaseKey                    string
@@ -42,6 +45,7 @@ type Config struct {
 type EmailConfig struct {
 	ResendAPIKey      string
 	NotificationEmail string
+	From              string
 }
 
 func Load() Config {
@@ -72,6 +76,9 @@ func Load() Config {
 		AIExplanationRefreshDays:       getEnv("AI_EXPLANATION_REFRESH_DAYS", "7"),
 		AIExplanationMaxAgeHours:       getEnv("AI_EXPLANATION_MAX_AGE_HOURS", "24"),
 		Port:                           getEnv("PORT", "3000"),
+		BetaApprovalBaseURL:            getEnv("BETA_APPROVAL_BASE_URL", ""),
+		BetaApprovalSecret:             getEnv("BETA_APPROVAL_SECRET", ""),
+		BetaAndroidPlayStoreURL:        getEnv("BETA_ANDROID_PLAY_STORE_URL", getEnv("PLAY_STORE_BETA_URL", "")),
 		PlayStoreBetaURL:               getEnv("PLAY_STORE_BETA_URL", ""),
 		RedisURL:                       getEnv("REDIS_URL", ""),
 		SupabaseKey:                    getEnv("SUPABASE_KEY", ""),
@@ -80,6 +87,7 @@ func Load() Config {
 		Email: EmailConfig{
 			ResendAPIKey:      getEnv("RESEND_API_KEY", ""),
 			NotificationEmail: getEnv("BETA_SIGNUP_NOTIFICATION_EMAIL", "gabrielevieira011@gmail.com"),
+			From:              getEnv("EMAIL_FROM", "Palpite! <noreply@palpite.app>"),
 		},
 	}
 }

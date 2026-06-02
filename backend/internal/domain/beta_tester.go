@@ -10,6 +10,7 @@ const (
 	BetaTesterStatusPendingApproval    = "pending_approval"
 	BetaTesterStatusAddedToGoogleGroup = "added_to_google_group"
 	BetaTesterStatusApproved           = "approved"
+	BetaTesterStatusRejected           = "rejected"
 	BetaTesterStatusExported           = "exported"
 	BetaTesterStatusFailed             = "failed"
 )
@@ -22,6 +23,8 @@ type BetaTesterAndroid struct {
 	Platform     string
 	Status       string
 	ErrorMessage string
+	ApprovedAt   *time.Time
+	ApprovedBy   string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }

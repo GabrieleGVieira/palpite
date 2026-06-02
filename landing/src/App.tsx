@@ -1,4 +1,5 @@
 import FAQ from './components/FAQ';
+import BetaApprovalPage from './components/BetaApprovalPage';
 import Features from './components/Features';
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -37,6 +38,17 @@ export default function App() {
       <>
         <Header />
         <LegalPage type="accountDeletion" />
+        <Footer />
+      </>
+    );
+  }
+
+  const betaApprovalMatch = path.match(/^\/admin\/beta-test(?:er)?s\/([^/]+)\/approve\/confirm$/);
+  if (betaApprovalMatch) {
+    return (
+      <>
+        <Header />
+        <BetaApprovalPage testerId={decodeURIComponent(betaApprovalMatch[1])} />
         <Footer />
       </>
     );

@@ -7,8 +7,10 @@ create table if not exists beta_testers_android (
 	source text not null default 'landing',
 	platform text not null default 'android',
 	status text not null default 'pending_approval'
-		check (status in ('pending', 'pending_approval', 'added_to_google_group', 'approved', 'exported', 'failed')),
+		check (status in ('pending', 'pending_approval', 'approved', 'rejected', 'added_to_google_group', 'exported', 'failed')),
 	error_message text,
+	approved_at timestamptz null,
+	approved_by text null,
 	created_at timestamptz not null default now(),
 	updated_at timestamptz not null default now()
 );

@@ -51,9 +51,12 @@ GEMINI_RATE_LIMIT_COOLDOWN_SECONDS=1800
 GEMINI_RATE_LIMIT_MAX_WAITS=1
 GEMINI_REQUEST_DELAY_SECONDS=15
 GEMINI_TIMEOUT_SECONDS=30
-PLAY_STORE_BETA_URL=https://play.google.com/apps/testing/com.palpite.app
+BETA_ANDROID_PLAY_STORE_URL=https://play.google.com/apps/testing/com.gabrielevieira.palpite
+BETA_APPROVAL_BASE_URL=https://seudominio.com
+BETA_APPROVAL_SECRET=segredo_longo_para_assinar_links
 RESEND_API_KEY=
-BETA_SIGNUP_NOTIFICATION_EMAIL=
+BETA_SIGNUP_NOTIFICATION_EMAIL=seu-email
+EMAIL_FROM=Palpite! <noreply@palpite.app>
 AI_EXPLANATION_BATCH_SIZE=2
 AI_EXPLANATION_MIN_BATCH_SIZE=1
 AI_EXPLANATION_RETRY_MISSING=true
@@ -195,10 +198,11 @@ GET    /api/v1/groups/{groupID}/ranking
 PUT    /api/v1/groups/{groupID}/matches/{matchID}/prediction
 PUT    /api/v1/matches/{matchID}/result
 POST   /api/beta/android
+PATCH  /admin/beta-testers/{id}/approve
 ```
 
 Todas as rotas de usuário exigem `Authorization: Bearer <access_token>` do Supabase Auth.
-`POST /api/beta/android` é público e tem rate limit simples por IP.
+`POST /api/beta/android` é público e tem rate limit simples por IP. A rota `/admin/beta-testers/{id}/approve` exige Bearer token e usa o usuário autenticado como responsável pela aprovação.
 
 ## Beta Android
 
@@ -208,9 +212,13 @@ O fluxo da landing é:
 Landing form -> POST /api/beta/android -> beta_testers_android(status=pending_approval)
 ```
 
-O signup público valida consentimento/e-mail, salva ou atualiza o registro, envia um alerta via Resend para `BETA_SIGNUP_NOTIFICATION_EMAIL` e retorna sucesso para a landing. Se o envio de e-mail falhar ou `RESEND_API_KEY` estiver vazio, o cadastro continua funcionando e a falha fica apenas no log.
+O signup público valida consentimento/e-mail, salva ou atualiza o registro, envia um alerta via Resend para `BETA_SIGNUP_NOTIFICATION_EMAIL` e retorna sucesso para a landing. Se `BETA_APPROVAL_BASE_URL` e `BETA_APPROVAL_SECRET` estiverem configurados, esse alerta inclui um botão de confirmação assinado para aprovar o tester depois que o e-mail for adicionado no Play Console. Se o envio de e-mail falhar ou `RESEND_API_KEY` estiver vazio, o cadastro continua funcionando e a falha fica apenas no log.
 
-`PLAY_STORE_BETA_URL` ainda pode ser configurado para uso futuro, mas a landing não redireciona automaticamente após o cadastro.
+`BETA_ANDROID_PLAY_STORE_URL` é usado no e-mail de aprovação enviado ao tester. A landing não redireciona automaticamente após o cadastro.
+
+A aprovação manual usa `PATCH /admin/beta-testers/{id}/approve`, altera o status para `approved`, preenche `approved_at`/`approved_by` e envia o e-mail de liberação ao tester. Se o envio falhar, a aprovação permanece salva.
+
+O link assinado do e-mail administrativo abre a landing em `/admin/beta-testers/{id}/approve/confirm` com uma página de revisão. A landing chama a API do backend para carregar os dados e confirmar a aprovação, reduzindo o risco de aprovação por scanners de e-mail. Configure `BETA_APPROVAL_BASE_URL` com a URL pública da landing.
 
 O adapter de Google Groups permanece isolado em `internal/google` para uso futuro, mas não faz parte do signup público da landing.
 

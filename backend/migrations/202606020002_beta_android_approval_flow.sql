@@ -1,14 +1,8 @@
 alter table beta_testers_android
-	add column if not exists platform text not null default 'android';
-
-alter table beta_testers_android
 	add column if not exists approved_at timestamptz null;
 
 alter table beta_testers_android
 	add column if not exists approved_by text null;
-
-alter table beta_testers_android
-	alter column status set default 'pending_approval';
 
 alter table beta_testers_android
 	drop constraint if exists beta_testers_android_status_check;

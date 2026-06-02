@@ -17,14 +17,22 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 			source text not null default 'landing',
 			platform text not null default 'android',
 			status text not null default 'pending_approval'
-				check (status in ('pending', 'pending_approval', 'added_to_google_group', 'approved', 'exported', 'failed')),
+				check (status in ('pending', 'pending_approval', 'approved', 'rejected', 'added_to_google_group', 'exported', 'failed')),
 			error_message text,
+			approved_at timestamptz null,
+			approved_by text null,
 			created_at timestamptz not null default now(),
 			updated_at timestamptz not null default now()
 		);
 
 		alter table beta_testers_android
 			add column if not exists platform text not null default 'android';
+
+		alter table beta_testers_android
+			add column if not exists approved_at timestamptz null;
+
+		alter table beta_testers_android
+			add column if not exists approved_by text null;
 
 		alter table beta_testers_android
 			alter column status set default 'pending_approval';
@@ -34,7 +42,7 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 
 		alter table beta_testers_android
 			add constraint beta_testers_android_status_check
-			check (status in ('pending', 'pending_approval', 'added_to_google_group', 'approved', 'exported', 'failed'));
+			check (status in ('pending', 'pending_approval', 'approved', 'rejected', 'added_to_google_group', 'exported', 'failed'));
 
 		create index if not exists beta_testers_android_status_idx
 			on beta_testers_android (status);

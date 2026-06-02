@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -78,5 +79,46 @@ func TestResendSenderReturnsErrorWhenAPIRejectsRequest(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("expected resend api error")
+	}
+}
+
+func TestResendSenderRetriesWithFallbackFromOnForbidden(t *testing.T) {
+	var requests int32
+	var fromValues []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&requests, 1)
+		var payload resendEmailRequest
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			t.Fatalf("failed to decode request payload: %v", err)
+		}
+		fromValues = append(fromValues, payload.From)
+		if payload.From == "Palpite! <noreply@palpite.app>" {
+			http.Error(w, "domain not verified", http.StatusForbidden)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	sender := ResendSender{
+		apiKey:     "re_test",
+		from:       "Palpite! <noreply@palpite.app>",
+		httpClient: server.Client(),
+		apiURL:     server.URL,
+	}
+
+	err := sender.Send(context.Background(), Message{
+		To:      []string{"admin@example.com"},
+		Subject: "Subject",
+		Text:    "Hello",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if atomic.LoadInt32(&requests) != 2 {
+		t.Fatalf("expected two resend attempts, got %d", requests)
+	}
+	if len(fromValues) != 2 || fromValues[0] != "Palpite! <noreply@palpite.app>" || fromValues[1] != resendFallbackFrom {
+		t.Fatalf("unexpected from values: %#v", fromValues)
 	}
 }
