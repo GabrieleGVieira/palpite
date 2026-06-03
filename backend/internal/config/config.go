@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -43,9 +44,14 @@ type Config struct {
 }
 
 type EmailConfig struct {
-	ResendAPIKey      string
 	NotificationEmail string
-	From              string
+	Provider          string
+	FromName          string
+	FromAddress       string
+	BrevoSMTPHost     string
+	BrevoSMTPPort     int
+	BrevoSMTPUser     string
+	BrevoSMTPPassword string
 }
 
 func Load() Config {
@@ -85,9 +91,14 @@ func Load() Config {
 		SupabaseServiceRoleKey:         getEnv("SUPABASE_SERVICE_ROLE_KEY", ""),
 		SupabaseURL:                    getEnv("SUPABASE_URL", ""),
 		Email: EmailConfig{
-			ResendAPIKey:      getEnv("RESEND_API_KEY", ""),
 			NotificationEmail: getEnv("BETA_SIGNUP_NOTIFICATION_EMAIL", "gabrielevieira011@gmail.com"),
-			From:              getEnv("EMAIL_FROM", "Palpite! <noreply@palpite.app>"),
+			Provider:          getEnv("EMAIL_PROVIDER", ""),
+			FromName:          getEnv("EMAIL_FROM_NAME", "Palpite!"),
+			FromAddress:       getEnv("EMAIL_FROM_ADDRESS", ""),
+			BrevoSMTPHost:     getEnv("BREVO_SMTP_HOST", "smtp-relay.brevo.com"),
+			BrevoSMTPPort:     getEnvInt("BREVO_SMTP_PORT", 587),
+			BrevoSMTPUser:     getEnv("BREVO_SMTP_USER", ""),
+			BrevoSMTPPassword: getEnv("BREVO_SMTP_PASSWORD", ""),
 		},
 	}
 }
@@ -104,4 +115,18 @@ func getEnv(key string, fallback string) string {
 	}
 
 	return value
+}
+
+func getEnvInt(key string, fallback int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+
+	return parsed
 }

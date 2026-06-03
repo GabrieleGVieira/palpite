@@ -67,7 +67,7 @@ func TestBetaAndroidSignupSucceedsWhenNotificationEmailFails(t *testing.T) {
 	db := &betaSignupFakeDB{
 		row: betaSignupFakeRow{values: betaSignupRowValues(now, "Gabriele", "user@example.com", domain.BetaTesterStatusPendingApproval)},
 	}
-	emailSender := &fakeEmailSender{err: errors.New("resend unavailable")}
+	emailSender := &fakeEmailSender{err: errors.New("email provider unavailable")}
 
 	result, err := NewBetaAndroidUsecase(db, nil, emailSender, "admin@example.com", "", "", "", nil).Signup(context.Background(), BetaAndroidSignupInput{
 		Name:    "Gabriele",
@@ -137,7 +137,7 @@ func TestApproveBetaTesterSucceedsWhenApprovalEmailFails(t *testing.T) {
 			{values: betaSignupApprovedRowValues(now, now.Add(time.Minute), "Gabriele", "user@example.com", "admin@example.com")},
 		},
 	}
-	emailSender := &fakeEmailSender{err: errors.New("resend unavailable")}
+	emailSender := &fakeEmailSender{err: errors.New("email provider unavailable")}
 
 	result, err := NewBetaAndroidUsecase(db, nil, emailSender, "", "", "", "https://play.google.com/apps/testing/com.gabrielevieira.palpite", nil).ApproveBetaTester(context.Background(), ApproveBetaTesterInput{
 		TesterID:   "tester-id",

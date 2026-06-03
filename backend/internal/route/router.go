@@ -32,7 +32,14 @@ func NewRouter(cfg config.Config, db usecase.Datastore, services ...Services) ht
 	predictionReader := predictionservice.NewPredictionReadService(db)
 	wallet := usecase.NewWalletUsecase(db)
 	challenges := usecase.NewChallengeUsecase(db)
-	betaAndroidEmailSender := emailservice.NewResendSender(cfg.Email, slog.Default())
+	betaAndroidEmailSender, err := emailservice.NewSender(cfg.Email, cfg.Env, slog.Default())
+	if err != nil {
+		slog.Error("email sender configuration failed", "provider", cfg.Email.Provider, "error", err)
+		if cfg.Env == "production" || cfg.Env == "prod" {
+			panic(err)
+		}
+		betaAndroidEmailSender = emailservice.NoopSender{}
+	}
 	betaAndroid := usecase.NewBetaAndroidUsecase(db, nil, betaAndroidEmailSender, cfg.Email.NotificationEmail, cfg.BetaApprovalBaseURL, cfg.BetaApprovalSecret, cfg.BetaAndroidPlayStoreURL, slog.Default())
 
 	mux.HandleFunc("GET /health", controller.HealthHandler(db, redis))

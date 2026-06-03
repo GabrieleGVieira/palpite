@@ -54,9 +54,14 @@ GEMINI_TIMEOUT_SECONDS=30
 BETA_ANDROID_PLAY_STORE_URL=https://play.google.com/apps/testing/com.gabrielevieira.palpite
 BETA_APPROVAL_BASE_URL=https://seudominio.com
 BETA_APPROVAL_SECRET=segredo_longo_para_assinar_links
-RESEND_API_KEY=
 BETA_SIGNUP_NOTIFICATION_EMAIL=seu-email
-EMAIL_FROM=Palpite! <noreply@palpite.app>
+EMAIL_PROVIDER=brevo
+EMAIL_FROM_NAME=Palpite!
+EMAIL_FROM_ADDRESS=email-configurado-no-brevo@example.com
+BREVO_SMTP_HOST=smtp-relay.brevo.com
+BREVO_SMTP_PORT=587
+BREVO_SMTP_USER=login-smtp-do-brevo
+BREVO_SMTP_PASSWORD=chave-smtp-do-brevo
 AI_EXPLANATION_BATCH_SIZE=2
 AI_EXPLANATION_MIN_BATCH_SIZE=1
 AI_EXPLANATION_RETRY_MISSING=true
@@ -212,7 +217,7 @@ O fluxo da landing é:
 Landing form -> POST /api/beta/android -> beta_testers_android(status=pending_approval)
 ```
 
-O signup público valida consentimento/e-mail, salva ou atualiza o registro, envia um alerta via Resend para `BETA_SIGNUP_NOTIFICATION_EMAIL` e retorna sucesso para a landing. Se `BETA_APPROVAL_BASE_URL` e `BETA_APPROVAL_SECRET` estiverem configurados, esse alerta inclui um botão de confirmação assinado para aprovar o tester depois que o e-mail for adicionado no Play Console. Se o envio de e-mail falhar ou `RESEND_API_KEY` estiver vazio, o cadastro continua funcionando e a falha fica apenas no log.
+O signup público valida consentimento/e-mail, salva ou atualiza o registro, envia um alerta via Brevo SMTP para `BETA_SIGNUP_NOTIFICATION_EMAIL` e retorna sucesso para a landing. Se `BETA_APPROVAL_BASE_URL` e `BETA_APPROVAL_SECRET` estiverem configurados, esse alerta inclui um botão de confirmação assinado para aprovar o tester depois que o e-mail for adicionado no Play Console. Se o envio de e-mail falhar ou `EMAIL_PROVIDER` estiver vazio em ambiente local/teste, o cadastro continua funcionando e a falha ou desativação fica apenas no log.
 
 `BETA_ANDROID_PLAY_STORE_URL` é usado no e-mail de aprovação enviado ao tester. A landing não redireciona automaticamente após o cadastro.
 
