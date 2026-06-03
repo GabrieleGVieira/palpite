@@ -51,6 +51,7 @@ jobs:
       - name: Build landing
         env:
           VITE_BASE_PATH: /palpite/
+          VITE_API_URL: https://palpitai-api.onrender.com
         run: npm run build
 
       - name: Export Expo Web app
